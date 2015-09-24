@@ -8,6 +8,11 @@
 #ifndef GUI_H_
 #define GUI_H_
 
+#include <CGAL/Linear_cell_complex.h>
+#include <CGAL/Linear_cell_complex_constructors.h>
+#include <CGAL/Linear_cell_complex_operations.h>
+
+
 /* If you want to use a viewer, you can use one of the following file
  * depending if you use vtk or qglviewer. */
 #ifdef CGAL_LCC_USE_QT
@@ -20,13 +25,24 @@
 
 #include "Data.h"
 
+namespace Skel {
 
 class GUI {
+
+	LCC_3 lcc;
+	Polygon_2 poly ;
+
 public:
 	GUI();
 	virtual ~GUI();
 
-	void show(SS3D::LCC_3& lcc);
+	void show(const SsPtr& ss);
+
+private:
+	Dart_handle make_facet(const Polygon_2& poly);
+	void addSS(const SsPtr& ss);
 };
+
+} /* end namespace */
 
 #endif /* GUI_H_ */
