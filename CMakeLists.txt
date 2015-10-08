@@ -1,4 +1,4 @@
-project( Bisector-MAX )
+project( Bisector )
 #LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "/usr/lib/CGAL")
 
 cmake_minimum_required(VERSION 2.6.2)

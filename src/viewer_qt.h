@@ -123,10 +123,10 @@ public:
 
   // Constructor/Destructor
   SimpleLCCViewerQt(LCC& alcc) : QGLViewer(), lcc(alcc),
-                                 wireframe(false), flatShading(true),
+                                 wireframe(true), flatShading(true),
                                  edges(true), vertices(true)
   {
-    setWindowTitle("Bisector Max");
+    setWindowTitle("Bisector");
     resize(500, 450);
   }
 

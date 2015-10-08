@@ -14,77 +14,77 @@
 #include <CGAL/HalfedgeDS_list.h>
 #include <CGAL/Polyhedron_3.h>
 
-namespace Skel {
-
 Data::Data() {
 	/* initialize classes for 'tedgen', set switches */
 }
 
 Data::~Data() {}
 
-void Data::loadFile(std::string fileName) {
-	this->fileName = fileName;
+bool Data::loadFile() {
 	// IO::importOBJ(fileName, &polyhedron);
 	// TODO: Importer for polygons.
+	return true;
 }
 
 
-void Data::evaluateArguments(std::list<std::string> args) {
+bool Data::evaluateArguments(std::list<std::string> args) {
 	std::string argument;
+	bool fileLoaded = false;
 
 	if(args.empty()) {
 		printHelp();
 
+		/* TODO: remove, just for testing! */
 		std::cout << "Using default test polygon." << std::endl;
-		polygon.push_back( Point(0,0) ) ;
-		polygon.push_back( Point(10,0) ) ;
-		polygon.push_back( Point(12,10) ) ;
-		polygon.push_back( Point(9,9) ) ;
-		polygon.push_back( Point(8,12) ) ;
-		polygon.push_back( Point(7,8) ) ;
-		polygon.push_back( Point(5,11) ) ;
-		polygon.push_back( Point(0,9) ) ;
-		return;
+		config.gui = true;
 
-		throw("no arguments given!");
+		polygon.push_back( Vertex(0,0) ) ;
+		polygon.push_back( Vertex(10,0) ) ;
+		polygon.push_back( Vertex(12,10) ) ;
+		polygon.push_back( Vertex(9,9) ) ;
+		polygon.push_back( Vertex(8,12) ) ;
+		polygon.push_back( Vertex(7,8) ) ;
+		polygon.push_back( Vertex(5,11) ) ;
+		polygon.push_back( Vertex(0,9) ) ;
+		return true;
+		/************************************/
+
+		return false;
 	} else {
 		while(!args.empty()) {
 			argument = args.front();
 			args.pop_front();
-			if(argument.compare("--obj") == 0) {
-				if(!args.empty()) {
-					argument = args.front();
-					args.pop_front();
-					if(fileExists(argument)) {
-						loadFile(argument);
-						std::cout << "File '" << argument << "' loaded." << std::endl;
-					} else {
-						std::cout << "File '" << argument << "' does not seem to exist!" << std::endl;
-						printHelp();
-						throw("File does not exist!");
-					}
+			if (argument == "-max") {
+				config.maximize = true;
+			} else if (argument == "-min") {
+				config.maximize = false;
+			} else if (argument == "-gui") {
+				config.gui = true;
+			} else {
+				if(fileExists(argument)) {
+					config.fileName = argument;
+					fileLoaded = loadFile();
 				} else {
-					std::cout << "No filename provided!" << std::endl;
-					printHelp();
-					throw("No filename provided!");
+					std::cout << argument << " no valid option or filename!" << std::endl;
 				}
 			}
 		}
 	}
+
+	return fileLoaded;
 }
 
-bool Data::fileExists (const std::string& name) {
+bool Data::fileExists(std::string fileName) {
   struct stat buffer;
-  return (stat (name.c_str(), &buffer) == 0);
+  return (stat (fileName.c_str(), &buffer) == 0);
 }
 
 
 
 void Data::printHelp() {
-	std::cout << "|---------------------- Bisecotr MAX --------------------|" << std::endl;
-	std::cout << "| usage: bismax --obj <filename>                         |" << std::endl;
+	std::cout << "|---------------------- Bisector --- --------------------|" << std::endl;
+	std::cout << "| usage: bis " << config.printOptions << "          |" << std::endl;
 	std::cout << "|--------------------------------------------------------|" << std::endl;
 }
 
 
-} /* namespace Skel */

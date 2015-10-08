@@ -25,24 +25,21 @@
 
 #include "Data.h"
 
-namespace Skel {
 
 class GUI {
-
-	LCC_3 lcc;
-	Polygon_2 poly ;
 
 public:
 	GUI();
 	virtual ~GUI();
 
 	void show(const SsPtr& ss);
+	Dart_handle make_facet(const Polygon_2& poly);
 
 private:
-	Dart_handle make_facet(const Polygon_2& poly);
 	void addSS(const SsPtr& ss);
+
+	LCC_3 lcc;
 };
 
-} /* end namespace */
 
 #endif /* GUI_H_ */

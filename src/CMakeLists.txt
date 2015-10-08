@@ -11,9 +11,9 @@ else()
   message(SEND_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-add_executable(bismax ${SRC_LIST})
-target_link_libraries(bismax ${CGAL_LIBRARIES}
-                             ${CGAL_3RD_PARTY_LIBRARIES}
-                             ${MAP_VIEWER_LIBRARIES}
+add_executable(bis ${SRC_LIST})
+target_link_libraries(bis ${CGAL_LIBRARIES}
+                          ${CGAL_3RD_PARTY_LIBRARIES}
+                          ${MAP_VIEWER_LIBRARIES}
                      )
 

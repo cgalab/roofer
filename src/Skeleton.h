@@ -14,25 +14,20 @@
 #include "GUI.h"
 #endif
 
-namespace Skel {
 
 
 class Skeleton {
 public:
-
 	Skeleton(std::list<std::string>& args);
-
 	virtual ~Skeleton();
 
 private:
-	Skel::Data data;
+	Data data;
 #ifdef CGAL_LCC_USE_VIEWER
-	GUI        gui;
+	GUI  gui;
 #endif
 
 	void createSkeleton();
-
 };
 
-} /* end namespace */
 #endif /* SKELETON_H_ */

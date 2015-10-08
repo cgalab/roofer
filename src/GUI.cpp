@@ -12,14 +12,13 @@
 #include <CGAL/Linear_cell_complex_constructors.h>
 #include <CGAL/Linear_cell_complex_operations.h>
 
-namespace Skel {
 
 GUI::GUI() {}
 
 GUI::~GUI() {}
 
 void GUI::show(const SsPtr& ss) {
-	addSS(ss);
+
 	display_lcc(lcc);
 }
 
@@ -37,13 +36,12 @@ Dart_handle GUI::make_facet(const Polygon_2& poly) {
 }
 
 void GUI::addSS(const SsPtr& ss) {
-	for ( Halfedge_const_iterator i = ss->halfedges_begin(); i != ss->halfedges_end(); ++i )
-	{
-		Point3D p(i->opposite()->vertex()->point().x(),i->opposite()->vertex()->point().y(),0);
-		Point3D q(i->vertex()->point().x(),i->vertex()->point().y(),0);
-
-		lcc.make_segment(p,q);
-	}
+//	for ( Halfedge_const_iterator i = ss->halfedges_begin(); i != ss->halfedges_end(); ++i )
+//	{
+//		Point3D p(i->opposite()->vertex()->point().x(),i->opposite()->vertex()->point().y(),0);
+//		Point3D q(i->vertex()->point().x(),i->vertex()->point().y(),0);
+//
+//		lcc.make_segment(p,q);
+//	}
 }
 
-}
