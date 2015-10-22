@@ -30,7 +30,8 @@
 
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
-typedef K::Point_2                   	Vertex;
+typedef K::Vector_2                   	Vertex;
+typedef K::Point_2						Point;
 
 typedef CGAL::Linear_cell_complex<3>    LCC_3;
 typedef LCC_3::Dart_handle              Dart_handle;
@@ -52,10 +53,13 @@ enum EventType : int {EDGE,SPLIT,CREATE};
 class WavefrontVertex : public Vertex {
 public:
 	Vertex    velocity;
-	K::Line_2 bisector;
+	//K::Line_2 bisector;
+
+	K::Direction_2 direction;
+	double speed;
 
 	WavefrontVertex(Vertex v)
-	: Vertex(v)	{
+	: Vertex(v),speed(0)	{
 	}
 };
 

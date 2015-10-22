@@ -38,14 +38,14 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		std::cout << "Using default test polygon." << std::endl;
 		config.gui = true;
 
-		polygon.push_back( Vertex(0,0) ) ;
-		polygon.push_back( Vertex(10,0) ) ;
-		polygon.push_back( Vertex(12,10) ) ;
-		polygon.push_back( Vertex(9,9) ) ;
-		polygon.push_back( Vertex(8,12) ) ;
-		polygon.push_back( Vertex(7,8) ) ;
-		polygon.push_back( Vertex(5,11) ) ;
-		polygon.push_back( Vertex(0,9) ) ;
+		polygon.push_back( Point(0,0) ) ;
+		polygon.push_back( Point(10,0) ) ;
+		polygon.push_back( Point(12,10) ) ;
+		polygon.push_back( Point(9,9) ) ;
+		polygon.push_back( Point(8,12) ) ;
+		polygon.push_back( Point(7,8) ) ;
+		polygon.push_back( Point(5,11) ) ;
+		polygon.push_back( Point(0,9) ) ;
 		return true;
 		/************************************/
 

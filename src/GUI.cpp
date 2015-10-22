@@ -27,7 +27,7 @@ Dart_handle GUI::make_facet(const Polygon_2& poly) {
 			CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)poly.size());
 	for (unsigned int i=0; i<poly.size(); ++i)
 	{
-		Point3D p(poly.vertex(i).x(),poly.vertex(i).y(),0);
+		Point3D p(poly.vertex(i).x(),poly.vertex(i).y(),i);
 
 		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
 		d=d->beta(1);

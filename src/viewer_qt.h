@@ -126,7 +126,7 @@ public:
                                  wireframe(true), flatShading(true),
                                  edges(true), vertices(true)
   {
-    setWindowTitle("Bisector");
+    setWindowTitle("Min/Max Bisector Graph");
     resize(500, 450);
   }
 
