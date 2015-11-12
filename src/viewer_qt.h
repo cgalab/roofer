@@ -24,7 +24,10 @@
 #include <QKeyEvent>
 
 #include <QGLViewer/qglviewer.h>
+#include <QGLViewer/manipulatedFrame.h>
+
 #include <GL/gl.h>
+
 #include <CGAL/Linear_cell_complex.h>
 #include <CGAL/Cartesian.h>
 #include <CGAL/Cartesian_converter.h>
@@ -127,6 +130,11 @@ public:
                                  edges(true), vertices(true)
   {
     setWindowTitle("Min/Max Bisector Graph");
+
+    auto frame = new qglviewer::ManipulatedFrame();
+    frame->setSpinningSensitivity(300);
+    setManipulatedFrame(frame);
+
     resize(500, 450);
   }
 

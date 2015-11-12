@@ -28,6 +28,15 @@ private:
 #endif
 
 	void createSkeleton();
+
+	void createInitialWavefront();
+	void createBisectorRays();
+
+	void computeEdgeEvents();
+	void computeSplitEvents();
+	void computeCreateEvents();
+
+	void startWavefrontPropagation();
 };
 
 #endif /* SKELETON_H_ */

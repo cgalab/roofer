@@ -33,11 +33,12 @@ public:
 	virtual ~GUI();
 
 	void show(const SsPtr& ss);
-	Dart_handle make_facet(const Polygon_2& poly);
+	Dart_handle make_facet(const Polygon& poly);
+
+	void addSegment(Point& a, Point& b);
 
 private:
 	void addSS(const SsPtr& ss);
-
 	LCC_3 lcc;
 };
 

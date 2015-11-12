@@ -18,21 +18,27 @@ GUI::GUI() {}
 GUI::~GUI() {}
 
 void GUI::show(const SsPtr& ss) {
-
 	display_lcc(lcc);
 }
 
-Dart_handle GUI::make_facet(const Polygon_2& poly) {
+Dart_handle GUI::make_facet(const Polygon& poly) {
 	Dart_handle d =
 			CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)poly.size());
 	for (unsigned int i=0; i<poly.size(); ++i)
 	{
-		Point3D p(poly.vertex(i).x(),poly.vertex(i).y(),i);
+		Point3D p(poly.vertex(i).x(),poly.vertex(i).y(),0);
 
 		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
 		d=d->beta(1);
 	}
 	return d;
+}
+
+void GUI::addSegment(Point& a, Point& b) {
+	Point3D p(a.x(),a.y(),0);
+	Point3D q(b.x(),b.y(),0);
+
+	lcc.make_segment(p,q);
 }
 
 void GUI::addSS(const SsPtr& ss) {
