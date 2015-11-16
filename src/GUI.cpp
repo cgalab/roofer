@@ -24,12 +24,14 @@ void GUI::show(const SsPtr& ss) {
 Dart_handle GUI::make_facet(const Polygon& poly) {
 	Dart_handle d =
 			CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)poly.size());
-	for (unsigned int i=0; i<poly.size(); ++i)
-	{
-		Point3D p(poly.vertex(i).x(),poly.vertex(i).y(),0);
 
-		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
-		d=d->beta(1);
+	for(auto v = poly.vertices_begin(); v != poly.vertices_end(); ++v) {
+		//for (unsigned int i=0; i<poly.size(); ++i) {
+
+		//Point3D p(v->x(),v->y(),0);
+
+		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(v));
+		d = d->beta(1);
 	}
 	return d;
 }

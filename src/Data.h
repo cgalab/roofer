@@ -9,10 +9,9 @@
 #define DATA_H_
 
 #include <vector>
+#include <memory>
 
-#include <boost/shared_ptr.hpp>
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel_with_sqrt.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/create_straight_skeleton_2.h>
 #include <CGAL/Combinatorial_map_constructors.h>
@@ -22,36 +21,30 @@
 #include <CGAL/HalfedgeDS_list.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Linear_cell_complex.h>
-//#include <CGAL/Linear_cell_complex_constructors.h>
-//#include <CGAL/Linear_cell_complex_operations.h>
+
 #include <CGAL/intersections.h>
 
 #include <sys/stat.h>
 
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
-typedef K::Vector_2                   	Vertex;
-typedef K::Point_2						Point;
-typedef K::Line_2						Line;
-typedef K::Ray_2						Ray;
-typedef K::Direction_2					Direction;
+using K 		  = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
+using Vertex      = K::Vector_2;
+using Point       = K::Point_2;
+using Line        = K::Line_2;
+using Ray         = K::Ray_2;
+using Direction   = K::Direction_2;
 
-typedef CGAL::Linear_cell_complex<3>    LCC_3;
-typedef LCC_3::Dart_handle              Dart_handle;
-typedef LCC_3::Point                    Point3D;
-typedef LCC_3::FT                       FT;
-typedef LCC_3::Traits 				    Traits;
+using LCC_3       = CGAL::Linear_cell_complex<3>;
+using Dart_handle = LCC_3::Dart_handle;
+using Point3D     = LCC_3::Point;
+//using FT          = LCC_3::FT;
+//using Traits      = LCC_3::Traits;
 
-typedef CGAL::Polygon_2<K>           	Polygon;
+using Polygon     = CGAL::Polygon_2<K>;
 
-//typedef CGAL::Straight_skeleton_2<K> 	SS;
-//typedef SS::Vertex_const_handle      	Vertex_const_handle ;
-//typedef SS::Halfedge_const_handle    	Halfedge_const_handle ;
-//typedef SS::Halfedge_const_iterator  	Halfedge_const_iterator ;
+using SsPtr       = std::shared_ptr<Polygon>;
 
-typedef boost::shared_ptr<Polygon> SsPtr ;
-
-enum EventType : int {EDGE,SPLIT,DIVIDE,CREATE};
+enum class EventType {EDGE,SPLIT,DIVIDE,CREATE};
 
 struct WavefrontPoint : public Point {
 	Vertex    velocity;
@@ -62,11 +55,35 @@ struct WavefrontPoint : public Point {
 	WavefrontPoint(Point v)
 	: Point(v),reflex(false)	{
 	}
+	WavefrontPoint(Point v, bool r)
+		: Point(v),reflex(r)	{
+	}
+
+	K::FT x() {return this->x();}
+	K::FT y() {return this->y();}
+	K::FT x(K::FT t) {return currentLocation(t).x();}
+	K::FT y(K::FT t) {return currentLocation(t).y();}
+
+	/* returns the wavefront point at time 'time' */
+	inline WavefrontPoint currentLocation(K::FT time){
+		auto dir = direction.to_vector();
+
+		/* 'unit-normalize' direction vector */
+		auto len = CGAL::sqrt(dir.squared_length());
+		auto vector = dir/len * time;
+
+		// TODO: wrong, we have to scale up the 'time' about
+		//       the speed value 1/sin(alpha/2)....
+
+		return WavefrontPoint(*this + vector);
+	}
 };
 
+
+/* event location is the point itself.  */
 struct Event : public Point {
 	EventType 	   type;
-	double 		   time;		    // TODO: double -> distance measure CGAL uses
+	K::FT 		   time;
 
 	WavefrontPoint *a, *b, *c;       	// TODO: whatever object type edges are/will be
 
@@ -75,8 +92,7 @@ struct Event : public Point {
 	}
 };
 
-class Compare {
-public:
+struct Compare {
     bool operator() (Event &a, Event &b)
     {
     	if (a.time > b.time) {
@@ -99,8 +115,8 @@ struct Config {
 	}
 };
 
-typedef std::priority_queue<Event, std::vector<Event>, Compare > EventQueue;
-typedef CGAL::Polygon_2<K,std::vector<WavefrontPoint> > Wavefront;
+using EventQueue = std::priority_queue<Event, std::vector<Event>, Compare >;
+using Wavefront  = CGAL::Polygon_2<K,std::vector<WavefrontPoint> >;
 
 class Data {
 public:

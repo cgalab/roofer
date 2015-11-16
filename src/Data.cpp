@@ -26,7 +26,6 @@ bool Data::loadFile() {
 	return true;
 }
 
-
 bool Data::evaluateArguments(std::list<std::string> args) {
 	std::string argument;
 	bool fileLoaded = false;
@@ -86,5 +85,4 @@ void Data::printHelp() {
 	std::cout << "| usage: bis " << config.printOptions << "          |" << std::endl;
 	std::cout << "|--------------------------------------------------------|" << std::endl;
 }
-
 

@@ -37,6 +37,15 @@ private:
 	void computeCreateEvents();
 
 	void startWavefrontPropagation();
+
+	void handleEdgeEvent(Event e);
+	void handleSplitEvent(Event e);
+	void handleDivideEvent(Event e);
+	void handleCreateEvent(Event e);
+
+#ifdef CGAL_LCC_USE_VIEWER
+	void drawEvent(Event e);
+#endif
 };
 
 #endif /* SKELETON_H_ */
