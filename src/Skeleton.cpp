@@ -47,7 +47,7 @@ void Skeleton::createSkeleton() {
 	cout << "generate 'bisector'-rays...";
 	createBisectorRays();
 	cout << "done" << endl;
-
+fflush(stdout);
 	/* compute initial edge-events */
 	cout << "compute edge-events...";
 	computeEdgeEvents();
@@ -79,14 +79,14 @@ void Skeleton::createBisectorRays() {
 	for(auto v_j = data.wavefront.vertices_begin(); v_j != data.wavefront.vertices_end(); ++v_j) {
 		auto v_i = v_j-1;
 		auto v_k = v_j+1;
+
 		if(v_j == data.wavefront.vertices_begin()) v_i = data.wavefront.vertices_end();
-		if(v_j == data.wavefront.vertices_end()) v_k = data.wavefront.vertices_begin();
+		if(v_j == data.wavefront.vertices_end())   v_k = data.wavefront.vertices_begin();
 
 		Line a(*v_i,*v_j);
 		Line b(*v_k,*v_j);
 
 		auto bis = CGAL::bisector(a,b);
-
 		auto pointOnBis = bis.projection(*v_k);
 
 		if(CGAL::left_turn(*v_i,*v_j,*v_k)) {

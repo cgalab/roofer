@@ -28,17 +28,17 @@ Dart_handle GUI::make_facet(const Polygon& poly) {
 	for(auto v = poly.vertices_begin(); v != poly.vertices_end(); ++v) {
 		//for (unsigned int i=0; i<poly.size(); ++i) {
 
-		//Point3D p(v->x(),v->y(),0);
+		Point3D p(v->x().doubleValue(),v->y().doubleValue(),0);
 
-		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(v));
+		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
 		d = d->beta(1);
 	}
 	return d;
 }
 
 void GUI::addSegment(Point& a, Point& b) {
-	Point3D p(a.x(),a.y(),0);
-	Point3D q(b.x(),b.y(),0);
+	Point3D p(a.x().doubleValue(),a.y().doubleValue(),0);
+	Point3D q(b.x().doubleValue(),b.y().doubleValue(),0);
 
 	lcc.make_segment(p,q);
 }
