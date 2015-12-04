@@ -14,9 +14,7 @@
 #include <CGAL/HalfedgeDS_list.h>
 #include <CGAL/Polyhedron_3.h>
 
-Data::Data() {
-	/* initialize classes for 'tedgen', set switches */
-}
+Data::Data() {}
 
 Data::~Data() {}
 
@@ -25,6 +23,16 @@ bool Data::loadFile() {
 	// TODO: Importer for polygons.
 	return true;
 }
+
+
+WavefrontIterator Data::next(WavefrontIterator i) {
+	return (i+1 == wavefront.vertices_end()) ? wavefront.vertices_begin() : i+1;
+}
+
+WavefrontIterator Data::prev(WavefrontIterator i) {
+	return (i == wavefront.vertices_begin()) ? wavefront.vertices_end()-1 : i-1;
+}
+
 
 bool Data::evaluateArguments(std::list<std::string> args) {
 	std::string argument;
@@ -45,6 +53,17 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		polygon.push_back( Point(7,8) ) ;
 		polygon.push_back( Point(5,11) ) ;
 		polygon.push_back( Point(0,9) ) ;
+
+
+//		wavefront.push_back( WavefrontPoint(0,0) ) ;
+//		wavefront.push_back( WavefrontPoint(10,0) ) ;
+//		wavefront.push_back( WavefrontPoint(12,10) ) ;
+//		wavefront.push_back( WavefrontPoint(9,9) ) ;
+//		wavefront.push_back( WavefrontPoint(8,12) ) ;
+//		wavefront.push_back( WavefrontPoint(7,8) ) ;
+//		wavefront.push_back( WavefrontPoint(5,11) ) ;
+//		wavefront.push_back( WavefrontPoint(0,9) ) ;
+
 		return true;
 		/************************************/
 

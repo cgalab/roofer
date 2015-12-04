@@ -407,7 +407,7 @@ template<class LCC>
 void display_lcc(LCC& alcc)
 {
   int argc=1;
-  typedef char* s;
+  //typedef char* s;
   
   const char* argv[2]={"lccviewer","\0"};
   QApplication app(argc,const_cast<char**>(argv));

@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <exception>
 
 #include "Data.h"
 #include "Skeleton.h"
@@ -32,10 +33,6 @@ Skeleton::Skeleton(list<string>& args) {
 Skeleton::~Skeleton() {}
 
 void Skeleton::createSkeleton() {
-
-	//	data.iss = CGAL::create_interior_straight_skeleton_2(data.polygon.vertices_begin(),
-	//			data.polygon.vertices_end());
-
 	/***
 	 * create initial wavefront
 	 ***/
@@ -44,10 +41,10 @@ void Skeleton::createSkeleton() {
 	cout << "done" << endl;
 
 	/* compute initial bisector rays */
-	cout << "generate 'bisector'-rays...";
+	cout << "generate bisector-rays...";
 	createBisectorRays();
 	cout << "done" << endl;
-fflush(stdout);
+
 	/* compute initial edge-events */
 	cout << "compute edge-events...";
 	computeEdgeEvents();
@@ -71,54 +68,57 @@ fflush(stdout);
 
 void Skeleton::createInitialWavefront() {
 	for(auto it=data.polygon.vertices_begin(); it != data.polygon.vertices_end(); ++it) {
-		data.wavefront.push_back(Point(*it));
+		data.wavefront.push_back(WavefrontPoint(*it));
 	}
 }
 
 void Skeleton::createBisectorRays() {
 	for(auto v_j = data.wavefront.vertices_begin(); v_j != data.wavefront.vertices_end(); ++v_j) {
-		auto v_i = v_j-1;
-		auto v_k = v_j+1;
-
-		if(v_j == data.wavefront.vertices_begin()) v_i = data.wavefront.vertices_end();
-		if(v_j == data.wavefront.vertices_end())   v_k = data.wavefront.vertices_begin();
+		auto v_i = (v_j != data.wavefront.vertices_begin()) ? v_j-1 : data.wavefront.vertices_end()-1;
+		auto v_k = (v_j+1 != data.wavefront.vertices_end()) ? v_j+1 : data.wavefront.vertices_begin();
 
 		Line a(*v_i,*v_j);
 		Line b(*v_k,*v_j);
 
-		auto bis = CGAL::bisector(a,b);
-		auto pointOnBis = bis.projection(*v_k);
+		Line bis = CGAL::bisector(a,b);
+		Point pointOnBis = bis.projection(*v_k);
 
 		if(CGAL::left_turn(*v_i,*v_j,*v_k)) {
 			v_j->direction = Ray(*v_j,pointOnBis);
-		} else {
+		} else if(CGAL::right_turn(*v_i,*v_j,*v_k)) {
 			v_j->reflex    = true;
-			v_j->direction = Ray(pointOnBis,*v_j);
-			v_j->direction = Ray(*v_j,v_j->direction.direction());
+			Ray r(pointOnBis,*v_j);
+			v_j->direction = Ray(*v_j,r.direction());
+		} else {
+			cout << "Polygon contains co-linear segments (angle equal to pi). This is not supported yet!" << endl;
+			assert(true);
 		}
 	}
 }
 
+Event Skeleton::computeEdgeEvent(WavefrontIterator a, WavefrontIterator b) {
+	auto intersection = CGAL::intersection(a->direction,b->direction);
+	if(!intersection.empty()) {
+		if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
+			Line l(*a,*b);
+
+			Event e(*ipoint,EventType::EDGE);
+
+			e.time = CGAL::sqrt(CGAL::squared_distance(l,*ipoint));
+
+			e.a = a;
+			e.b = b;
+
+			return e;
+		}
+	}
+	return Event();
+}
+
 void Skeleton::computeEdgeEvents() {
 	for(auto v_i = data.wavefront.vertices_begin(); v_i != data.wavefront.vertices_end(); ++v_i) {
-		auto v_j = v_i+1;
-		if(v_i == data.wavefront.vertices_end()) v_j = data.wavefront.vertices_begin();
-
-		auto intersection = CGAL::intersection(v_i->direction,v_j->direction);
-		if(!intersection.empty()) {
-			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
-				Line l(*v_i,*v_j);
-
-				Event e(*ipoint,EventType::EDGE);
-
-				e.time = CGAL::sqrt(CGAL::squared_distance(l,*ipoint));
-
-				e.a = &*v_i;
-				e.b = &*v_j;
-
-				data.eventQueue.push(e);
-			}
-		}
+		auto e = computeEdgeEvent(v_i,data.next(v_i));
+		if(e.type == EventType::EDGE) data.eventQueue.push(e);
 	}
 }
 
@@ -126,16 +126,14 @@ void Skeleton::computeSplitEvents() {
 	for(auto v_i = data.wavefront.vertices_begin(); v_i != data.wavefront.vertices_end(); ++v_i) {
 		/* we only need to consider reflex vertices for the split-events */
 		if(v_i->reflex) {
-			cout << "reflex" << endl;
-			auto v_ii = v_i+1;
-			if(v_i == data.wavefront.vertices_end()) v_ii = data.wavefront.vertices_begin();
-			/* we take the line after the reflex vertex to calculate distance and bisector */
+			auto v_ii = (v_i+1 != data.wavefront.vertices_end()) ? v_i+1 : data.wavefront.vertices_begin();
+			/* we take a line incident at the reflex vertex to calculate distance */
 			Line l_a(*v_i,*v_ii);
 
 			/* circle through all 'lines' */
 			for(auto v_j = data.wavefront.vertices_begin(); v_j != data.wavefront.vertices_end(); ++v_j) {
 				auto v_jj = v_j+1;
-				if(v_j == data.wavefront.vertices_end()) v_jj = data.wavefront.vertices_begin();
+				if(v_j+1 == data.wavefront.vertices_end()) v_jj = data.wavefront.vertices_begin();
 				if(v_j == v_i || v_jj == v_i) continue;
 
 				Line l_b(*v_jj,*v_j);
@@ -151,20 +149,14 @@ void Skeleton::computeSplitEvents() {
 						 * not to the reflex vertex but to the supporting line of one of
 						 * its incident edges. */
 
-//						auto proj_a = l_a.projection(*ipoint);
-//						auto proj_b = l_b.projection(*ipoint);
-//						CGAL::compare_distance_to_point(*ipoint,proj_a,proj_b)
-
-
 						if(CGAL::compare_distance(*ipoint,l_a,l_b) == CGAL::EQUAL) {
 							Event e(*ipoint,EventType::SPLIT);
 							e.time = CGAL::sqrt(CGAL::squared_distance(*ipoint,l_a));
-							e.a    = &*v_i;		// the reflex vertex
-							e.b    = &*v_j;		// vertex a of line segment
-							e.c    = &*v_jj;	// vertex b of line segment
+							e.a    = v_i;		// the reflex vertex
+							e.b    = v_j;		// vertex a of line segment
+							e.c    = v_jj;		// vertex b of line segment
 
 							data.eventQueue.push(e);
-							cout << "SE added" << endl;
 						} else {
 							cout << "distances do not match " <<
 									CGAL::squared_distance(l_a,*ipoint) << "," <<
@@ -187,7 +179,7 @@ void Skeleton::startWavefrontPropagation() {
 	while(!data.eventQueue.empty()) {
 		auto e = data.eventQueue.top();
 		data.eventQueue.pop();
-
+		cout << data.eventQueue.size() << endl;
 		switch(e.type) {
 		case EventType::EDGE:   handleEdgeEvent(e);   break;
 		case EventType::SPLIT:  handleSplitEvent(e);  break;
@@ -198,21 +190,41 @@ void Skeleton::startWavefrontPropagation() {
 		}
 
 #ifdef CGAL_LCC_USE_VIEWER
-	if(data.config.gui) {}
+	if(data.config.gui) {drawEvent(e);}
 #endif
 	}
 }
 
 void Skeleton::handleEdgeEvent(Event e) {
-	Point a(e.a->currentLocation(e.time));
-	Point b(e.b->currentLocation(e.time));
+	if(data.next(e.a) == e.b) {
 
-	if(a == b) {
-//		data.wavefront.erase(e.a);
-		// TODO: major ... remove vertex from wavefront...
-		cout << "intersection at: " << e.time << endl;
+		Event e_eval = computeEdgeEvent(e.a,e.b);
+
+		if(e.time == e_eval.time) {
+			Line la(*data.prev(e.a),*e.a);
+			Line lb(*e.b,*data.next(e.b));
+
+			Line bis = CGAL::bisector(la,lb);
+			Point pointOnBis = bis.projection(*e.a);
+
+			Ray dir(*e.a,e);
+			e.a->direction = dir;
+			e.a->reflex    = false;
+
+			auto e_a = computeEdgeEvent(e.b,data.next(e.b));
+			auto e_b = computeEdgeEvent(data.prev(e.b),e.b);
+
+			if(e_a.type == EventType::EDGE) data.eventQueue.push(e_a);
+			if(e_b.type == EventType::EDGE) data.eventQueue.push(e_b);
+
+			data.wavefront.erase(e.b);
+
+			cout << "intersection at: " << e.time << endl;
+		} else {
+			cout << "no intersection " << endl;
+		}
 	} else {
-		cout << "no intersection " << a << "," << b << endl;
+		cout << "no intersection " << endl;
 	}
 }
 

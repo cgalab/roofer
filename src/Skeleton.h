@@ -38,6 +38,8 @@ private:
 
 	void startWavefrontPropagation();
 
+	Event computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
+
 	void handleEdgeEvent(Event e);
 	void handleSplitEvent(Event e);
 	void handleDivideEvent(Event e);

@@ -26,6 +26,7 @@
 
 #include <sys/stat.h>
 
+using namespace std;
 
 using K 		  = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
 using Vertex      = K::Vector_2;
@@ -42,25 +43,37 @@ using Point3D     = LCC_3::Point;
 
 using Polygon     = CGAL::Polygon_2<K>;
 
-using SsPtr       = std::shared_ptr<Polygon>;
+using SsPtr       = shared_ptr<Polygon>;
 
-enum class EventType {EDGE,SPLIT,DIVIDE,CREATE};
+enum class EventType {EDGE,SPLIT,DIVIDE,CREATE,EMPTY};
 
 struct WavefrontPoint : public Point {
+	WavefrontPoint(K::FT x, K::FT y)
+	: Point(x,y),reflex(false)	{}
+	WavefrontPoint(Point v)
+	: Point(v),reflex(false)	{}
+	WavefrontPoint(Point v, int idx)
+	: Point(v),reflex(false)	{}
+	WavefrontPoint(Point v, bool r)
+	: Point(v),reflex(r)		{}
+//	WavefrontPoint(K::FT x, K::FT y)
+//	: Point(x,y),reflex(false),wavefrontIndex(-1)	{}
+//	WavefrontPoint(Point v)
+//	: Point(v),reflex(false),wavefrontIndex(-1)	{}
+//	WavefrontPoint(Point v, int idx)
+//	: Point(v),reflex(false),wavefrontIndex(idx)	{}
+//	WavefrontPoint(Point v, bool r)
+//	: Point(v),reflex(r),wavefrontIndex(-1)		{}
+
 	Vertex    velocity;
 	Ray       direction;
 
+//	int		  wavefrontIndex;
 	bool 	  reflex;
-
-	WavefrontPoint(Point v)
-	: Point(v),reflex(false)	{
-	}
-	WavefrontPoint(Point v, bool r)
-		: Point(v),reflex(r)	{
-	}
 
 	K::FT x() {return this->x();}
 	K::FT y() {return this->y();}
+
 	K::FT x(K::FT t) {return currentLocation(t).x();}
 	K::FT y(K::FT t) {return currentLocation(t).y();}
 
@@ -79,17 +92,19 @@ struct WavefrontPoint : public Point {
 	}
 };
 
+using WavefrontIterator = CGAL::Polygon_2<K,vector<WavefrontPoint,allocator<WavefrontPoint>>>::Vertex_const_iterator;
 
 /* event location is the point itself.  */
 struct Event : public Point {
 	EventType 	   type;
 	K::FT 		   time;
 
-	WavefrontPoint *a, *b, *c;       	// TODO: whatever object type edges are/will be
+	WavefrontIterator a, b, c;       	// TODO: whatever object type edges are/will be
 
 	Event(Point v, EventType t)
-		: Point(v),type(t),time(0),a(NULL),b(NULL),c(NULL)	{
-	}
+	: Point(v),type(t),time(0),a(NULL),b(NULL),c(NULL) {}
+	Event()
+	: Point(),type(EventType::EMPTY),time(0),a(NULL),b(NULL),c(NULL) {}
 };
 
 struct Compare {
@@ -104,19 +119,19 @@ struct Compare {
 };
 
 struct Config {
-	std::string printOptions;
+	Config():gui(false),maximize(true),fileName("") {
+		printOptions = "[-min|-max] [-gui] <filename>";
+	}
 
 	bool 		gui;
 	bool 		maximize;
-	std::string fileName;
+	string 		fileName;
 
-	Config():gui(false),fileName(""),maximize(true) {
-		printOptions = "[-min|-max] [-gui] <filename>";
-	}
+	string 		printOptions;
 };
 
-using EventQueue = std::priority_queue<Event, std::vector<Event>, Compare >;
-using Wavefront  = CGAL::Polygon_2<K,std::vector<WavefrontPoint> >;
+using EventQueue = priority_queue<Event,vector<Event>, Compare >;
+using Wavefront  = CGAL::Polygon_2<K,vector<WavefrontPoint> >;
 
 class Data {
 public:
@@ -125,16 +140,18 @@ public:
 	Config     config;
 
 	Wavefront  wavefront;
-
 	EventQueue eventQueue;
 
 	Data();
 	virtual ~Data();
 
-	bool evaluateArguments(std::list<std::string> args);
+	bool evaluateArguments(list<string> args);
+
+	WavefrontIterator next(WavefrontIterator i);
+	WavefrontIterator prev(WavefrontIterator i);
 
 private:
-	bool fileExists(std::string fileName);
+	bool fileExists(string fileName);
 	bool loadFile();
 	void printHelp();
 };
