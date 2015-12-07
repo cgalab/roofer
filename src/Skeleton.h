@@ -38,7 +38,8 @@ private:
 
 	void startWavefrontPropagation();
 
-	Event computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
+	Event  computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
+	Vertex computeVelocity(Point& v_a, Point& v_b, Point& v_c);
 
 	void handleEdgeEvent(Event e);
 	void handleSplitEvent(Event e);

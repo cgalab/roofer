@@ -55,15 +55,6 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		polygon.push_back( Point(0,9) ) ;
 
 
-//		wavefront.push_back( WavefrontPoint(0,0) ) ;
-//		wavefront.push_back( WavefrontPoint(10,0) ) ;
-//		wavefront.push_back( WavefrontPoint(12,10) ) ;
-//		wavefront.push_back( WavefrontPoint(9,9) ) ;
-//		wavefront.push_back( WavefrontPoint(8,12) ) ;
-//		wavefront.push_back( WavefrontPoint(7,8) ) ;
-//		wavefront.push_back( WavefrontPoint(5,11) ) ;
-//		wavefront.push_back( WavefrontPoint(0,9) ) ;
-
 		return true;
 		/************************************/
 
@@ -100,8 +91,8 @@ bool Data::fileExists(std::string fileName) {
 
 
 void Data::printHelp() {
-	std::cout << "|---------------------- Bisector --- --------------------|" << std::endl;
-	std::cout << "| usage: bis " << config.printOptions << "          |" << std::endl;
-	std::cout << "|--------------------------------------------------------|" << std::endl;
+	std::cout << "----------------------- Bisector --- ---------------------" << std::endl;
+	std::cout << "| usage: bis " << config.printOptions << "               |" << std::endl;
+	std::cout << "----------------------------------------------------------" << std::endl;
 }
 
