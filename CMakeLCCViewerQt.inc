@@ -26,8 +26,13 @@ add_definitions(${QGLVIEWER_DEFINITIONS})
 set (MAP_VIEWER_LIBRARIES ${QT_LIBRARIES} ${QGLVIEWER_LIBRARIES}
                           ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
 
-ADD_DEFINITIONS("-DCGAL_LCC_USE_VIEWER -DCGAL_LCC_USE_QT")
-message(STATUS "Libraries for lcc_viewer found. You need to link them "
-               "in your executable by using "
-               "TARGET_LINK_LIBRARIES( myexec \${MAP_VIEWER_LIBRARIES})")
+#ADD_DEFINITIONS("-DCGAL_LCC_USE_VIEWER -DCGAL_LCC_USE_QT")
+ADD_DEFINITIONS("-DQTGUI")
+
+message(STATUS "Libraries for lcc_viewer found.") 
+
+# Info used to be in the STATUS message
+#"You need to link them "
+#"in your executable by using "
+#"TARGET_LINK_LIBRARIES( myexec \${MAP_VIEWER_LIBRARIES})")
 

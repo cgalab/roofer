@@ -14,7 +14,7 @@
 #include <CGAL/HalfedgeDS_list.h>
 #include <CGAL/Polyhedron_3.h>
 
-Data::Data() {}
+Data::Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
 
 Data::~Data() {}
 

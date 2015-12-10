@@ -38,9 +38,9 @@
 #include <CGAL/Cartesian.h>
 #include <CGAL/Cartesian_converter.h>
 
-typedef CGAL::Cartesian<double> Local_kernel;
-typedef typename Local_kernel::Point_3  Local_point;
-typedef typename Local_kernel::Vector_3 Local_vector;
+typedef CGAL::Cartesian<double> GUIKernel;
+typedef typename GUIKernel::Point_3  Local_point;
+typedef typename GUIKernel::Vector_3 Local_vector;
 
 template<class LCC, int dim=LCC::ambient_dimension>
 struct Geom_utils;
@@ -68,7 +68,7 @@ struct Geom_utils<LCC,3>
     return n;
   }
 protected:
-  CGAL::Cartesian_converter<typename LCC::Traits, Local_kernel> converter;
+  CGAL::Cartesian_converter<typename LCC::Traits, GUIKernel> converter;
 };
 
 template<class LCC>
@@ -95,7 +95,7 @@ struct Geom_utils<LCC,2>
     return n;    
   }
 protected:
-  CGAL::Cartesian_converter<typename LCC::Traits, Local_kernel> converter;  
+  CGAL::Cartesian_converter<typename LCC::Traits, GUIKernel> converter;  
 };
 
 class SimpleViewVtk : public QMainWindow

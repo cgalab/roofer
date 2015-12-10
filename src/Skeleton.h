@@ -10,22 +10,17 @@
 
 #include "Data.h"
 
-#ifdef CGAL_LCC_USE_VIEWER
-#include "GUI.h"
-#endif
-
-
-
 class Skeleton {
 public:
 	Skeleton(std::list<std::string>& args);
 	virtual ~Skeleton();
 
+	bool guiEnabled() {return data.config.gui;}
+
+
 private:
 	Data data;
-#ifdef CGAL_LCC_USE_VIEWER
-	GUI  gui;
-#endif
+
 
 	void createSkeleton();
 
@@ -41,14 +36,16 @@ private:
 	Event  computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
 	Vertex computeVelocity(Point& v_a, Point& v_b, Point& v_c);
 
-	void handleEdgeEvent(Event e);
-	void handleSplitEvent(Event e);
-	void handleDivideEvent(Event e);
-	void handleCreateEvent(Event e);
+	void handleNextEvent(Event& e);
 
-#ifdef CGAL_LCC_USE_VIEWER
-	void drawEvent(Event e);
-#endif
+	void handleEdgeEvent(Event& e);
+	void handleSplitEvent(Event& e);
+	void handleDivideEvent(Event& e);
+	void handleCreateEvent(Event& e);
+
+//#ifdef CGAL_LCC_USE_VIEWER
+//	void drawEvent(Event& e);
+//#endif
 };
 
 #endif /* SKELETON_H_ */
