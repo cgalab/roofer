@@ -286,16 +286,12 @@ void Skeleton::handleNextEvent(Event& e) {
 
 	default: break;
 	}
-//#ifdef CGAL_LCC_USE_VIEWER
-//	if(data.config.gui) {
-//		drawEvent(e);
-//	}
-//#endif
 }
 
 
 void Skeleton::handleEdgeEvent(Event& e) {
 	cout << "Edge Event ";
+
 	if(e.a->isInWavefront() && e.b->isInWavefront() && data.next(e.a) == e.b && e.a != e.b) {
 		cout << "!" << endl;
 
@@ -307,20 +303,14 @@ void Skeleton::handleEdgeEvent(Event& e) {
 			auto b = e.a;
 			auto c = data.next(e.b);
 
-			cout << *b << " velocity: " << b->velocity << " -> "; fflush(stdout);
-
-			cout << "(" << *a << ", " << *b << ", " << *c << ") -> ";
+			cout << "(" << *a << ", " << *c << ") -> ";
 			a->moveToTime(e.time);
-			b->moveToTime(e.time);
 			c->moveToTime(e.time);
-			cout << "(" << *a << ", " << *b << ", " << *c << ")" << endl;
-			cout << *a << " velocity: " << a->velocity << endl;
-			cout << *b << " velocity: " << b->velocity << endl;
-			cout << *c << " velocity: " << c->velocity << endl;
+			cout << "(" << *a << ", " << *c << ")" << endl;
 
 			/* only a triangle left in this polygon (does not have to be the last) */
 			if(a == c || a == b || b == c) {
-				cout << "a == c -> vanishing event" << endl;
+				cout << "vanishing event" << endl;
 				a->disable();
 				b->disable();
 				c->disable();
@@ -330,16 +320,25 @@ void Skeleton::handleEdgeEvent(Event& e) {
 				return;
 			}
 
+			WavefrontPoint node(e);
+			node.start = e;
+			node.time = node.startTime = e.time;
+
+			b = data.wavefront.insert(c, node);
+
+			node.velocity = computeVelocity(*a,*b,*c);
+
+			e.a->disable();
 			e.b->disable();
+			data.wavefront.erase(e.a);
 			data.wavefront.erase(e.b);
 
-			b->startTime = e.time;
-			b->time = e.time;
+			cout << "LIST: " << *a << " -- " << *b << " -- " << *c << endl;
+			cout << "LIST: " << *a << " -- " << *(data.next(a)) << " -- " << *(data.next(data.next(a))) << endl;
 
-			b->velocity = computeVelocity(*a,*b,*c);
 
-			auto e_a = computeEdgeEvent(a,b);
-			auto e_b = computeEdgeEvent(b,c);
+			auto e_a = computeEdgeEvent(a,data.next(a));
+			auto e_b = computeEdgeEvent(b,data.next(b));
 
 			if(e_a.type == EventType::EDGE) {
 				cout << e_a.time << " ";
@@ -371,21 +370,3 @@ void Skeleton::handleDivideEvent(Event& e) {
 void Skeleton::handleCreateEvent(Event& e) {
 	cout << "Create Event" << endl;
 }
-
-//#ifdef CGAL_LCC_USE_VIEWER
-//void Skeleton::drawEvent(Event& e) {
-//	if(data.config.gui) {
-//		switch(e.type) {
-//		case EventType::EDGE:
-//			gui.addSegment(e,*e.a);
-//			gui.addSegment(e,*e.b);
-//			break;
-//		case EventType::SPLIT:  cout << "TODO" << endl; break;
-//		case EventType::DIVIDE: cout << "TODO" << endl; break;
-//		case EventType::CREATE: cout << "TODO" << endl; break;
-//
-//		default: break;
-//		}
-//	}
-//}
-//#endif

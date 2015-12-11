@@ -127,12 +127,20 @@ protected :
 
 private:
 	void addSS(const SsPtr& ss);
-	LCC_3 lcc;
+	void drawEvent(Event& e);
+	void drawWavefrontPolygon(K::FT time);
+
 	Skeleton *skeleton;
+	Data     *data;
+
+	LCC_3 	  lcc;
+	SsPtr     iss;
+
 	bool wireframe;
 	bool flatShading;
 	bool edges;
 	bool vertices;
+
 	Geom_utils<LCC_3> geomutils;
 };
 

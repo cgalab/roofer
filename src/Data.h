@@ -82,6 +82,10 @@ struct WavefrontPoint : public Point {
 		time  = newTime;
 		*this = WavefrontPoint(*this, start + (velocity * (time - startTime)));
 	}
+
+	inline Point getPointAtTime(K::FT newTime) {
+		return start + (velocity * (newTime - startTime));
+	}
 };
 
 using WavefrontIterator = CGAL::Polygon_2<K,vector<WavefrontPoint,allocator<WavefrontPoint>>>::Vertex_const_iterator;
@@ -112,7 +116,6 @@ using Wavefront  = CGAL::Polygon_2<K,vector<WavefrontPoint> >;
 
 class Data {
 public:
-//	SsPtr      iss;
 	Polygon    polygon;
 	Config     config;
 

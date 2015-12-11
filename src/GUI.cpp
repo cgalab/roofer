@@ -12,6 +12,7 @@ GUI::GUI(Skeleton *s) : QGLViewer(),
 wireframe(true), flatShading(false),
 edges(true), vertices(true) {
 	skeleton = s;
+	data     = &s->data;
 
 	setWindowTitle("Min/Max Bisector Graph");
 
@@ -21,6 +22,8 @@ edges(true), vertices(true) {
 
 	resize(800, 600);
 	updateGL();
+
+	make_facet(data->polygon);
 
 	this->show();
 }
@@ -114,19 +117,17 @@ void GUI::keyPressEvent(QKeyEvent *e) {
 	}
 	else if ((e->key()==Qt::Key_Plus) && (modifiers==Qt::NoButton))
 	{
-		std::cout << "plus key pressed" << std::endl;
-		//			while(!data.eventQueue.empty()) {
-			//					auto e = data.eventQueue.top();
-		//					data.eventQueue.pop();
-		//					cout << data.eventQueue.size() << endl;
-		//					switch(e.type) {
-		//					case EventType::EDGE:   handleEdgeEvent(e);   break;
-		//					case EventType::SPLIT:  handleSplitEvent(e);  break;
-		//					case EventType::DIVIDE: handleDivideEvent(e); break;
-		//					case EventType::CREATE: handleCreateEvent(e); break;
-		//
-		//					default: cout << "Unknown Event appeared!" << endl;
-		//					}updateGL();
+		if(!data->eventQueue.empty()) {
+			auto e = data->eventQueue.top();
+			data->eventQueue.pop();
+			cout << data->eventQueue.size() << endl;
+
+			drawEvent(e);
+
+			skeleton->handleNextEvent(e);
+			drawWavefrontPolygon(e.time);
+		}
+		updateGL();
 	}
 
 
@@ -238,6 +239,30 @@ void GUI::draw() {
 	}
 
 	lcc.free_mark(facettreated);
+}
+void GUI::drawEvent(Event& e) {
+	switch(e.type) {
+	case EventType::EDGE:
+		addSegment(e,e.a->start);
+		addSegment(e,e.b->start);
+		break;
+	case EventType::SPLIT:  cout << "TODO" << endl; break;
+	case EventType::DIVIDE: cout << "TODO" << endl; break;
+	case EventType::CREATE: cout << "TODO" << endl; break;
+
+	default: break;
+	}
+}
+
+void GUI::drawWavefrontPolygon(K::FT time) {
+	for(auto v = data->wavefront.vertices_begin(); v != data->wavefront.vertices_end(); ++v) {
+		auto vn = data->next(v);
+
+		auto a = v->getPointAtTime(time);
+		auto b = vn->getPointAtTime(time);
+
+		addSegment(a,b);
+	}
 }
 
 void GUI::init() {
