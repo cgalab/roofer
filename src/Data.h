@@ -26,6 +26,8 @@
 
 #include <sys/stat.h>
 
+#include "LinkedList.h"
+
 using namespace std;
 
 using K 		  = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
@@ -52,7 +54,7 @@ struct Config {
 	string 		printOptions;
 };
 
-struct WavefrontPoint : public Point {
+struct WavefrontPoint : public Point, ListItem<WavefrontPoint> {
 	WavefrontPoint(K::FT x, K::FT y)
 	: Point(x,y),start(x,y),time(0),startTime(0),reflex(false),inWavefront(true)	{}
 	WavefrontPoint(Point v)
@@ -88,16 +90,17 @@ struct WavefrontPoint : public Point {
 	}
 };
 
-using WavefrontIterator = CGAL::Polygon_2<K,vector<WavefrontPoint,allocator<WavefrontPoint>>>::Vertex_const_iterator;
+//using WavefrontIterator = CGAL::Polygon_2<K,vector<WavefrontPoint,allocator<WavefrontPoint>>>::Vertex_const_iterator;
 
 /* event location is the point itself.  */
 struct Event : public Point {
 	EventType 	   type;
 	K::FT 		   time;
 
-	WavefrontIterator a, b, c;
+	//	WavefrontIterator a, b, c;
+	WavefrontPoint *a, *b, *c;
 
-	Event(Point v, EventType t, K::FT _time, WavefrontIterator _a, WavefrontIterator _b, WavefrontIterator _c)
+	Event(Point v, EventType t, K::FT _time, WavefrontPoint _a, WavefrontPoint _b, WavefrontPoint _c)
 	: Point(v),type(t),time(_time),a(_a),b(_b),c(_c) {}
 	Event(Point v, EventType t)
 	: Point(v),type(t),time(0),a(NULL),b(NULL),c(NULL) {}
