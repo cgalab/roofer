@@ -24,7 +24,8 @@ include(CheckCXXCompilerFlag)
 # compiler warnings 
 add_definitions ("-Wall")
 
-find_package(CGAL COMPONENTS Qt4 Core REQUIRED)
+#find_package(CGAL COMPONENTS Qt4 Core REQUIRED)
+find_package(CGAL COMPONENTS Qt5 Core REQUIRED)
 include(${CGAL_USE_FILE})
 include(${QT_USE_FILE})
 

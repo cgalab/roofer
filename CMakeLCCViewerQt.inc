@@ -2,10 +2,10 @@
 # You need to link the libraries in your executable by using 
 # TARGET_LINK_LIBRARIES( myexec ${MAP_VIEWER_LIBRARIES})
 
-if ( NOT CGAL_FOUND OR NOT CGAL_Qt4_FOUND)
+if ( NOT CGAL_FOUND ) # OR NOT CGAL_Qt4_FOUND)
   message(STATUS "NOTICE: Libraries for lcc_viewer not found "
                  "(CGAL, Qt4, QGLViewer).")
-endif( NOT CGAL_FOUND OR NOT CGAL_Qt4_FOUND)
+endif( NOT CGAL_FOUND ) # OR NOT CGAL_Qt4_FOUND)
 
 include( ${CGAL_USE_FILE} )
 

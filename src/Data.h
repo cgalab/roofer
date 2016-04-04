@@ -47,9 +47,9 @@ struct Config {
 		printOptions = "[-min|-max] [-gui] <filename>";
 	}
 
-	bool 		gui;
-	bool 		maximize;
-	string 		fileName;
+	bool 		   gui;
+	bool 		   maximize;
+	string      fileName;
 
 	string 		printOptions;
 };
@@ -63,14 +63,14 @@ struct WavefrontPoint : public Point, ListItem<WavefrontPoint> {
 	: Point(v),start(w.start),time(w.time),startTime(w.startTime),
 	  velocity(w.velocity),reflex(w.reflex),inWavefront(w.inWavefront)	{}
 
-	Point   start;
-	K::FT 	time;
-	K::FT   startTime;
+	Point    start;
+	K::FT    time;
+	K::FT    startTime;
 
-	Vertex  velocity;
+	Vertex   velocity;
 
-	bool 	reflex;
-	bool	inWavefront;
+	bool 	   reflex;
+	bool	   inWavefront;
 
 	inline void enable()  {inWavefront = true; }
 	inline void disable() {inWavefront = false;}
