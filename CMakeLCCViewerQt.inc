@@ -2,10 +2,10 @@
 # You need to link the libraries in your executable by using 
 # TARGET_LINK_LIBRARIES( myexec ${MAP_VIEWER_LIBRARIES})
 
-if ( NOT CGAL_FOUND ) # OR NOT CGAL_Qt4_FOUND)
+if ( NOT CGAL_FOUND OR NOT CGAL_Qt5_FOUND)
   message(STATUS "NOTICE: Libraries for lcc_viewer not found "
-                 "(CGAL, Qt4, QGLViewer).")
-endif( NOT CGAL_FOUND ) # OR NOT CGAL_Qt4_FOUND)
+                 "(CGAL, Qt5, QGLViewer).")
+endif( NOT CGAL_FOUND OR NOT CGAL_Qt5_FOUND)
 
 include( ${CGAL_USE_FILE} )
 
@@ -13,7 +13,7 @@ SET(QT_USE_QTMAIN   TRUE )
 SET(QT_USE_QTOPENGL TRUE) 
 SET(QT_USE_QTXML    TRUE) 
 
-FIND_PACKAGE(Qt4        REQUIRED)
+FIND_PACKAGE(Qt5        REQUIRED)
 find_package(QGLViewer  REQUIRED)
 find_package(OpenGL     REQUIRED)
 
