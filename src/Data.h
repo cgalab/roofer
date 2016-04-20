@@ -11,7 +11,7 @@
 #include <vector>
 #include <memory>
 
-#include <CGAL/Exact_predicates_exact_constructions_kernel_with_sqrt.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/create_straight_skeleton_2.h>
 #include <CGAL/Combinatorial_map_constructors.h>
@@ -30,14 +30,15 @@
 
 using namespace std;
 
-using K 		  = CGAL::Exact_predicates_exact_constructions_kernel;
-using Vector      = K::Vector_3;
-using Point       = K::Point_3;
-using Line        = K::Line_3;
-using Ray         = K::Ray_3;
-using Direction   = K::Direction_3;
-using Polygon     = CGAL::Polygon_2<K>;
-using Plane       = K::Plane_3;
+using K 		   = CGAL::Exact_predicates_exact_constructions_kernel;
+using Vector       = K::Vector_3;
+using Point        = K::Point_3;
+using Line         = K::Line_3;
+using Ray          = K::Ray_3;
+using Direction    = K::Direction_3;
+using Polygon      = CGAL::Polygon_2<K>;
+using Plane        = K::Plane_3;
+using PlanePolygon = vector<Plane>;
 
 using Transformation = CGAL::Aff_transformationC2<K>;
 
@@ -91,15 +92,14 @@ struct Compare {
 using EventQueue = priority_queue<Event,vector<Event>, Compare >;
 using Cell       = vector<Point>;
 using Facet      = vector<Cell>;
-using Planes     = vector<CGAL::<K,vector<WavefrontPoint> >;
 
 class Data {
 public:
-	Polygon    polygon;
-	Config     config;
+	Polygon    	  polygon;
+	PlanePolygon  planes;
+	Config        config;
 
-	Wavefront  wavefront;
-	EventQueue eventQueue;
+	EventQueue    eventQueue;
 
 	Transformation rotateNintyLeft;
 

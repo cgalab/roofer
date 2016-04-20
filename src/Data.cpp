@@ -55,6 +55,12 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		polygon.push_back( Point(0,9) ) ;
 
 
+		for(auto v_i = polygon.vertices_begin(); v_i != polygon.vertices_end(); ++v_i) {
+			auto v_j = v_i->next();
+
+			planes.push_back( Plane(*v_i,*v_j,aösdlfkjasöldfjk 45° ));
+		}
+
 		return true;
 		/************************************/
 
