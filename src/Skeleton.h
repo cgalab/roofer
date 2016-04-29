@@ -41,5 +41,5 @@ private:
 	void handleDivideEvent(Event& e);
 	void handleCreateEvent(Event& e);
 };
-
+// https://www.ics.uci.edu/~dock/manuals/cgal_manual/Sweep_line_2/Chapter_main.html
 #endif /* SKELETON_H_ */
