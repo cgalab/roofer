@@ -32,19 +32,18 @@
 using namespace std;
 
 using K 		    = CGAL::Exact_predicates_exact_constructions_kernel;
-using Vector        = K::Vector_3;
-using Point         = K::Point_3;
-using Line          = K::Line_3;
-using Ray           = K::Ray_3;
-using Direction     = K::Direction_3;
+using Vector        = K::Vector_2;
+using Point         = K::Point_2;
+using Line          = K::Line_2;
+using Ray           = K::Ray_2;
+using Direction     = K::Direction_2;
 using Polygon       = CGAL::Polygon_2<K>;
-using Plane         = K::Plane_3;
-using PolygonPlanes = vector<Plane>;
-using Edge          = K::Segment_3;
+//using PolygonPlanes = vector<Plane>;
+using Edge          = K::Segment_2;
 
 using VertexIterator = Polygon::Vertex_iterator;
 
-using Transformation = CGAL::Aff_transformationC2<K>;
+using Transformation = CGAL::Aff_transformation_2<K>;
 
 enum class EventType {EDGE,SPLIT,CREATE,MERGE,EMPTY};
 
@@ -62,7 +61,7 @@ struct Config {
 
 // TODO: use arrangement class for this!
 struct LineArrangement {
-    LineArrangement(Edge e, PolygonPlanes p)
+    LineArrangement(Edge e, p)
     {}
     
     vector<Line> lines;
@@ -102,13 +101,13 @@ using Facet      = vector<Cell>;
 class Data {
 public:
 	Polygon    	  polygon;
-	PolygonPlanes planes;
+//	PolygonPlanes planes;
     
 	Config        config;
 
 	EventQueue    eventQueue;
 
-    //	Transformation rotateNintyLeft;
+    Transformation rotateNintyLeft;
 
 	Data();
 	virtual ~Data();

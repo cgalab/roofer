@@ -78,6 +78,12 @@ void Skeleton::createInitialWavefront() {
 	}
 }
 
+void Skeleton::createLineArrangments() {
+	for(auto it=data.polygon.vertices_begin(); it != data.polygon.vertices_end(); ++it) {
+		data.wavefront.push_back(WavefrontPoint(*it));
+	}
+}
+
 void Skeleton::createBisectorRays() {
 	for(auto v_j = data.wavefront.vertices_begin(); v_j != data.wavefront.vertices_end(); ++v_j) {
 		auto v_i = data.prev(v_j);

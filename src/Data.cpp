@@ -18,7 +18,7 @@
 
 Data::Data() {}
 
-//Data::Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
+Data::Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
 
 Data::~Data() {}
 
@@ -48,31 +48,31 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		std::cout << "Using default test polygon." << std::endl;
 		config.gui = true;
 
-        polygon.push_back( K::Point_2(0,0)  );
-		polygon.push_back( K::Point_2(10,0) );
-		polygon.push_back( K::Point_2(12,10));
-		polygon.push_back( K::Point_2(9,9)  );
-		polygon.push_back( K::Point_2(8,12) );
-		polygon.push_back( K::Point_2(7,8)  );
-		polygon.push_back( K::Point_2(5,11) );
-		polygon.push_back( K::Point_2(0,9)  );
+        polygon.push_back( Point(0,0)  );
+		polygon.push_back( Point(10,0) );
+		polygon.push_back( Point(12,10));
+		polygon.push_back( Point(9,9)  );
+		polygon.push_back( Point(8,12) );
+		polygon.push_back( Point(7,8)  );
+		polygon.push_back( Point(5,11) );
+		polygon.push_back( Point(0,9)  );
 
 
-		for(auto v_i = polygon.vertices_begin(); v_i != polygon.vertices_end(); ++v_i) {
-            auto v_j = next(v_i);
-
-            Point a(v_i->x(),v_i->y(),0);
-            Point b(v_j->x(),v_j->y(),0);
-            
-            auto dir(*v_j - *v_i);
-            K::Vector_2 dirRot(-dir.y(),dir.x());
-            
-            
-            K::Point_2 aTrans(*v_i + dirRot);
-            Point c(aTrans.x(),aTrans.y(),dirRot.squared_length());
-            
-			planes.push_back( Plane( Point(*v_i->x(),*v_,*v_j, *v_i + *v_j /* get 45° */));
-		}
+//		for(auto v_i = polygon.vertices_begin(); v_i != polygon.vertices_end(); ++v_i) {
+//            auto v_j = next(v_i);
+//
+//            Point a(v_i->x(),v_i->y(),0);
+//            Point b(v_j->x(),v_j->y(),0);
+//
+//            auto dir(*v_j - *v_i);
+//            K::Vector_2 dirRot(-dir.y(),dir.x());
+//
+//
+//            K::Point_2 aTrans(*v_i + dirRot);
+//            Point c(aTrans.x(),aTrans.y(),dirRot.squared_length());
+//
+//			planes.push_back( Plane( Point(*v_i->x(),*v_,*v_j, *v_i + *v_j /* get 45° */));
+//		}
 
 		return true;
 		/************************************/

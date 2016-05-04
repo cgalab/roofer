@@ -24,6 +24,8 @@ public:
 private:
 	void createSkeleton();
 
+	void createLineArrangements();
+
 	void createInitialWavefront();
 	void createBisectorRays();
 
@@ -43,7 +45,7 @@ private:
 };
 // https://www.ics.uci.edu/~dock/manuals/cgal_manual/Sweep_line_2/Chapter_main.html
 /*
- *** SWEPP LINE
+ *** SWEEP LINE
 #include <CGAL/Cartesian.h>
 #include <CGAL/MP_Float.h>
 #include <CGAL/Quotient.h>
