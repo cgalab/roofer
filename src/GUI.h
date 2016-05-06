@@ -8,6 +8,8 @@
 #ifndef GUI_H_
 #define GUI_H_
 
+#ifdef QTGUI
+
 #include <QApplication>
 #include <QKeyEvent>
 
@@ -158,5 +160,7 @@ private:
 //
 //	app.exec();
 //};
+
+#endif /* QTGUI */
 
 #endif /* GUI_H_ */

@@ -58,23 +58,9 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		polygon.push_back( Point(0,9)  );
 
 
-//		for(auto v_i = polygon.vertices_begin(); v_i != polygon.vertices_end(); ++v_i) {
-//            auto v_j = next(v_i);
-//
-//            Point a(v_i->x(),v_i->y(),0);
-//            Point b(v_j->x(),v_j->y(),0);
-//
-//            auto dir(*v_j - *v_i);
-//            K::Vector_2 dirRot(-dir.y(),dir.x());
-//
-//
-//            K::Point_2 aTrans(*v_i + dirRot);
-//            Point c(aTrans.x(),aTrans.y(),dirRot.squared_length());
-//
-//			planes.push_back( Plane( Point(*v_i->x(),*v_,*v_j, *v_i + *v_j /* get 45° */));
-//		}
+		bbox = BBox(polygon.vertices_begin(),polygon.vertices_end());
 
-		return true;
+	    return true;
 		/************************************/
 
 		return false;

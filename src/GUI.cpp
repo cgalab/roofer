@@ -7,6 +7,7 @@
 
 #include "GUI.h"
 
+#ifdef QTGUI
 
 GUI::GUI(Skeleton *s) : QGLViewer(),
 wireframe(true), flatShading(false),
@@ -351,3 +352,5 @@ QString GUI::helpString() const	{
 	text += "Press <b>Escape</b> to exit the viewer.";
 	return text;
 }
+
+#endif /* QTGUI */
