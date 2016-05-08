@@ -39,7 +39,7 @@ using K 		     = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
 using Trait          = CGAL::Arr_segment_traits_2<K>;
 
 using BBox			 = CGAL::Bbox_2;
-using Polygon        = CGAL::Polygon_2<K>;
+using Polygon        = CGAL::Polygon_2<Trait>;
 
 using Vector         = Trait::Vector_2;
 using Point          = Trait::Point_2;
@@ -50,11 +50,13 @@ using Direction      = Trait::Direction_2;
 using Edge           = Trait::X_monotone_curve_2;
 
 using VertexIterator = Polygon::Vertex_iterator;
+using EdgeIterator   = Polygon::Edge_const_iterator;
 
 using Transformation = CGAL::Aff_transformation_2<K>;
 
 using Arrangement    = CGAL::Arrangement_2<Trait>;
 
+using Exact          = K::FT;
 
 enum class EventType {EDGE,SPLIT,CREATE,MERGE,EMPTY};
 
@@ -81,11 +83,22 @@ struct Config {
 //
 //};
 
+
+/* Intersection of lines in a line arrangemnt */
+struct EventPoint {
+    /* e ... edge of current line arrangement,
+       e_i, e_j ... bisectors that intersect e | e_i and e | e_j */
+    EdgeIterator e, e_i, e_j;
+    
+	EventPoint(EdgeIterator pe, EdgeIterator pe_i, EdgeIterator pe_j)
+	: e(pe),e_i(pe_i),e_j(pe_j) {}
+};
+
 /* event location is the point itself.  */
 struct Event {
 	EventType 	   type;
     Point          point;
-	K::FT 		   height;
+	Exact 		   height;
 
     int edgeIndex;
     int edgeIndexA;
@@ -101,6 +114,8 @@ struct Compare {
     }
 };
 
+using Input               = vector<Point>;
+
 using EventQueue 		  = priority_queue<Event,vector<Event>, Compare >;
 using AllLineArrangements = vector<Arrangement>;
 using Cell       		  = vector<Point>;
@@ -108,6 +123,8 @@ using Facet      		  = vector<Cell>;
 
 class Data {
 public:
+    Input                input;
+    
 	Polygon    	  		 polygon;
 	BBox 				 bbox;
 
@@ -116,7 +133,7 @@ public:
     
 	Config        		 config;
 
-    Transformation 		 rotateNintyLeft;
+    //Transformation 		 rotateNintyLeft;
 
 	Data();
 	virtual ~Data();

@@ -9,3 +9,4 @@ build/*
 .viewer_qt.h.swp
 weasel/
 *.swp
+buildgcc

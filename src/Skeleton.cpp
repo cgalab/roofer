@@ -41,26 +41,6 @@ void Skeleton::createSkeleton() {
 	createLineArrangements();
 	cout << "done" << endl;
 
-//	/* compute initial bisector rays */
-//	cout << "generate bisector-rays...";
-//	createBisectorRays();
-//	cout << "done" << endl;
-//
-//	/* compute initial edge-events */
-//	cout << "compute edge-events...";
-//	computeEdgeEvents();
-//	cout << "done" << endl;
-//
-//	/* compute initial split-events */
-//	cout << "compute split-events...";
-//	computeSplitEvents();
-//	cout << "done" << endl;
-//
-//	/* compute initial create-events */
-//	cout << "compute create-events...";
-//	computeCreateEvents();
-//	cout << "done" << endl;
-
 	/* start wavefront propagation */
 #ifdef QTGUI
 	if(!data.config.gui) {
@@ -86,7 +66,7 @@ void Skeleton::createLineArrangements() {
 
 			auto intersection = CGAL::intersection(baseLine,iteratorLine);
 
-			if(!intersection.empty()) {
+			if(!intersection->empty()) {
 				if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
 
 					bisectors->push_back(Ray(*ipoint,bisector));

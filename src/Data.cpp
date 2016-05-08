@@ -16,9 +16,12 @@
 #include <CGAL/HalfedgeDS_list.h>
 #include <CGAL/Polyhedron_3.h>
 
+#include <CGAL/bounding_box.h>
+
+
 Data::Data() {}
 
-Data::Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
+//Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
 
 Data::~Data() {}
 
@@ -48,20 +51,22 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		std::cout << "Using default test polygon." << std::endl;
 		config.gui = true;
 
-        polygon.push_back( Point(0,0)  );
-		polygon.push_back( Point(10,0) );
-		polygon.push_back( Point(12,10));
-		polygon.push_back( Point(9,9)  );
-		polygon.push_back( Point(8,12) );
-		polygon.push_back( Point(7,8)  );
-		polygon.push_back( Point(5,11) );
-		polygon.push_back( Point(0,9)  );
+        input.push_back(Point(0,0));
+		input.push_back( Point(10,0) );
+		input.push_back( Point(12,10));
+		input.push_back( Point(9,9)  );
+		input.push_back( Point(8,12) );
+		input.push_back( Point(7,8)  );
+		input.push_back( Point(5,11) );
+		input.push_back( Point(0,9)  );
+        
+        for(auto i : input) polygon.push_back(i);
 
-
-		bbox = BBox(polygon.vertices_begin(),polygon.vertices_end());
-
+        Trait::Iso_rectangle_2 r2 = CGAL::bounding_box(input.begin(),input.end());
+        bbox = r2.bbox();
+        
 	    return true;
-		/************************************/
+        /************************************/
 
 		return false;
 	} else {
