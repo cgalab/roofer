@@ -15,8 +15,8 @@ struct ArrangementLine {
 	EdgeIterator base, e;
 	Point start;
 
-	ArrangementLine(EdgeIterator pbase, EdgeIterator pe):base(pbase),e(pe) {
-		auto intersection = CGAL::intersection(*base,*e);
+	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe):base(pbase),e(pe) {
+		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
 
 		if(!intersection.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
@@ -45,14 +45,13 @@ struct ArrangementLine {
 
 struct SweepItem {
 	SweepItem(ArrangementLine pa, ArrangementLine pb):a(pa),b(pb) {
-		if(a.base != b.base) {
-			cout << "ERROR: Base Line not equal!" << endl;
-			if(CGAL::do_intersect(a.bisector(),b.bisector())) {
-				raysIntersect = true;
-				normalDistance = dist();
-			} else {
-				raysIntersect = false;
-			}
+		if(a.base != b.base) {cout << "ERROR: Base Line not equal!" << endl;}
+
+		if(CGAL::do_intersect(a.bisector(),b.bisector())) {
+			raysIntersect = true;
+			normalDistance = dist();
+		} else {
+			raysIntersect = false;
 		}
 	}
 
@@ -69,10 +68,10 @@ struct SweepItem {
 				return CGAL::squared_distance(a.base->supporting_line(),*ipoint);
 
 			} else {
-				cout << "SweepItem: No Intersection (Point)?" << endl;
+//				cout << "SweepItem: No Intersection (Point)?" << endl;
 			}
 		} else {
-			cout << "SweepItem: No Intersection (Object empty)?" << endl;
+//			cout << "SweepItem: No Intersection (Object empty)?" << endl;
 		}
 		// TODO: exception handling!
 		return -1;
@@ -106,14 +105,11 @@ struct SweepLine {
 	EventQueue eventQueue;
 	SweepLineStatus status;
 
-	inline void addItem(SweepItem i) {eventQueue.push(i);}
-
-	inline void addLine(ArrangementLine a) {arrangementStart[a.base].push(a);}
+	inline void addLine(ArrangementLine &a) {arrangementStart[a.base].push(a);}
 
 	void initiateEventQueue();
 
 	SweepLine() {}
-
 };
 
 #endif /* SWEEPLINE_H_*/

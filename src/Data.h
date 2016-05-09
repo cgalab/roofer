@@ -34,55 +34,9 @@ struct Config {
 	string 		printOptions;
 };
 
-// TODO: use arrangement class for this!
-//struct LineArrangement {
-//    LineArrangement(Edge e, p)
-//    {}
-//
-//    vector<Ray>  lines;
-//    vector<int>  sweepLineStatus;
-//
-//
-//};
-
-
-/* Intersection of lines in a line arrangemnt */
-//struct EventPoint {
-//    /* e ... edge of current line arrangement,
-//       e_i, e_j ... bisectors that intersect e | e_i and e | e_j */
-//    Exact squaredHeight;
-//    EdgeIterator e, e_i, e_j;
-//
-//	EventPoint(Exact psquaredHeight, EdgeIterator pe, EdgeIterator pe_i, EdgeIterator pe_j)
-//	: squaredHeight(psquaredHeight),e(pe),e_i(pe_i),e_j(pe_j) {}
-//};
-
-///* event location is the point itself.  */
-//struct Event {
-//	EventType 	   type;
-//    Point          point;
-//	Exact 		   height;
-//
-//    int edgeIndex;
-//    int edgeIndexA;
-//    int edgeIndexB;
-//
-//	Event(Point v, EventType t, K::FT _height, int _self, int _a, int _b)
-//	: type(t),point(v),height(_height),edgeIndex(_self),edgeIndexA(_a),edgeIndexB(_b) {}
-//};
-
-//struct Compare {
-//    bool operator() (Event &a, Event &b) {
-//    	return a.height > b.height;
-//    }
-//};
 
 using Input               = vector<Point>;
 
-//using EventPoints 		  = vector<vector<Point> >;
-
-//using EventQueue 		  = priority_queue<Event,vector<Event>, Compare >;
-//using AllLineArrangements = vector<Arrangement>;
 //using Cell       		  = vector<Point>;
 //using Facet      		  = vector<Cell>;
 
@@ -91,16 +45,21 @@ public:
     Input                input;
 	Polygon    	  		 polygon;
 
-//	BBox 				 bbox;
-//	Exact				 bboxDiagonal;
-//
-//	EventPoints			 allEventPoints;
-
 	SweepLine			 sweepLine;
 
 	Config        		 config;
 
     //Transformation 		 rotateNintyLeft;
+
+	inline bool isEmptyEventQueue() {
+		return sweepLine.eventQueue.empty();
+	}
+
+	inline SweepItem& popEvent() {
+		auto ret = sweepLine.eventQueue.top();
+		sweepLine.eventQueue.pop();
+		return ret;
+	}
 
 	Data();
 	virtual ~Data();

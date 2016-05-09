@@ -49,7 +49,7 @@ void Skeleton::createSkeleton() {
 #ifdef QTGUI
 	if(!data.config.gui) {
 #endif
-		cout << "start wavefront propagation...";
+		cout << "start plane sweep...";
 		startPlaneSweep();
 		cout << "done" << endl;
 #ifdef QTGUI
@@ -60,7 +60,7 @@ void Skeleton::createSkeleton() {
 void Skeleton::createLineArrangements() {
 	for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
 		for(auto it=data.polygon.edges_begin(); it != data.polygon.edges_end(); ++it) {
-			if( edgeIt == it ) continue;
+			if( edgeIt->supporting_line() == it->supporting_line() ) {continue;}
 
 			ArrangementLine al(edgeIt,it);
 			data.sweepLine.addLine(al);
@@ -253,15 +253,12 @@ void Skeleton::createLineArrangements() {
 //
 void Skeleton::startPlaneSweep() {
 
-	cout << "Start Plane Sweep!" << endl; fflush(stdout);
-//	while(!data.eventQueue.empty()) {
-//		auto e = data.eventQueue.top();
-//		data.eventQueue.pop();
-//		cout << data.eventQueue.size() << endl;
-//
-//		//handleNextEvent(e);
-//
-//	}
+	cout << "EventQueue size: " << data.sweepLine.eventQueue.size() << endl; fflush(stdout);
+	while(!data.isEmptyEventQueue()) {
+		auto i = data.popEvent();
+
+
+	}
 }
 
 //

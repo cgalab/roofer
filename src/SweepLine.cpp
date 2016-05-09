@@ -5,8 +5,10 @@
 using namespace std;
 
 void SweepLine::initiateEventQueue() {
+	assert(arrangementStart.empty());
 
 	for(auto le : arrangementStart) {
+		assert(le.second.empty() && le.second.size >= 2);
 
 		do {
 			ArrangementLine a = le.second.top();
@@ -23,6 +25,7 @@ void SweepLine::initiateEventQueue() {
 
 			status[le.first].push_back(a);
 
-		} while(!status.empty());
+		} while(!le.second.empty());
 	}
+	cout << "done" << endl;
 }
