@@ -1,4 +1,4 @@
-set(SRC_LIST  main.cpp Skeleton.cpp Data.cpp)
+set(SRC_LIST  main.cpp Skeleton.cpp Data.cpp SweepLine.cpp)
 
 if( WITH_GUI )
    list(APPEND SRC_LIST GUI.cpp)
@@ -6,7 +6,7 @@ endif( WITH_GUI )
 
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-
+ 
 if(COMPILER_SUPPORTS_CXX11)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -std=c++11 -stdlib=libc++")

@@ -17,7 +17,7 @@ public:
 
 	bool guiEnabled() {return data.config.gui;}
 
-	void handleNextEvent(Event& e);
+//	void handleNextEvent(Event& e);
 
 	Data data;
 
@@ -39,9 +39,9 @@ private:
 //	Event  computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
 //	Vertex computeVelocity(Point& v_a, Point& v_b, Point& v_c);
 
-	void handleEdgeEvent(Event& e);
-	void handleSplitEvent(Event& e);
-	void handleCreateEvent(Event& e);
+//	void handleEdgeEvent(Event& e);
+//	void handleSplitEvent(Event& e);
+//	void handleCreateEvent(Event& e);
 };
 
 #endif /* SKELETON_H_ */

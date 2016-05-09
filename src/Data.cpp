@@ -62,9 +62,6 @@ bool Data::evaluateArguments(std::list<std::string> args) {
         
         for(auto i : input) polygon.push_back(i);
 
-        Trait::Iso_rectangle_2 r2 = CGAL::bounding_box(input.begin(),input.end());
-        bbox = r2.bbox();
-        
 	    return true;
         /************************************/
 

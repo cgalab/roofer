@@ -37,8 +37,12 @@ void Skeleton::createSkeleton() {
 	/***
 	 * create initial wavefront
 	 ***/
-	cout << "generate wavefront...";
+	cout << endl << "generating line arrangements and event queue...";
 	createLineArrangements();
+	cout << "done" << endl;
+
+	cout << endl << "initiate event queue...";
+	data.sweepLine.initiateEventQueue();
 	cout << "done" << endl;
 
 	/* start wavefront propagation */
@@ -55,36 +59,12 @@ void Skeleton::createSkeleton() {
 
 void Skeleton::createLineArrangements() {
 	for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
-		Line baseLine(edgeIt->vertex(0),edgeIt->vertex(1));
-		auto bisectors = new list<Ray>();
-
 		for(auto it=data.polygon.edges_begin(); it != data.polygon.edges_end(); ++it) {
+			if( edgeIt == it ) continue;
 
-			// Change direction of linedirection in order to become the correct bisector
-			Line iteratorLine(it->vertex(1), it->vertex(0));
-			Line bisector(CGAL::bisector(baseLine,iteratorLine));
-
-			auto intersection = CGAL::intersection(baseLine,iteratorLine);
-
-			if(!intersection->empty()) {
-				if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
-
-					bisectors->push_back(Ray(*ipoint,bisector));
-
-				} else {
-					cout << "No Intersection? - Parallel Input Lines (not yet supported)" << endl;
-					assert(false);
-				}
-			} else {
-				cout << "Object empty?" << endl;
-				assert(false);
-			}
-
+			ArrangementLine al(edgeIt,it);
+			data.sweepLine.addLine(al);
 		}
-
-		Arrangement arr;
-		CGAL::insert(arr, bisectors->begin(), bisectors->end());
-		data.lineArrangements.push_back(arr);
 	}
 }
 
@@ -274,14 +254,14 @@ void Skeleton::createLineArrangements() {
 void Skeleton::startPlaneSweep() {
 
 	cout << "Start Plane Sweep!" << endl; fflush(stdout);
-	while(!data.eventQueue.empty()) {
-		auto e = data.eventQueue.top();
-		data.eventQueue.pop();
-		cout << data.eventQueue.size() << endl;
-
-		handleNextEvent(e);
-
-	}
+//	while(!data.eventQueue.empty()) {
+//		auto e = data.eventQueue.top();
+//		data.eventQueue.pop();
+//		cout << data.eventQueue.size() << endl;
+//
+//		//handleNextEvent(e);
+//
+//	}
 }
 
 //
@@ -366,14 +346,14 @@ void Skeleton::startPlaneSweep() {
 //	}
 //}
 
-void Skeleton::handleSplitEvent(Event& e) {
-	cout << "Split Event" << endl;
-}
-
-void Skeleton::handleEdgeEvent(Event& e) {
-	cout << "Divide Event" << endl;
-}
-
-void Skeleton::handleCreateEvent(Event& e) {
-	cout << "Create Event" << endl;
-}
+//void Skeleton::handleSplitEvent(Event& e) {
+//	cout << "Split Event" << endl;
+//}
+//
+//void Skeleton::handleEdgeEvent(Event& e) {
+//	cout << "Divide Event" << endl;
+//}
+//
+//void Skeleton::handleCreateEvent(Event& e) {
+//	cout << "Create Event" << endl;
+//}
