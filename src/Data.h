@@ -22,6 +22,7 @@ using namespace std;
 
 enum class EventType {EDGE,SPLIT,CREATE,MERGE,EMPTY};
 
+
 struct Config {
 	Config():gui(false),maximize(true),fileName("") {
 		printOptions = "[-min|-max] [-gui] <filename>";
@@ -50,16 +51,6 @@ public:
 	Config        		 config;
 
     //Transformation 		 rotateNintyLeft;
-
-	inline bool isEmptyEventQueue() {
-		return sweepLine.eventQueue.empty();
-	}
-
-	inline SweepItem& popEvent() {
-		auto ret = sweepLine.eventQueue.top();
-		sweepLine.eventQueue.pop();
-		return ret;
-	}
 
 	Data();
 	virtual ~Data();
