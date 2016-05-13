@@ -17,6 +17,7 @@
 
 #include "CGALTypes.h"
 #include "SweepLine.h"
+#include "Arrangement.h"
 
 using namespace std;
 
@@ -35,18 +36,18 @@ struct Config {
 	string 		printOptions;
 };
 
-
-using Input               = vector<Point>;
-
-//using Cell       		  = vector<Point>;
-//using Facet      		  = vector<Cell>;
-
 class Data {
 public:
     Input                input;
 	Polygon    	  		 polygon;
+	BBox				 bbox;
 
+	/* handles the sweepLine algorithm (events in a global queue and line arrangements
+	 * in a per base-line vector */
 	SweepLine			 sweepLine;
+
+	/* handles the cell arrangements and the resulting skeleton */
+	Arrangement			 cellArrangement;
 
 	Config        		 config;
 

@@ -10,3 +10,4 @@ build/*
 weasel/
 *.swp
 buildgcc
+qtbuild

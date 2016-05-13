@@ -1,7 +1,8 @@
-set(SRC_LIST  main.cpp Skeleton.cpp Data.cpp SweepLine.cpp)
+set(SRC_LIST  main.cpp Skeleton.cpp Data.cpp SweepLine.cpp Arrangement.cpp)
 
 if( WITH_GUI )
    list(APPEND SRC_LIST GUI.cpp)
+   add_definitions(-DQTGUI)
 endif( WITH_GUI )
 
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)

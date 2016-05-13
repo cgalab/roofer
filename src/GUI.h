@@ -115,6 +115,7 @@ public:
 //	void show(const SsPtr& ss);
 	Dart_handle make_facet(const Polygon& poly);
 
+	void addSegment(EdgeIterator& e);
 	void addSegment(Point& a, Point& b);
 
 protected :
@@ -129,8 +130,8 @@ protected :
 
 private:
 	void addSS(const SsPtr& ss);
-	void drawEvent(Event& e);
-	void drawWavefrontPolygon(K::FT time);
+	void drawEvent(SweepItem& i);
+	void drawPolygon();
 
 	Skeleton *skeleton;
 	Data     *data;

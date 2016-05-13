@@ -62,6 +62,8 @@ bool Data::evaluateArguments(std::list<std::string> args) {
         
         for(auto i : input) polygon.push_back(i);
 
+        bbox = CGAL::bounding_box(input.begin(),input.end());
+
 	    return true;
         /************************************/
 

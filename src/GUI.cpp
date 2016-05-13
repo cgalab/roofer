@@ -15,17 +15,18 @@ edges(true), vertices(true) {
 	skeleton = s;
 	data     = &s->data;
 
-	setWindowTitle("Min/Max Bisector Graph");
+	setWindowTitle("Min/Max Roofs");
 
 	auto frame = new qglviewer::ManipulatedFrame();
 	frame->setSpinningSensitivity(300);
 	setManipulatedFrame(frame);
 
-	resize(800, 600);
+	resize(1024, 768);
 	updateGL();
 
 	make_facet(data->polygon);
 
+	init();
 	this->show();
 }
 
@@ -48,6 +49,13 @@ Dart_handle GUI::make_facet(const Polygon& poly) {
 		d = d->beta(1);
 	}
 	return d;
+}
+
+void GUI::addSegment(EdgeIterator& e) {
+	Point3D p(e->vertex(0).x().doubleValue(),e->vertex(0).y().doubleValue(),0);
+	Point3D q(e->vertex(1).x().doubleValue(),e->vertex(1).y().doubleValue(),0);
+
+	lcc.make_segment(q,p);
 }
 
 void GUI::addSegment(Point& a, Point& b) {
@@ -118,15 +126,18 @@ void GUI::keyPressEvent(QKeyEvent *e) {
 	}
 	else if ((e->key()==Qt::Key_Plus) && (modifiers==Qt::NoButton))
 	{
-		if(!data->eventQueue.empty()) {
-			auto e = data->eventQueue.top();
-			data->eventQueue.pop();
-			cout << data->eventQueue.size() << endl;
+		if(!data->sweepLine.queueEmpty()) {
+			auto item = data->sweepLine.popEvent();
 
-			drawEvent(e);
+			drawEvent(item);
 
-			skeleton->handleNextEvent(e);
-			drawWavefrontPolygon(e.time);
+			skeleton->handleNextEvent(item);
+
+			cout << "(" << data->sweepLine.queueSize() << ") ";
+			fflush(stdout);
+
+//			skeleton->handleNextEvent(e);
+//			drawWavefrontPolygon(e.time);
 		}
 		updateGL();
 	}
@@ -241,28 +252,32 @@ void GUI::draw() {
 
 	lcc.free_mark(facettreated);
 }
-void GUI::drawEvent(Event& e) {
-	switch(e.type) {
-	case EventType::EDGE:
-		addSegment(e,e.a->start);
-		addSegment(e,e.b->start);
-		break;
-	case EventType::SPLIT:  cout << "TODO" << endl; break;
-	case EventType::DIVIDE: cout << "TODO" << endl; break;
-	case EventType::CREATE: cout << "TODO" << endl; break;
+void GUI::drawEvent(SweepItem& i) {
+	if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
+			data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
+			data->bbox.xmax() > i.intersectionPoint.x().doubleValue() &&
+			data->bbox.ymax() > i.intersectionPoint.y().doubleValue() ) {
+		addSegment(i.intersectionPoint,i.intersectionPoint);
 
-	default: break;
+		addSegment(i.a.start,i.intersectionPoint);
+		addSegment(i.b.start,i.intersectionPoint);
 	}
+//	switch(e.type) {
+//	case EventType::EDGE:
+//		addSegment(e,e.a->start);
+//		addSegment(e,e.b->start);
+//		break;
+//	case EventType::SPLIT:  cout << "TODO" << endl; break;
+//	case EventType::DIVIDE: cout << "TODO" << endl; break;
+//	case EventType::CREATE: cout << "TODO" << endl; break;
+//
+//	default: break;
+//	}
 }
 
-void GUI::drawWavefrontPolygon(K::FT time) {
-	for(auto v = data->wavefront.vertices_begin(); v != data->wavefront.vertices_end(); ++v) {
-		auto vn = data->next(v);
-
-		auto a = v->getPointAtTime(time);
-		auto b = vn->getPointAtTime(time);
-
-		addSegment(a,b);
+void GUI::drawPolygon() {
+	for(auto e = data->polygon.edges_begin(); e != data->polygon.edges_end(); ++e) {
+		addSegment(e);
 	}
 }
 
@@ -301,8 +316,9 @@ void GUI::init() {
 		::glBlendFunc(GL_ONE, GL_ZERO);
 		::glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
 	}
-	else
-	{
+	else if (wireframe) {
+		::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	} else {
 		::glShadeModel(GL_SMOOTH);
 		::glEnable(GL_BLEND);
 		::glEnable(GL_LINE_SMOOTH);

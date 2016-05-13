@@ -23,7 +23,7 @@ Skeleton::Skeleton(list<string>& args) {
 	createSkeleton();
 
 //	/* display if needed */
-//		#ifdef CGAL_LCC_USE_VIEWER
+//		#ifdef QTGUI
 //			if(data.config.gui) {
 //				gui.make_facet(data.polygon);
 //				gui.show(data.iss);
@@ -60,31 +60,28 @@ void Skeleton::createSkeleton() {
 void Skeleton::createLineArrangements() {
 	for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
 		for(auto it=data.polygon.edges_begin(); it != data.polygon.edges_end(); ++it) {
-			if( edgeIt->supporting_line() == it->supporting_line() ) {continue;}
-
-			ArrangementLine al(edgeIt,it);
-			data.sweepLine.addLine(al);
+			if( edgeIt->supporting_line() != it->supporting_line() ) {
+				ArrangementLine al(edgeIt,it);
+				data.sweepLine.addLine(al);
+			}
 		}
 	}
 }
 
 void Skeleton::startPlaneSweep() {
-	cout << "EventQueue size: " << data.sweepLine.queueSize() << endl; fflush(stdout);
 	while(!data.sweepLine.queueEmpty()) {
-		cout << data.sweepLine.queueSize() << " "; fflush(stdout);
 		try {
-			auto pop = data.sweepLine.popEvent();
-
-		cout << "item: " << pop.normalDistance << "| ";
-
+			auto item = data.sweepLine.popEvent();
+			handleNextEvent(item);
 		} catch(const out_of_range& err) {
 			cerr << "EXEPTION: " << err.what() << endl;
 		}
-
-
 	}
 }
 
+void Skeleton::handleNextEvent(SweepItem& item) {
+
+}
 
 //void Skeleton::handleSplitEvent(Event& e) {
 //	cout << "Split Event" << endl;

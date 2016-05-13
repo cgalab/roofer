@@ -17,7 +17,7 @@ public:
 
 	bool guiEnabled() {return data.config.gui;}
 
-//	void handleNextEvent(Event& e);
+	void handleNextEvent(SweepItem& item);
 
 	Data data;
 
@@ -34,6 +34,7 @@ private:
 //	void computeCreateEvents();
 
 //	void startWavefrontPropagation();
+
 	void startPlaneSweep();
 
 //	Event  computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
