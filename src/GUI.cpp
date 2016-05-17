@@ -252,15 +252,18 @@ void GUI::draw() {
 
 	lcc.free_mark(facettreated);
 }
-void GUI::drawEvent(SweepItem& i) {
-	if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
-			data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
-			data->bbox.xmax() > i.intersectionPoint.x().doubleValue() &&
-			data->bbox.ymax() > i.intersectionPoint.y().doubleValue() ) {
-		addSegment(i.intersectionPoint,i.intersectionPoint);
+void GUI::drawEvent(SweepEvent& event) {
+	for(auto i : event) {
+		if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
+				data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
+				data->bbox.xmax() > i.intersectionPoint.x().doubleValue() &&
+				data->bbox.ymax() > i.intersectionPoint.y().doubleValue() ) {
 
-		addSegment(i.a.start,i.intersectionPoint);
-		addSegment(i.b.start,i.intersectionPoint);
+			addSegment(i.intersectionPoint,i.intersectionPoint);
+
+			addSegment(i.a.start,i.intersectionPoint);
+			addSegment(i.b.start,i.intersectionPoint);
+		}
 	}
 //	switch(e.type) {
 //	case EventType::EDGE:

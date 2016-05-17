@@ -13,6 +13,8 @@
 #include <list>
 #include <memory>
 
+#include <assert.h>
+
 #include <sys/stat.h>
 
 #include "CGALTypes.h"

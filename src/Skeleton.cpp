@@ -79,8 +79,8 @@ void Skeleton::startPlaneSweep() {
 	}
 }
 
-void Skeleton::handleNextEvent(SweepItem& item) {
-
+void Skeleton::handleNextEvent(SweepEvent& item) {
+	cout << "Size: " << item.size() << endl;
 }
 
 //void Skeleton::handleSplitEvent(Event& e) {

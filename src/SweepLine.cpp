@@ -17,9 +17,11 @@ bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
 
 
 bool operator== (const SweepItem& a, const SweepItem& b) {
-	return a.normalDistance == b.normalDistance &&
-		   a.a 				== b.a &&
-		   b.b 				== b.b;
+	return a.normalDistance == b.normalDistance && (
+		   (a.a 				== b.a &&
+		    b.b 				== b.b) || (
+			a.a 				== b.b &&
+		    b.b 				== b.a  ) );
 }
 bool operator> (const SweepItem& a, const SweepItem& b) {
 	return  a.normalDistance  > b.normalDistance ||
@@ -52,29 +54,98 @@ void SweepLine::initiateEventQueue() {
 
 			status[le.first].push_back(a);
 
-		} while(!le.second.empty());
+		} while(le.second.size() > 1);
+
+		status[le.first].push_back(le.second.top());
+		le.second.pop();
 	}
 }
 
- SweepItem SweepLine::popEvent() {
+ SweepEvent SweepLine::popEvent() {
 	if(queueEmpty()) {
 		throw out_of_range("EventQueue is empty!");
 	} else {
-		auto ret = eventQueue.top();
+		SweepEvent event;
+		SweepEvent temp;
+
+		auto first = eventQueue.top();
 		eventQueue.pop();
 
-		handlePopEvent(ret);
+		event.push_back(first);
+		handlePopEvent(first);
 
-		return ret;
+		/* TEST */
+		{
+			ArrangementLine a(first.a.e,first.a.base);
+			ArrangementLine b(first.a.e,first.b.e);
+
+			SweepItem it_ab(a,b);
+
+			if(it_ab.raysIntersect) {
+				cout << "intersect! ";
+				if(binary_search(eventQueue.begin(),eventQueue.end(),it_ab)) {
+					cout << "found!";
+				} else {
+					cout << "not found!";
+				}
+			} else {
+				cout << "do not intersect!";
+			}
+		}
+
+		//cout <<
+
+		while(!queueEmpty() && first.normalDistance == eventQueue.top().normalDistance) {
+			auto second = eventQueue.top();
+
+//			if(first.intersectionPoint == second.intersectionPoint) {
+			if((first.base != second.base) &&
+//				( (first.a.base  == second.a.e || first.a.base  == second.b.e ) ||
+//				  (second.b.base ==  first.a.e || second.a.base ==  first.b.e) ) ) {
+				  (first.a.e  == second.base || first.b.e  == second.base ) ) {
+				event.push_back(second);
+				eventQueue.pop();
+				handlePopEvent(second);
+				cout << " | ";
+			} else {
+				cout << " - ";
+				temp.push_back(second);
+				eventQueue.pop();
+			}
+		}
+		cout << "Event:" << event.size() << ", Tmp: " << temp.size() << endl;
+
+		if(event.size() != 3) {
+			cout << "F: " << first.intersectionPoint << " - ";
+			for(auto e : temp) { cout << e.intersectionPoint; }
+			int cnt = 0;
+			for(auto it = eventQueue.begin(); it != eventQueue.end() && cnt < 5; ++it) {
+				cout << it->intersectionPoint << " - ";
+				++cnt;
+			}
+			cout << endl;
+		}
+
+		for(auto e : temp) { eventQueue.push(e); }
+
+		return event;
 	}
 }
 
-void SweepLine::handlePopEvent(SweepItem& item) {
+void SweepLine::handlePopEvent(SweepItem item) {
 	auto a = item.a;
 	auto b = item.b;
-	auto lStatus = status[a.base];
+	auto lStatus = status[item.base];
 
-//	cout << "handlePopEvent(" << item.dist() << "): "; fflush(stdout);
+	assert(!(a == b));
+	if(a == b) throw runtime_error("ERROR: handlePopEvent(a==b)!");
+
+	auto TESTB = lower_bound(lStatus.begin(),lStatus.end(),b,less<ArrangementLine>());
+	if(TESTB == lStatus.end() || !(*TESTB == item.b) ) {
+		cout << "TEST B NOT FOUND!" << endl;
+	} else {
+		cout << "TEST B FOUND!" << endl;
+	}
 
 	auto LeFoundA = lower_bound(lStatus.begin(),lStatus.end(),a,less<ArrangementLine>());
 	if(LeFoundA == lStatus.end() || !(*LeFoundA == item.a) ) {
@@ -95,7 +166,9 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		if(b == *(LeFoundA+1) ) {
 			LeFoundB = LeFoundA+1;
 		} else {
+			if(LeFoundA!= lStatus.begin() && b == *(LeFoundA-1)) cout << " (found at -1)! ";
 			cout << "Wrong Order!" << endl;	fflush(stdout);
+			if(*find(lStatus.begin(),lStatus.end(),b) == b) cout << " is inside! ";
 			LeFoundB = LeFoundA;
 			if(LeFoundA != lStatus.begin()) {
 				LeFoundA = LeFoundA-1;
@@ -103,10 +176,11 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		}
 	}
 
-	assert(b == *LeFoundB);
+	assert(a == *LeFoundA && b == *LeFoundB);
+	if(!(a == *LeFoundA && b == *LeFoundB)) throw runtime_error("ERROR: handlePopEvent(a,b not FOUND)!");
 
 	if(LeFoundA != lStatus.begin()) {
-		SweepItem beforeA(*(LeFoundA-1), *LeFoundA);
+		SweepItem beforeA(*(LeFoundA-1), *LeFoundB);
 
 //		cout << "BeforeA"; fflush(stdout);
 		if(beforeA.raysIntersect && beforeA.normalDistance > item.normalDistance) {
@@ -118,7 +192,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 	}
 
 	if(LeFoundB+1 != lStatus.end())  {
-		SweepItem afterB(*LeFoundB, *(LeFoundB+1) );
+		SweepItem afterB(*LeFoundA, *(LeFoundB+1) );
 //		cout << "AfterB "; fflush(stdout);
 		if(afterB.raysIntersect && afterB.normalDistance > item.normalDistance) {
 			if(!binary_search(eventQueue.begin(),eventQueue.end(),afterB)) {
@@ -129,6 +203,6 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 	}
 
 	// swap line segments in status, as of the intersection point.
-	iter_swap(LeFoundA,LeFoundB);
+	iter_swap(LeFoundA, LeFoundB);
 }
 

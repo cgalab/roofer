@@ -18,6 +18,13 @@ else()
   message(SEND_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
+if( WITH_DEBUG )
+   set(CMAKE_BUILD_TYPE Debug FORCE)
+   set_directory_properties(PROPERTIES COMPILE_DEFINITIONS_DEBUG DEBUG=1)
+   add_definitions ("-g")
+   message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+endif( WITH_DEBUG)
+
 add_executable(bis ${SRC_LIST})
 target_link_libraries(bis ${CGAL_LIBRARIES}
                           ${CGAL_3RD_PARTY_LIBRARIES}

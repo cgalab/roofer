@@ -17,6 +17,8 @@ struct ArrangementLine {
 	Point start;
 
 	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe):base(pbase),e(pe) {
+		assert(base != e);
+
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
 
 		if(!intersection.empty()) {
@@ -39,7 +41,8 @@ struct ArrangementLine {
 		Line bisectorLine = CGAL::bisector(base->supporting_line(), Line(e->vertex(1),e->vertex(0)));
 		auto ray = Ray(start,bisectorLine);
 
-		if(Line(*base).has_on_negative_side(start + ray.to_vector())) {
+		if(Line(*base).has_on_negative_side(start + ray.to_vector()) ||
+		   Line(*e).has_on_negative_side(start + ray.to_vector()) 	) {
 			ray = Ray(start,bisectorLine.opposite());
 		}
 
@@ -49,12 +52,13 @@ struct ArrangementLine {
 
 struct SweepItem {
 	ArrangementLine a, b;
+	EdgeIterator base;
 
 	bool  raysIntersect;
 	Exact normalDistance;
 	Point intersectionPoint;
 
-	SweepItem(ArrangementLine pa, ArrangementLine pb):a(pa),b(pb) {
+	SweepItem(ArrangementLine pa, ArrangementLine pb):a(pa),b(pb),base(pa.base) {
 		if(a.base != b.base) {cout << "ERROR: Base Line not equal!" << endl;}
 
 		auto intersection = CGAL::intersection(a.bisector(),b.bisector());
@@ -86,6 +90,7 @@ using EventQueue 	   		= SPQueue<SweepItem,vector<SweepItem>, greater<SweepItem>
 using LocalSweepLineStatus  = vector<ArrangementLine>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
 using SweepLineIterator     = vector<ArrangementLine>::iterator;
+using SweepEvent			= vector<SweepItem>;
 
 class SweepLine {
 public:
@@ -96,9 +101,9 @@ public:
 
 	inline bool queueEmpty() { return eventQueue.empty(); }
 	inline long queueSize()  { return eventQueue.size(); }
-	SweepItem popEvent();
+	SweepEvent popEvent();
 
-	void handlePopEvent(SweepItem &item);
+	void handlePopEvent(SweepItem item);
 
 private:
 	ArrangementStart 	arrangementStart;

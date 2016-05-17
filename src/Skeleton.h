@@ -17,7 +17,7 @@ public:
 
 	bool guiEnabled() {return data.config.gui;}
 
-	void handleNextEvent(SweepItem& item);
+	void handleNextEvent(SweepEvent& item);
 
 	Data data;
 
