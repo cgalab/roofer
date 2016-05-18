@@ -16,7 +16,14 @@ struct ArrangementLine {
 	EdgeIterator base, e;
 	Point start;
 
-	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe):base(pbase),e(pe) {
+	/* to enables an ordering if two ArrangementLines of different base are compared  */
+	int uid;
+
+	/* TODO: remove, just for testing */
+	int lid;
+
+	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe, int id = -1):
+		base(pbase),e(pe),uid(id),lid(-1) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -85,6 +92,36 @@ struct SweepItem {
 	friend bool operator== (const SweepItem& a, const SweepItem& b);
 };
 
+/* used as compare object, to enable binary search in the sweep line status
+ * at a specific distance to the base line */
+struct DistanceCompare {
+	Point currentIntersection;
+	DistanceCompare(Point p): currentIntersection(p) {}
+
+	// < Operator
+	bool operator()  (ArrangementLine a, ArrangementLine b) {
+		if(a.base != b.base) return a.uid < b.uid;
+
+		Line currentBase(currentIntersection,a.base->direction());
+
+		auto intersectionA = CGAL::intersection(currentBase, a.bisector());
+		auto intersectionB = CGAL::intersection(currentBase, b.bisector());
+
+		if(!intersectionA.empty() && !intersectionB.empty()) {
+			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
+				if(const Point *pointB = CGAL::object_cast<Point>(&intersectionB)) {
+					return a.base->direction() == Vector(*pointB - *pointA).direction();
+				}
+			}
+		}
+
+		throw runtime_error("ERROR: empty intersections!");
+	}
+
+//	bool operator== (ArrangementLine& a, ArrangementLine& b);
+//	bool operator>  (ArrangementLine& a, ArrangementLine& b);
+};
+
 using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine,vector<ArrangementLine>, greater<ArrangementLine> > >;
 using EventQueue 	   		= SPQueue<SweepItem,vector<SweepItem>, greater<SweepItem> >;
 using LocalSweepLineStatus  = vector<ArrangementLine>;
@@ -103,7 +140,9 @@ public:
 	inline long queueSize()  { return eventQueue.size(); }
 	SweepEvent popEvent();
 
-	void handlePopEvent(SweepItem item);
+	void handlePopEvent(SweepItem& item);
+
+	void printSweepLine(SweepItem& item);
 
 private:
 	ArrangementStart 	arrangementStart;

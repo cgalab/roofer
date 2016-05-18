@@ -58,10 +58,11 @@ void Skeleton::createSkeleton() {
 }
 
 void Skeleton::createLineArrangements() {
+	int uid = 0;
 	for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
 		for(auto it=data.polygon.edges_begin(); it != data.polygon.edges_end(); ++it) {
 			if( edgeIt->supporting_line() != it->supporting_line() ) {
-				ArrangementLine al(edgeIt,it);
+				ArrangementLine al(edgeIt, it, uid++);
 				data.sweepLine.addLine(al);
 			}
 		}
@@ -80,7 +81,10 @@ void Skeleton::startPlaneSweep() {
 }
 
 void Skeleton::handleNextEvent(SweepEvent& item) {
-	cout << "Size: " << item.size() << endl;
+	cout << "Q: " << data.sweepLine.queueSize() << ", Items: " << item.size() << endl;
+	for(auto i : item) {
+		data.sweepLine.printSweepLine(i);
+	}
 }
 
 //void Skeleton::handleSplitEvent(Event& e) {

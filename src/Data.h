@@ -53,6 +53,8 @@ public:
 
 	Config        		 config;
 
+
+
     //Transformation 		 rotateNintyLeft;
 
 	Data();

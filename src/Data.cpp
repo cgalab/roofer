@@ -51,7 +51,7 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		std::cout << "Using default test polygon." << std::endl;
 		config.gui = true;
 
-        input.push_back(Point(0,0));
+        input.push_back( Point(0,0)  );
 		input.push_back( Point(10,0) );
 		input.push_back( Point(12,10));
 		input.push_back( Point(9,9)  );
