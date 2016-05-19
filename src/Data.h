@@ -38,6 +38,8 @@ struct Config {
 	string 		printOptions;
 };
 
+using AllArrangements = map<EdgeIterator,Arrangement>;
+
 class Data {
 public:
     Input                input;
@@ -49,7 +51,7 @@ public:
 	SweepLine			 sweepLine;
 
 	/* handles the cell arrangements and the resulting skeleton */
-	Arrangement			 cellArrangement;
+	AllArrangements		 allArrangements;
 
 	Config        		 config;
 
@@ -59,6 +61,14 @@ public:
 
 	Data();
 	virtual ~Data();
+
+	inline void addBaseCells(ArrangementLine& line) {
+		allArrangements[line.base].addBaseCell(line);
+	}
+
+	inline void checkLowerChainEnds(EdgeIterator& e) {
+		allArrangements[e].checkLowerChainEnds();
+	}
 
 	bool evaluateArguments(list<string> args);
 

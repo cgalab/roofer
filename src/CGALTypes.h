@@ -32,15 +32,4 @@ using Exact          = K::FT;
 
 using Input          = std::vector<Point>;
 
-//using Trait          = CGAL::Arr_segment_traits_2<K>;
-//using Polygon        = CGAL::Polygon_2<Trait>;
-//using Vector         = Trait::Vector_2;
-//using Point          = Trait::Point_2;
-//using Line           = Trait::Line_2;
-//using Ray            = Trait::Ray_2;
-//using Direction      = Trait::Direction_2;
-////using Edge           = Trait::Segment_2;
-//using Edge           = Trait::X_monotone_curve_2;
-//using Arrangement    = CGAL::Arrangement_2<Trait>;
-
 #endif /* CGALTYPES_H_ */

@@ -3,21 +3,6 @@
 
 using namespace std;
 
-//bool DistanceCompare::operator==(ArrangementLine& a, ArrangementLine& b) {
-//		return  a.base  == b.base &&
-//				a.start == b.start &&
-//				a.e     == b.e;
-//}
-//bool DistanceCompare::operator> (ArrangementLine& a, ArrangementLine& b) {
-//    return (a.base == b.base && a.base->direction() == Vector(a.start - b.start).direction()) ||
-//    	   (a.base != b.base && a.uid > b.uid);
-//}
-
-//bool DistanceCompare::operator() (ArrangementLine& a, ArrangementLine& b) {
-//    return (a.base == b.base && a.base->direction() == Vector(b.start - a.start).direction()) ||
-//     	   (a.base != b.base && a.uid < b.uid);
-//}
-
 bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 		return  a.base  == b.base &&
 				a.start == b.start &&

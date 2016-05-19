@@ -64,9 +64,11 @@ void Skeleton::createLineArrangements() {
 			if( edgeIt->supporting_line() != it->supporting_line() ) {
 				ArrangementLine al(edgeIt, it, uid++,eid);
 				data.sweepLine.addLine(al);
+				data.addBaseCells(al);
 			}
 		}
 		eid++;
+		data.checkLowerChainEnds(edgeIt);
 	}
 }
 
@@ -87,7 +89,7 @@ void Skeleton::startPlaneSweep() {
 }
 
 void Skeleton::handleNextEvent(SweepEvent& item) {
-	cout << "Q: " << data.sweepLine.queueSize();
+	cout << "Q: " << data.sweepLine.queueSize() << endl;
 	if(item.size() != 3) cout << ", Items: " << item.size() << endl;
 
 	for(auto i : item) {

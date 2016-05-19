@@ -11,9 +11,14 @@
 
 using namespace std;
 
+/**
+ * defines a line in the line arrangement, belongs to one 'base' edge and the arrangement
+ * line is the 'bisector' between the referenced second edge 'e' and 'base'.
+ * */
 struct ArrangementLine {
 	EdgeIterator base, e;
 	Point start;
+	Ray bisector;
 
 	/* to enables an ordering if two ArrangementLines of different base are compared  */
 	int uid;
@@ -30,12 +35,15 @@ struct ArrangementLine {
 
 		if(!intersection.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
-				start = *ipoint;
+				start    = *ipoint;
+				bisector = setBisector();
 			} else {
-				cout << "Constructor: No Intersection?" << endl;
+				// TODO: construct bisector between parallel edges...
+				cout << "ERROR: Constructor: No Intersection?" << endl;
 			}
 		} else {
-			cout << "Constructor: Object empty?" << endl;
+			// TODO: construct bisector between parallel edges...
+			cout << "ERROR: Constructor: Object empty?" << endl;
 		}
 	}
 
@@ -44,7 +52,7 @@ struct ArrangementLine {
 	friend bool operator== (const ArrangementLine& a, const ArrangementLine& b);
 
 	/* The second Line in the bisector is with changed orientation on purpose */
-	inline Ray bisector() {
+	inline Ray setBisector() {
 		Line bisectorLine = CGAL::bisector(base->supporting_line(), Line(e->vertex(1),e->vertex(0)));
 		auto ray = Ray(start,bisectorLine);
 
@@ -68,7 +76,7 @@ struct SweepItem {
 	SweepItem(ArrangementLine pa, ArrangementLine pb):a(pa),b(pb),base(pa.base) {
 		if(a.base != b.base) {cout << "ERROR: Base Line not equal!" << endl;}
 
-		auto intersection = CGAL::intersection(a.bisector(),b.bisector());
+		auto intersection = CGAL::intersection(a.bisector,b.bisector);
 
 		if(!intersection.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
@@ -104,8 +112,8 @@ struct DistanceCompare {
 
 		Line currentBase(currentIntersection,a.base->direction());
 
-		auto intersectionA = CGAL::intersection(currentBase, a.bisector());
-		auto intersectionB = CGAL::intersection(currentBase, b.bisector());
+		auto intersectionA = CGAL::intersection(currentBase, a.bisector);
+		auto intersectionB = CGAL::intersection(currentBase, b.bisector);
 
 		if(!intersectionA.empty() && !intersectionB.empty()) {
 			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
