@@ -14,7 +14,7 @@ endif()
 #set(cmake_cxx_flags "${cmake_cxx_flags} -std=c++11 -stdlib=libc++")
 #set(cmake_exe_linker_flags "${cMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 
-option(WITH_GUI "Enable QT GUI (requieres libQGLViewer)!" "OFF")
+option(WITH_GUI "Enable QT GUI (requieres libQGLViewer)!" "ON")
 option(WITH_DEBUG "Enable Debug Mode!" "OFF")
 
 
@@ -23,7 +23,7 @@ include_directories(BEFORE ../../include)
 include(CheckCXXCompilerFlag)
 
 # compiler warnings 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pednatic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
  
 #find_package(CGAL COMPONENTS Qt4 Core REQUIRED)
 find_package(CGAL COMPONENTS Core REQUIRED)

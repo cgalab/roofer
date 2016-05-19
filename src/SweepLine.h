@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "CGALTypes.h"
-#include "SPQueue.h"
 
 using namespace std;
 
@@ -21,9 +20,10 @@ struct ArrangementLine {
 
 	/* TODO: remove, just for testing */
 	int lid;
+	int eid;
 
-	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe, int id = -1):
-		base(pbase),e(pe),uid(id),lid(-1) {
+	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe, int id = -1, int edgeid = -1):
+		base(pbase),e(pe),uid(id),lid(-1),eid(edgeid) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -123,7 +123,8 @@ struct DistanceCompare {
 };
 
 using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine,vector<ArrangementLine>, greater<ArrangementLine> > >;
-using EventQueue 	   		= SPQueue<SweepItem,vector<SweepItem>, greater<SweepItem> >;
+//using EventQueue 	   		= SPQueue<SweepItem,vector<SweepItem>, greater<SweepItem> >;
+using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
 using LocalSweepLineStatus  = vector<ArrangementLine>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
 using SweepLineIterator     = vector<ArrangementLine>::iterator;
@@ -143,6 +144,7 @@ public:
 	void handlePopEvent(SweepItem& item);
 
 	void printSweepLine(SweepItem& item);
+	void printEventQueue();
 
 private:
 	ArrangementStart 	arrangementStart;

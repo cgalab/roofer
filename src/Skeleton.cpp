@@ -58,30 +58,38 @@ void Skeleton::createSkeleton() {
 }
 
 void Skeleton::createLineArrangements() {
-	int uid = 0;
+	int uid = 0, eid = 0;
 	for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
 		for(auto it=data.polygon.edges_begin(); it != data.polygon.edges_end(); ++it) {
 			if( edgeIt->supporting_line() != it->supporting_line() ) {
-				ArrangementLine al(edgeIt, it, uid++);
+				ArrangementLine al(edgeIt, it, uid++,eid);
 				data.sweepLine.addLine(al);
 			}
 		}
+		eid++;
 	}
 }
 
 void Skeleton::startPlaneSweep() {
+//	cout << "Beginning Q-State: "; data.sweepLine.printEventQueue();
 	while(!data.sweepLine.queueEmpty()) {
 		try {
 			auto item = data.sweepLine.popEvent();
 			handleNextEvent(item);
 		} catch(const out_of_range& err) {
 			cerr << "EXEPTION: " << err.what() << endl;
+			break;
+		} catch(const runtime_error& err) {
+			cerr << "EXEPTION: " << err.what() << endl;
+			break;
 		}
 	}
 }
 
 void Skeleton::handleNextEvent(SweepEvent& item) {
-	cout << "Q: " << data.sweepLine.queueSize() << ", Items: " << item.size() << endl;
+	cout << "Q: " << data.sweepLine.queueSize();
+	if(item.size() != 3) cout << ", Items: " << item.size() << endl;
+
 	for(auto i : item) {
 		data.sweepLine.printSweepLine(i);
 	}
