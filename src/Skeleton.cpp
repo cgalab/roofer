@@ -45,6 +45,10 @@ void Skeleton::createSkeleton() {
 	data.sweepLine.initiateEventQueue();
 	cout << "done" << endl;
 
+	cout << endl << "add all base cells...";
+	addAllBaseCells();
+	cout << "done" << endl;
+
 	/* start wavefront propagation */
 #ifdef QTGUI
 	if(!data.config.gui) {
@@ -64,11 +68,21 @@ void Skeleton::createLineArrangements() {
 			if( edgeIt->supporting_line() != it->supporting_line() ) {
 				ArrangementLine al(edgeIt, it, uid++,eid);
 				data.sweepLine.addLine(al);
-				data.addBaseCells(al);
 			}
 		}
 		eid++;
-		data.checkLowerChainEnds(edgeIt);
+	}
+}
+
+/**
+ * as upper- and lower chain are lists (not sorted like a set) we use the
+ * already sorted line arrangements to fill them.
+ * */
+void Skeleton::addAllBaseCells() {
+	for(auto& a : data.sweepLine.status) {
+		for(auto& line : a.second) {
+			data.facets.addBaseCell(line);
+		}
 	}
 }
 
@@ -88,13 +102,16 @@ void Skeleton::startPlaneSweep() {
 	}
 }
 
-void Skeleton::handleNextEvent(SweepEvent& item) {
+void Skeleton::handleNextEvent(SweepEvent& event) {
 	cout << "Q: " << data.sweepLine.queueSize() << endl;
-	if(item.size() != 3) cout << ", Items: " << item.size() << endl;
+	if(event.size() != 3) cout << ", Items: " << event.size() << endl;
 
-	for(auto i : item) {
-		data.sweepLine.printSweepLine(i);
-	}
+	data.facets.addCell(event);
+
+
+//	for(auto i : item) {
+//		data.sweepLine.printSweepLine(i);
+//	}
 }
 
 //void Skeleton::handleSplitEvent(Event& e) {

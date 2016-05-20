@@ -17,7 +17,7 @@ public:
 
 	bool guiEnabled() {return data.config.gui;}
 
-	void handleNextEvent(SweepEvent& item);
+	void handleNextEvent(SweepEvent& event);
 
 	Data data;
 
@@ -25,7 +25,7 @@ private:
 	void createSkeleton();
 
 	void createLineArrangements();
-
+	void addAllBaseCells();
 //	void createInitialWavefront();
 //	void createBisectorRays();
 

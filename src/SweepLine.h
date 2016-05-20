@@ -20,6 +20,9 @@ struct ArrangementLine {
 	Point start;
 	Ray bisector;
 
+	/* we will use this idx to referenc to the current facets adjacent to 'bisector' */
+	int leftListIdx, rightListIdx;
+
 	/* to enables an ordering if two ArrangementLines of different base are compared  */
 	int uid;
 
@@ -28,7 +31,7 @@ struct ArrangementLine {
 	int eid;
 
 	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe, int id = -1, int edgeid = -1):
-		base(pbase),e(pe),uid(id),lid(-1),eid(edgeid) {
+		base(pbase),e(pe),leftListIdx(-1),rightListIdx(-1),uid(id),lid(-1),eid(edgeid) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -125,13 +128,9 @@ struct DistanceCompare {
 
 		throw runtime_error("ERROR: empty intersections!");
 	}
-
-//	bool operator== (ArrangementLine& a, ArrangementLine& b);
-//	bool operator>  (ArrangementLine& a, ArrangementLine& b);
 };
 
 using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine,vector<ArrangementLine>, greater<ArrangementLine> > >;
-//using EventQueue 	   		= SPQueue<SweepItem,vector<SweepItem>, greater<SweepItem> >;
 using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
 using LocalSweepLineStatus  = vector<ArrangementLine>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
@@ -154,10 +153,10 @@ public:
 	void printSweepLine(SweepItem& item);
 	void printEventQueue();
 
+	SweepLineStatus 	status;
 private:
 	ArrangementStart 	arrangementStart;
 	EventQueue 			eventQueue;
-	SweepLineStatus 	status;
 };
 
 #endif /* SWEEPLINE_H_*/

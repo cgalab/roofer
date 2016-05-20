@@ -19,7 +19,7 @@
 
 #include "CGALTypes.h"
 #include "SweepLine.h"
-#include "Arrangement.h"
+#include "Facets.h"
 
 using namespace std;
 
@@ -38,7 +38,7 @@ struct Config {
 	string 		printOptions;
 };
 
-using AllArrangements = map<EdgeIterator,Arrangement>;
+using AllArrangements = map<EdgeIterator,RoofFacets>;
 
 class Data {
 public:
@@ -51,24 +51,12 @@ public:
 	SweepLine			 sweepLine;
 
 	/* handles the cell arrangements and the resulting skeleton */
-	AllArrangements		 allArrangements;
+	RoofFacets			 facets;
 
 	Config        		 config;
 
-
-
-    //Transformation 		 rotateNintyLeft;
-
 	Data();
 	virtual ~Data();
-
-	inline void addBaseCells(ArrangementLine& line) {
-		allArrangements[line.base].addBaseCell(line);
-	}
-
-	inline void checkLowerChainEnds(EdgeIterator& e) {
-		allArrangements[e].checkLowerChainEnds();
-	}
 
 	bool evaluateArguments(list<string> args);
 

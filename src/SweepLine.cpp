@@ -66,10 +66,6 @@ void SweepLine::initiateEventQueue() {
 		for(auto &l : line.second) {
 			l.lid = cnt++;
 		}
-		for(auto l : line.second) {
-			cout << l.lid << " ";
-		}
-		cout << endl;
 	}
 }
 
@@ -134,7 +130,7 @@ void SweepLine::printSweepLine(SweepItem& item) {
 		}
 
 		for(auto e : event) {
-			cout << " P"; // << e.intersectionPoint << endl;
+//			cout << " P"; // << e.intersectionPoint << endl;
 			handlePopEvent(e);
 		}
 
@@ -152,7 +148,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 	assert(!(a == b));
 	if(a == b) throw runtime_error("ERROR: handlePopEvent(a==b)!");
 
-	cout << "+"; fflush(stdout);
+//	cout << "+"; fflush(stdout);
 
 	auto FoundA = lower_bound(lStatus.begin(),lStatus.end(),a,comp);
 	SweepLineIterator FoundB;
@@ -181,7 +177,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		throw runtime_error("ERROR: handlePopEvent a,b not found!");
 	}
 
-	cout << "+"; fflush(stdout);
+//	cout << "+"; fflush(stdout);
 
 	if(FoundA != lStatus.begin()) {
 		SweepItem beforeA(*(FoundA-1), *FoundB);
@@ -190,7 +186,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		}
 	}
 
-	cout << "+"; fflush(stdout);
+//	cout << "+"; fflush(stdout);
 
 	if(FoundB+1 != lStatus.end())  {
 		SweepItem afterB(*FoundA, *(FoundB+1) );
@@ -199,7 +195,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		}
 	}
 
-	cout << "+" << endl; fflush(stdout);
+//	cout << "+" << endl; fflush(stdout);
 
 	// swap line segments in status, as of the intersection point.
 	iter_swap(FoundA, FoundB);
