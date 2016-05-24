@@ -32,4 +32,24 @@ using Exact          = K::FT;
 
 using Input          = std::vector<Point>;
 
+
+#ifdef QTGUI
+
+#include <CGAL/Linear_cell_complex.h>
+#include <CGAL/Cartesian.h>
+#include <CGAL/Cartesian_converter.h>
+
+#include <CGAL/Linear_cell_complex.h>
+#include <CGAL/Linear_cell_complex_constructors.h>
+#include <CGAL/Linear_cell_complex_operations.h>
+
+using GUIKernel = CGAL::Cartesian<double>;
+
+using LCC_3       = CGAL::Linear_cell_complex<3>;
+using Dart_handle = LCC_3::Dart_handle;
+using Point3D     = LCC_3::Point;
+using SsPtr       = std::shared_ptr<Polygon>;
+
+#endif /* QTGUI */
+
 #endif /* CGALTYPES_H_ */

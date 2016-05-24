@@ -31,11 +31,6 @@ struct ArrangementLine {
 	int lid;
 	int eid;
 
-//	ArrangementLine(const ArrangementLine& al):
-//		base(al.base),e(al.e),start(al.start),bisector(al.bisector),
-//		leftListIdx(al.leftListIdx),rightListIdx(al.rightListIdx),
-//		uid(al.uid),lid(al.lid),eid(al.eid) {}
-
 	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = -1, int edgeid = -1):
 		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(-1),eid(edgeid) {
 		assert(base != e);
@@ -88,6 +83,11 @@ struct SweepItem {
 	Exact normalDistance;
 	Point intersectionPoint;
 
+#ifdef QTGUI
+	inline Point3D getPoint3D() {return Point3D(intersectionPoint.x().doubleValue(),
+			intersectionPoint.y().doubleValue(),normalDistance.doubleValue());}
+#endif
+
 	SweepItem(const SweepItem& i):SweepItem(i.a,i.b) {}
 
 	SweepItem(ALIterator pa, ALIterator pb):a(pa),b(pb),base(pa->base) {
@@ -113,10 +113,7 @@ struct SweepItem {
 	inline Exact dist() { return normalDistance; }
 
 	/* enable accessing the list indices of left/right refs of a,b via setter/getter
-	 * (0,0) a left
-	 * (0,1) a right
-	 * (1,0) b left
-	 * (1,1) b right
+	 * (0,0) a left, (0,1) a right, (1,0) b left, (1,1) b right
 	 * */
 	inline int get(int i, int j) {
 		if(i == 0) {
@@ -153,9 +150,17 @@ struct SweepItem {
 		else throw runtime_error("get(i,j) i or j > 1!");
 	}
 
+	inline void setAll(int idx) {
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				set(i,j,idx);
+			}
+		}
+	}
+
 	inline bool isInteriorNode() {
-		return a->leftListIdx  != NOLIST &&
-			   a->rightListIdx == a->leftListIdx &&
+		return a->leftListIdx  != NOLIST          &&
+			   a->rightListIdx == a->leftListIdx  &&
 			   b->leftListIdx  == a->rightListIdx &&
 			   b->rightListIdx == b->leftListIdx;
 	}
@@ -178,8 +183,27 @@ struct SweepItem {
 		return NOLIST;
 	}
 
-	inline bool isActiveUpToIntersection() {
-		return firstListIndex() != NOLIST;
+	inline bool isBoundaryOrInteriorNode() {
+		return isBoundaryNode() || isInteriorNode();
+	}
+
+//	inline bool isActiveUpToIntersection() {
+//		return firstListIndex() != NOLIST;
+//	}
+
+	inline void print() {
+		cout << "(";
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				if(get(i,j) == NOLIST) {
+					cout << "_";
+				} else {
+					cout << get(i,j);
+				}
+				if(i != 1 || j != 1) cout << ",";
+			}
+		}
+		cout << ") ";
 	}
 
 	friend bool operator>  (const SweepItem& a, const SweepItem& b);
@@ -238,19 +262,37 @@ using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
 using LocalSweepLineStatus  = vector<ALIterator>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
 
+struct SweepEventReturnContainer {
+	vector<SweepItem> interiorNodes;
+	vector<SweepItem> boundaryNodes;
+};
+
+using EventInfo = pair<EventType,SweepEventReturnContainer>;
+
 struct SweepEvent : public vector<SweepItem> {
-	inline bool hasActiveCell() {
+	inline int numberActiveCell() {
+		int cnt = 0;
 		if(!empty()) {
 			for(auto& e : *this) {
-				if(e.isActiveUpToIntersection()) {
-					return true;
+//				if(e.isActiveUpToIntersection()) {
+				if(e.isBoundaryOrInteriorNode()) {
+					++cnt;
 				}
 			}
 		}
-		return false;
+		return cnt;
 	}
 
+	inline void printAll() {for(auto c : *this) {c.print();}}
 
+	inline vector<SweepItem*> getActivCells() {
+		vector<SweepItem*> r;
+//		for(auto c : *this) {if(c.isActiveUpToIntersection()) r.push_back(&c);}
+		for(auto& c : *this) {if(c.isBoundaryOrInteriorNode()) r.push_back(&c);}
+		return r;
+	}
+
+	EventInfo getEventType();
 };
 
 class SweepLine {

@@ -24,8 +24,6 @@
 
 using namespace std;
 
-enum class EventType {EDGE,SPLIT,CREATE,MERGE,EMPTY};
-
 struct Config {
 	Config():gui(false),maximize(true),fileName("") {
 		printOptions = "[-min|-max] [-gui] <filename>";

@@ -58,6 +58,9 @@ void GUI::addSegment(EdgeIterator& e) {
 	lcc.make_segment(q,p);
 }
 
+void GUI::addSegment(Point3D& a, Point3D& b) {
+	lcc.make_segment(a,b);
+}
 void GUI::addSegment(Point& a, Point& b) {
 	Point3D p(a.x().doubleValue(),a.y().doubleValue(),0);
 	Point3D q(b.x().doubleValue(),b.y().doubleValue(),0);
@@ -130,10 +133,8 @@ void GUI::keyPressEvent(QKeyEvent *e) {
 			auto item = data->sweepLine.popEvent();
 
 			drawEvent(item);
-
 			skeleton->handleNextEvent(item);
 
-			cout << "(" << data->sweepLine.queueSize() << ") ";
 			fflush(stdout);
 
 //			skeleton->handleNextEvent(e);
@@ -253,16 +254,36 @@ void GUI::draw() {
 	lcc.free_mark(facettreated);
 }
 void GUI::drawEvent(SweepEvent& event) {
-	for(auto i : event) {
-		if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
-				data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
-				data->bbox.xmax() > i.intersectionPoint.x().doubleValue() &&
-				data->bbox.ymax() > i.intersectionPoint.y().doubleValue() ) {
 
-			addSegment(i.intersectionPoint,i.intersectionPoint);
+	auto cont = event.getEventType();
+	if(cont.first == EventType::EDGE) {
+		for(auto i : event) {
+			if(i.a->rightListIdx == i.b->leftListIdx && i.a->rightListIdx != NOLIST) {
+				if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
+						data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
+						data->bbox.xmax() > i.intersectionPoint.x().doubleValue() &&
+						data->bbox.ymax() > i.intersectionPoint.y().doubleValue() ) {
 
-			addSegment(i.a.start,i.intersectionPoint);
-			addSegment(i.b.start,i.intersectionPoint);
+					auto& l = data->facets.allLists[i.a->rightListIdx];
+
+					Point p = l.front();
+					for(auto q : l) {
+						if(p == q) continue;
+
+						addSegment(p,q);
+
+						p = q;
+					}
+					addSegment(i.intersectionPoint,i.intersectionPoint);
+
+					addSegment(p,i.intersectionPoint);
+					addSegment(i.intersectionPoint,l.front());
+
+//					addSegment(i.intersectionPoint,i.a->start);
+//					addSegment(i.intersectionPoint,i.b->start);
+
+				}
+			}
 		}
 	}
 //	switch(e.type) {

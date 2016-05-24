@@ -108,12 +108,15 @@ void Skeleton::handleNextEvent(SweepEvent& event) {
 
 //	for(auto &e : event) cout << e.a.leftListIdx << "," << e.a.rightListIdx << " - " << e.b.leftListIdx << "," <<e.b.rightListIdx << endl;;
 
-//	data.facets.handleCell(&event);
+	event.printAll();
+	cout << endl;
+
+	data.facets.handleCell(&event);
 
 
-	for(auto i : event) {
-		data.sweepLine.printSweepLine(i);
-	}
+//	for(auto i : event) {
+//		data.sweepLine.printSweepLine(i);
+//	}
 }
 
 //void Skeleton::handleSplitEvent(Event& e) {

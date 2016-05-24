@@ -129,34 +129,17 @@ void RoofFacets::addCellToFacet(SweepItem& item, int& listIdx) {
 //}
 
 void RoofFacets::handleCell(SweepEvent *event) {
-	vector<SweepItem> interiorNode;
-	vector<SweepItem> boundaryNode;
-//	int interiorNodeCnt = 0;
-//	for(auto e : event) {
-//		if(isInteriorNode(e)) {
-//			interiorNode.push_back(e);
-//		} else if(isBoundaryNode(e)) {
-//			boundaryNode.push_back(e);
-//		}
-//	}
-//
-//	if(interiorNode.size() == 1 && boundaryNode.size() == 2) {
-//	/* Split Event */
-//
-//	} else if(boundaryNode.size() == 3) {
-//	/* Edge Event (?) */
-//		handleEdgeEvent()
-//	}
-//
-//	return;
-//
-//	auto p = onlyOneCellHasActiveNeighbors(event);
-//
-//	if(p.first) {
-//		addCellToFacet(p.second,p.second.a.rightListIdx);
-//	} else {
-//
-//	}
+	auto cont = event->getEventType();
+	switch(cont.first) {
+	case EventType::EMPTY:   		cout << "EMPTY EVENT ";		  			break;
+	case EventType::EDGE:    		handleEdgeEvent(cont.second); 			break;
+	case EventType::SPLIT:   		handleSplitEvent(cont.second);			break;
+	case EventType::CREATE1: 		handleCreate1Event(cont.second);		break;
+	case EventType::CREATE2: 		cout << "ERROR: CREATE2 EVENT"; 		break;
+	case EventType::MERGE:   		cout << "ERROR: MERGE EVENT"; 			break;
+	case EventType::CREATE1ORMERGE: handleMergeOrCreate1Event(cont.second); break;
+	case EventType::CREATE2ORMERGE: handleMergeOrCreate2Event(cont.second); break;
+	}
 }
 
 bool RoofFacets::aGreaterB(Point a, Point b, EdgeIterator base) {
@@ -203,6 +186,109 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		line->rightListIdx = facet.front();
 	}
 }
+
+void RoofFacets::handleEdgeEvent(SweepEventReturnContainer& event) {
+	for(auto& cell : event.boundaryNodes) {
+//		cell.print();
+		if(cell.a->rightListIdx == cell.b->leftListIdx && cell.b->leftListIdx != NOLIST) {
+
+			auto& l = allLists[cell.a->rightListIdx];
+			l.push_back(cell.intersectionPoint);
+			cell.a->rightListIdx = NOLIST;
+			cell.b->leftListIdx  = NOLIST;
+
+		} else if(cell.a->leftListIdx != NOLIST) {
+
+			auto& l = allLists[cell.a->leftListIdx];
+			l.push_back(cell.intersectionPoint);
+			cell.b->leftListIdx = cell.a->leftListIdx;
+			cell.a->leftListIdx = NOLIST;
+
+		} else if(cell.a->rightListIdx != NOLIST) {
+
+			auto& l = allLists[cell.a->rightListIdx];
+			l.push_front(cell.intersectionPoint);
+			cell.b->rightListIdx = cell.a->rightListIdx;
+			cell.a->rightListIdx = NOLIST;
+
+		} else if(cell.b->leftListIdx != NOLIST) {
+
+			auto& l = allLists[cell.b->leftListIdx];
+			l.push_front(cell.intersectionPoint);
+			cell.a->leftListIdx = cell.b->leftListIdx;
+			cell.b->leftListIdx = NOLIST;
+
+		} else if(cell.b->rightListIdx != NOLIST) {
+
+			auto& l = allLists[cell.b->rightListIdx];
+			l.push_front(cell.intersectionPoint);
+			cell.a->rightListIdx = cell.b->rightListIdx;
+			cell.b->rightListIdx = NOLIST;
+
+		} else {
+			cout << "Warning: Should not occur!" << endl;
+		}
+		cell.print();
+	}
+
+	cout << "----------------------------------------> edge, ";
+}
+
+void RoofFacets::handleSplitEvent(SweepEventReturnContainer& event) {
+	for(auto& cell : event.interiorNodes) {
+		cout << "INT: "; cell.print();
+		int facetIdx = listToFacet[cell.a->rightListIdx];
+
+		cell.a->leftListIdx  = cell.a->rightListIdx;
+		cell.b->rightListIdx = cell.b->leftListIdx;
+
+		cell.a->rightListIdx = NOLIST;
+		cell.b->leftListIdx  = NOLIST;
+
+		list<Point> l;
+		l.push_back(cell.intersectionPoint);
+		allLists.push_back(l);
+		listToFacet[allLists.size()-1] = facetIdx;
+	}
+
+	for(auto& cell : event.boundaryNodes) {
+		cell.print();
+	}
+	cout << "----------------------------------------> split, ";
+}
+
+void RoofFacets::handleCreate1Event(SweepEventReturnContainer& event) {
+	cout << "----------------------------------------> create1, ";
+
+}
+
+void RoofFacets::handleMergeOrCreate1Event(SweepEventReturnContainer& event) {
+	cout << "----------------------------------------> create1ormerge, ";
+	handleMergeEvent(event);
+}
+
+void RoofFacets::handleMergeOrCreate2Event(SweepEventReturnContainer& event) {
+	cout << "----------------------------------------> create2ormerge, ";
+	handleMergeEvent(event);
+}
+
+
+void RoofFacets::handleMergeEvent(SweepEventReturnContainer& event) {
+	for(auto& cell : event.boundaryNodes) {
+		if(cell.a->leftListIdx != NOLIST && cell.a->rightListIdx == NOLIST &&
+		   cell.b->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST ) {
+
+			cell.b->leftListIdx  = cell.a->leftListIdx;
+			cell.b->rightListIdx = cell.a->leftListIdx;
+		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx == NOLIST &&
+		   cell.b->leftListIdx == NOLIST && cell.b->rightListIdx != NOLIST ) {
+
+			cell.a->leftListIdx  = cell.b->rightListIdx;
+			cell.a->rightListIdx = cell.b->rightListIdx;
+		}
+	}
+}
+
 
 void RoofFacets::addPointToNewList(SweepItem& item) {
 

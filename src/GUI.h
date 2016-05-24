@@ -18,23 +18,11 @@
 
 #include <GL/gl.h>
 
-#include <CGAL/Linear_cell_complex.h>
-#include <CGAL/Cartesian.h>
-#include <CGAL/Cartesian_converter.h>
 
-#include <CGAL/Linear_cell_complex.h>
-#include <CGAL/Linear_cell_complex_constructors.h>
-#include <CGAL/Linear_cell_complex_operations.h>
-
+#include "Definitions.h"
+#include "CGALTypes.h"
 #include "Data.h"
 #include "Skeleton.h"
-
-using GUIKernel = CGAL::Cartesian<double>;
-
-using LCC_3       = CGAL::Linear_cell_complex<3>;
-using Dart_handle = LCC_3::Dart_handle;
-using Point3D     = LCC_3::Point;
-using SsPtr       = std::shared_ptr<Polygon>;
 
 typedef typename GUIKernel::Point_3  Local_point;
 typedef typename GUIKernel::Vector_3 Local_vector;
@@ -117,6 +105,7 @@ public:
 
 	void addSegment(EdgeIterator& e);
 	void addSegment(Point& a, Point& b);
+	void addSegment(Point3D& a, Point3D& b);
 
 protected :
 	virtual void draw();

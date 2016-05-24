@@ -1,6 +1,9 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
+#define NIL    -1
 #define NOLIST -2
+
+enum class EventType : int {EMPTY=0,EDGE,SPLIT,CREATE1,CREATE2,MERGE,CREATE1ORMERGE,CREATE2ORMERGE};
 
 #endif

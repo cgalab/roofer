@@ -28,15 +28,23 @@ public:
 
 	bool aGreaterB(Point a, Point b, EdgeIterator base);
 
+	AllLists    allLists;
 private:
 	void addCellToFacet(SweepItem& item, int& listIdx);
+
+	void handleEdgeEvent(SweepEventReturnContainer& event);
+	void handleSplitEvent(SweepEventReturnContainer& event);
+	void handleCreate1Event(SweepEventReturnContainer& event);
+	void handleMergeOrCreate1Event(SweepEventReturnContainer& event);
+	void handleMergeOrCreate2Event(SweepEventReturnContainer& event);
+
+	void handleMergeEvent(SweepEventReturnContainer& event);
 
 	void addPointToNewList(SweepItem& item);
 	void addPointToCurrentList(SweepItem& item);
 
 	int 		numberOfFacets;
 
-	AllLists    allLists;
 	AllFacets   allFacets;
 	ListToFacet listToFacet;
 };
