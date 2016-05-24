@@ -63,10 +63,10 @@ void Skeleton::createSkeleton() {
 
 void Skeleton::createLineArrangements() {
 	int uid = 0, eid = 0;
-	for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
-		for(auto it=data.polygon.edges_begin(); it != data.polygon.edges_end(); ++it) {
-			if( edgeIt->supporting_line() != it->supporting_line() ) {
-				ArrangementLine al(edgeIt, it, uid++,eid);
+	for(auto baseEdgeIt=data.polygon.edges_begin(); baseEdgeIt != data.polygon.edges_end(); ++baseEdgeIt) {
+		for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
+			if( baseEdgeIt->supporting_line() != edgeIt->supporting_line() ) {
+				ArrangementLine al(baseEdgeIt, edgeIt, uid++, eid);
 				data.sweepLine.addLine(al);
 			}
 		}
@@ -106,12 +106,14 @@ void Skeleton::handleNextEvent(SweepEvent& event) {
 	cout << "Q: " << data.sweepLine.queueSize() << endl;
 	if(event.size() != 3) cout << ", Items: " << event.size() << endl;
 
-	data.facets.addCell(event);
+//	for(auto &e : event) cout << e.a.leftListIdx << "," << e.a.rightListIdx << " - " << e.b.leftListIdx << "," <<e.b.rightListIdx << endl;;
+
+//	data.facets.handleCell(&event);
 
 
-//	for(auto i : item) {
-//		data.sweepLine.printSweepLine(i);
-//	}
+	for(auto i : event) {
+		data.sweepLine.printSweepLine(i);
+	}
 }
 
 //void Skeleton::handleSplitEvent(Event& e) {

@@ -3,6 +3,19 @@
 
 using namespace std;
 
+//bool operator==(const ArrangementLine* a, const ArrangementLine* b) {
+//		return  a->base  == b->base &&
+//				a->start == b->start &&
+//				a->e     == b->e;
+//}
+//bool operator> (const ArrangementLine* a, const ArrangementLine* b) {
+//    return (a->base == b->base && a->base->direction() == Vector(a->start - b->start).direction()) ||
+//    	   (a->base != b->base && a->uid > b->uid);
+//}
+//bool operator< (const ArrangementLine* a, const ArrangementLine* b) {
+//    return (a->base == b->base && a->base->direction() == Vector(b->start - a->start).direction()) ||
+//     	   (a->base != b->base && a->uid < b->uid);
+//}
 bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 		return  a.base  == b.base &&
 				a.start == b.start &&
@@ -25,11 +38,11 @@ bool operator== (const SweepItem& a, const SweepItem& b) {
 		    b.b 				== b.a  ) );
 }
 bool operator> (const SweepItem& a, const SweepItem& b) {
-	return  a.normalDistance  > b.normalDistance ||
+	return (a.normalDistance  > b.normalDistance) ||
 		   (a.normalDistance == b.normalDistance && a.a > b.a);
 }
 bool operator< (const SweepItem& a, const SweepItem& b) {
-	return  a.normalDistance  < b.normalDistance ||
+	return (a.normalDistance  < b.normalDistance) ||
 		   (a.normalDistance == b.normalDistance && a.a < b.a);
 }
 
@@ -37,34 +50,37 @@ bool operator< (const SweepItem& a, const SweepItem& b) {
 void SweepLine::initiateEventQueue() {
 	assert(arrangementStart.empty());
 
-	for(auto le : arrangementStart) {
+	for(auto& le : arrangementStart) {
 		assert(le.second.empty() && le.second.size > 1);
 
-		do {
-			ArrangementLine a = le.second.top();
+		auto& arrangementLines = allArrangementLines[le.first];
+		auto& lStatus          = status[le.first];
+
+		while(!le.second.empty()) {
+			auto a = le.second.top();
+
+			arrangementLines.push_back(a);
+
 			le.second.pop();
-			ArrangementLine b = le.second.top();
+		}
 
-			assert(a.base == b.base);
 
-			SweepItem i(a,b);
+		for(auto i = arrangementLines.begin(); i != arrangementLines.end(); ++i) {
+			lStatus.push_back(i);
+			if(i+1 != arrangementLines.end()) {
+				SweepItem item(i,(i+1));
 
-			if(i.raysIntersect) {
-				eventQueue.insert(i);
+				if(item.raysIntersect) {
+					eventQueue.insert(item);
+				}
 			}
-
-			status[le.first].push_back(a);
-
-		} while(le.second.size() > 1);
-
-		status[le.first].push_back(le.second.top());
-		le.second.pop();
+		}
 	}
 
 	for(auto &line : status) {
 		int cnt = 0;
-		for(auto &l : line.second) {
-			l.lid = cnt++;
+		for(auto l : line.second) {
+			l->lid = cnt++;
 		}
 	}
 }
@@ -80,12 +96,12 @@ void SweepLine::printEventQueue() {
 }
 
 void SweepLine::printSweepLine(SweepItem& item) {
-	cout << status[item.base].begin()->eid << ": ";
+	cout << status[item.base].front()->eid << ": ";
 	for(auto l : status[item.base]) {
 		if(l == item.a || l == item.b) {
 			cout << "(";
 		}
-		cout << l.lid;
+		cout << l->lid;
 		if(l == item.a || l == item.b) {
 			cout << ")";
 		}
@@ -107,16 +123,16 @@ void SweepLine::printSweepLine(SweepItem& item) {
 		event.push_back(first);
 
 		while(!queueEmpty() && first.normalDistance == eventQueue.begin()->normalDistance) {
-			auto second = eventQueue.begin();
+			auto other = eventQueue.begin();
 
-			if((first.base != second->base) &&
-			   (first.a.e  == second->base || first.b.e  == second->base ) ) {
-				event.push_back(*second);
+			if((first.base != other->base) &&
+			   (first.a->e  == other->base || first.b->e  == other->base ) ) {
+				event.push_back(*other);
 			} else {
-				temp.push_back(*second);
+				temp.push_back(*other);
 				cout << "Warning: event added to temp!" << endl;
 			}
-			eventQueue.erase(second);
+			eventQueue.erase(other);
 		}
 
 		if(event.size() != 3 || temp.size() > 0) {
@@ -139,8 +155,8 @@ void SweepLine::printSweepLine(SweepItem& item) {
 }
 
 void SweepLine::handlePopEvent(SweepItem& item) {
-	auto a = item.a;
-	auto b = item.b;
+	const ALIterator a = item.a;
+	const ALIterator b = item.b;
 	auto& lStatus = status[item.base];
 
 	DistanceCompare comp(item.intersectionPoint);
@@ -148,10 +164,8 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 	assert(!(a == b));
 	if(a == b) throw runtime_error("ERROR: handlePopEvent(a==b)!");
 
-//	cout << "+"; fflush(stdout);
-
 	auto FoundA = lower_bound(lStatus.begin(),lStatus.end(),a,comp);
-	SweepLineIterator FoundB;
+	auto FoundB = FoundA;
 
 	if(a == *FoundA) {
 		if(b == *(FoundA+1)) {
@@ -179,7 +193,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 
 //	cout << "+"; fflush(stdout);
 
-	if(FoundA != lStatus.begin()) {
+	if(!(*FoundA == lStatus.front())) {
 		SweepItem beforeA(*(FoundA-1), *FoundB);
 		if(beforeA.raysIntersect && beforeA.normalDistance > item.normalDistance) {
 			eventQueue.insert(beforeA);
@@ -188,7 +202,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 
 //	cout << "+"; fflush(stdout);
 
-	if(FoundB+1 != lStatus.end())  {
+	if(!(*FoundB == lStatus.back()))  {
 		SweepItem afterB(*FoundA, *(FoundB+1) );
 		if(afterB.raysIntersect && afterB.normalDistance > item.normalDistance) {
 			eventQueue.insert(afterB);

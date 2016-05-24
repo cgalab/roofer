@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "CGALTypes.h"
+#include "Definitions.h"
 
 using namespace std;
 
@@ -30,8 +31,13 @@ struct ArrangementLine {
 	int lid;
 	int eid;
 
-	ArrangementLine(EdgeIterator &pbase, EdgeIterator &pe, int id = -1, int edgeid = -1):
-		base(pbase),e(pe),leftListIdx(-1),rightListIdx(-1),uid(id),lid(-1),eid(edgeid) {
+//	ArrangementLine(const ArrangementLine& al):
+//		base(al.base),e(al.e),start(al.start),bisector(al.bisector),
+//		leftListIdx(al.leftListIdx),rightListIdx(al.rightListIdx),
+//		uid(al.uid),lid(al.lid),eid(al.eid) {}
+
+	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = -1, int edgeid = -1):
+		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(-1),eid(edgeid) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -63,28 +69,36 @@ struct ArrangementLine {
 		   Line(*e).has_on_negative_side(start + ray.to_vector()) 	) {
 			ray = Ray(start,bisectorLine.opposite());
 		}
-
 		return ray;
 	}
 };
 
+/* used to initially sort the ArrangementLines along their 'base' line */
+using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine, vector<ArrangementLine>, greater<ArrangementLine> > >;
+/* holds the actual ArrangementLines, to which we point to */
+using AllArrangementLines	= map<EdgeIterator,vector<ArrangementLine> >;
+
+using ALIterator = vector<ArrangementLine>::iterator;
+
 struct SweepItem {
-	ArrangementLine a, b;
+	ALIterator a, b;
 	EdgeIterator base;
 
 	bool  raysIntersect;
 	Exact normalDistance;
 	Point intersectionPoint;
 
-	SweepItem(ArrangementLine pa, ArrangementLine pb):a(pa),b(pb),base(pa.base) {
-		if(a.base != b.base) {cout << "ERROR: Base Line not equal!" << endl;}
+	SweepItem(const SweepItem& i):SweepItem(i.a,i.b) {}
 
-		auto intersection = CGAL::intersection(a.bisector,b.bisector);
+	SweepItem(ALIterator pa, ALIterator pb):a(pa),b(pb),base(pa->base) {
+		if(a->base != b->base) {cout << "ERROR: Base Line not equal!" << endl;}
+
+		auto intersection = CGAL::intersection(a->bisector,b->bisector);
 
 		if(!intersection.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
 				raysIntersect  = true;
-				normalDistance = CGAL::squared_distance(a.base->supporting_line(),*ipoint);
+				normalDistance = CGAL::squared_distance(a->base->supporting_line(),*ipoint);
 				intersectionPoint   = *ipoint;
 			} else {
 				raysIntersect  = false;
@@ -98,6 +112,76 @@ struct SweepItem {
 
 	inline Exact dist() { return normalDistance; }
 
+	/* enable accessing the list indices of left/right refs of a,b via setter/getter
+	 * (0,0) a left
+	 * (0,1) a right
+	 * (1,0) b left
+	 * (1,1) b right
+	 * */
+	inline int get(int i, int j) {
+		if(i == 0) {
+			if(j == 0) {
+				return a->leftListIdx;
+			} else if(j == 1) {
+				return a->rightListIdx;
+			}
+		} else if(i == 1) {
+			if(j == 0) {
+				return b->leftListIdx;
+			} else if(j == 1) {
+				return b->rightListIdx;
+			}
+		}
+		else throw runtime_error("get(i,j) i or j > 1!");
+		return NOLIST;
+	}
+
+	inline void set(int i, int j, int idx) {
+		if(i == 0) {
+			if(j == 0) {
+				a->leftListIdx = idx;
+			} else if(j == 1) {
+				a->rightListIdx = idx;
+			}
+		} else if(i == 1) {
+			if(j == 0) {
+				b->leftListIdx = idx;
+			} else if(j == 1) {
+				b->rightListIdx = idx;
+			}
+		}
+		else throw runtime_error("get(i,j) i or j > 1!");
+	}
+
+	inline bool isInteriorNode() {
+		return a->leftListIdx  != NOLIST &&
+			   a->rightListIdx == a->leftListIdx &&
+			   b->leftListIdx  == a->rightListIdx &&
+			   b->rightListIdx == b->leftListIdx;
+	}
+
+	inline bool isBoundaryNode() {
+		return (a->leftListIdx == NOLIST && a->rightListIdx != NOLIST) ||
+			   (a->leftListIdx != NOLIST && a->rightListIdx == NOLIST) ||
+			   (b->leftListIdx == NOLIST && b->rightListIdx != NOLIST) ||
+			   (b->leftListIdx != NOLIST && b->rightListIdx == NOLIST);
+	}
+
+	inline int firstListIndex() {
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				if(get(i,j) != NOLIST) {
+					return get(i,j);
+				}
+			}
+		}
+		return NOLIST;
+	}
+
+	inline bool isActiveUpToIntersection() {
+		return firstListIndex() != NOLIST;
+	}
+
 	friend bool operator>  (const SweepItem& a, const SweepItem& b);
 	friend bool operator<  (const SweepItem& a, const SweepItem& b);
 	friend bool operator== (const SweepItem& a, const SweepItem& b);
@@ -110,6 +194,24 @@ struct DistanceCompare {
 	DistanceCompare(Point p): currentIntersection(p) {}
 
 	// < Operator
+	bool operator()  (ALIterator a, ALIterator b) {
+		if(a->base != b->base) return a->uid < b->uid;
+
+		Line currentBase(currentIntersection,a->base->direction());
+
+		auto intersectionA = CGAL::intersection(currentBase, a->bisector);
+		auto intersectionB = CGAL::intersection(currentBase, b->bisector);
+
+		if(!intersectionA.empty() && !intersectionB.empty()) {
+			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
+				if(const Point *pointB = CGAL::object_cast<Point>(&intersectionB)) {
+					return a->base->direction() == Vector(*pointB - *pointA).direction();
+				}
+			}
+		}
+
+		throw runtime_error("ERROR: empty intersections!");
+	}
 	bool operator()  (ArrangementLine a, ArrangementLine b) {
 		if(a.base != b.base) return a.uid < b.uid;
 
@@ -130,22 +232,37 @@ struct DistanceCompare {
 	}
 };
 
-using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine,vector<ArrangementLine>, greater<ArrangementLine> > >;
+
 using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
-using LocalSweepLineStatus  = vector<ArrangementLine>;
+
+using LocalSweepLineStatus  = vector<ALIterator>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
-using SweepLineIterator     = vector<ArrangementLine>::iterator;
-using SweepEvent			= vector<SweepItem>;
+
+struct SweepEvent : public vector<SweepItem> {
+	inline bool hasActiveCell() {
+		if(!empty()) {
+			for(auto& e : *this) {
+				if(e.isActiveUpToIntersection()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+};
 
 class SweepLine {
 public:
 	SweepLine() {}
 
-	inline void addLine(ArrangementLine &a) { arrangementStart[a.base].push(a); }
+	inline void addLine(ArrangementLine a) { arrangementStart[a.base].push(a); }
 	void initiateEventQueue();
 
 	inline bool queueEmpty() { return eventQueue.empty(); }
 	inline long queueSize()  { return eventQueue.size(); }
+
 	SweepEvent popEvent();
 
 	void handlePopEvent(SweepItem& item);
@@ -154,8 +271,11 @@ public:
 	void printEventQueue();
 
 	SweepLineStatus 	status;
+
 private:
 	ArrangementStart 	arrangementStart;
+
+	AllArrangementLines allArrangementLines;
 	EventQueue 			eventQueue;
 };
 

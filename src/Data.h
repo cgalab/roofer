@@ -18,13 +18,13 @@
 #include <sys/stat.h>
 
 #include "CGALTypes.h"
+#include "Definitions.h"
 #include "SweepLine.h"
 #include "Facets.h"
 
 using namespace std;
 
 enum class EventType {EDGE,SPLIT,CREATE,MERGE,EMPTY};
-
 
 struct Config {
 	Config():gui(false),maximize(true),fileName("") {

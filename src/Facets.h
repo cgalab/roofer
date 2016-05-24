@@ -1,7 +1,10 @@
 #ifndef FACETS_H_
 #define FACETS_H_
 
+
 #include "CGALTypes.h"
+
+#include "Definitions.h"
 #include "SweepLine.h"
 
 using namespace std;
@@ -20,16 +23,16 @@ class RoofFacets {
 public:
 	RoofFacets();
 
-	void addCell(SweepEvent& event);
-	void addBaseCell(ArrangementLine& line);
-
+	void handleCell(SweepEvent *event);
+	void addBaseCell(ALIterator& line);
 
 	bool aGreaterB(Point a, Point b, EdgeIterator base);
+
 private:
 	void addCellToFacet(SweepItem& item, int& listIdx);
 
-	bool cellHasActiveNeighbors(SweepItem& item);
-	bool onlyOneCellHasActiveNeighbors(SweepEvent& event);
+	void addPointToNewList(SweepItem& item);
+	void addPointToCurrentList(SweepItem& item);
 
 	int 		numberOfFacets;
 
