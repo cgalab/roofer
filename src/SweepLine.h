@@ -187,12 +187,12 @@ struct SweepItem {
 		return isBoundaryNode() || isInteriorNode();
 	}
 
-//	inline bool isActiveUpToIntersection() {
-//		return firstListIndex() != NOLIST;
-//	}
+	inline bool hasAtLeastOneListIdx() {
+		return firstListIndex() != NOLIST;
+	}
 
 	inline void print() {
-		cout << "(";
+		cout <<  a->eid << " (";
 		for(int i = 0; i < 2; ++i) {
 			for(int j = 0; j < 2; ++j) {
 				if(get(i,j) == NOLIST) {
@@ -203,7 +203,7 @@ struct SweepItem {
 				if(i != 1 || j != 1) cout << ",";
 			}
 		}
-		cout << ") ";
+		cout << ")  ";
 	}
 
 	friend bool operator>  (const SweepItem& a, const SweepItem& b);

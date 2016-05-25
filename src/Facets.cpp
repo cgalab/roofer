@@ -132,20 +132,21 @@ void RoofFacets::handleCell(SweepEvent *event) {
 	auto cont = event->getEventType();
 	switch(cont.first) {
 	case EventType::EMPTY:   		cout << "EMPTY EVENT ";		  			break;
-	case EventType::EDGE:    		handleEdgeEvent(cont.second); 			break;
-	case EventType::SPLIT:   		handleSplitEvent(cont.second);			break;
-	case EventType::CREATE1: 		handleCreate1Event(cont.second);		break;
+	case EventType::EDGE:    		event->printAll(); cout << endl;handleEdgeEvent(cont.second); 			break;
+	case EventType::SPLIT:   		event->printAll(); cout << endl;handleSplitEvent(cont.second);			break;
+	case EventType::CREATE1: 		event->printAll(); cout << endl;handleCreate1Event(cont.second);		break;
 	case EventType::CREATE2: 		cout << "ERROR: CREATE2 EVENT"; 		break;
 	case EventType::MERGE:   		cout << "ERROR: MERGE EVENT"; 			break;
-	case EventType::CREATE1ORMERGE: handleMergeOrCreate1Event(cont.second); break;
-	case EventType::CREATE2ORMERGE: handleMergeOrCreate2Event(cont.second); break;
+	case EventType::CREATE1ORENTER: event->printAll(); cout << endl;handleEnterOrCreate1Event(cont.second); break;
+	case EventType::CREATE2ORMERGE: event->printAll(); cout << endl;handleMergeOrCreate2Event(cont.second); break;
+	case EventType::ENTER:    		event->printAll(); cout << endl;handleEnterEvent(cont.second); 			break;
 	}
 }
 
 bool RoofFacets::aGreaterB(Point a, Point b, EdgeIterator base) {
 	auto aOnBase = base->supporting_line().projection(a);
 	auto bOnBase = base->supporting_line().projection(b);
-    return base->direction() == Vector(bOnBase - aOnBase).direction();
+    return base->direction() == Vector(aOnBase - bOnBase).direction();
 }
 
 
@@ -262,14 +263,14 @@ void RoofFacets::handleCreate1Event(SweepEventReturnContainer& event) {
 
 }
 
-void RoofFacets::handleMergeOrCreate1Event(SweepEventReturnContainer& event) {
-	cout << "----------------------------------------> create1ormerge, ";
-	handleMergeEvent(event);
+void RoofFacets::handleEnterOrCreate1Event(SweepEventReturnContainer& event) {
+	handleEnterEvent(event);
+	cout << "----------------------------------------> enter-create1, ";
 }
 
 void RoofFacets::handleMergeOrCreate2Event(SweepEventReturnContainer& event) {
-	cout << "----------------------------------------> create2ormerge, ";
 	handleMergeEvent(event);
+	cout << "----------------------------------------> create2ormerge, ";
 }
 
 
@@ -288,6 +289,34 @@ void RoofFacets::handleMergeEvent(SweepEventReturnContainer& event) {
 		}
 	}
 }
+
+void RoofFacets::handleEnterEvent(SweepEventReturnContainer& event) {
+	for(auto& cell : event.boundaryNodes) {
+		if(cell.a->leftListIdx != NOLIST && cell.a->rightListIdx == NOLIST &&
+		   cell.b->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST ) {
+
+			cell.b->leftListIdx  = cell.a->leftListIdx;
+			cell.b->rightListIdx = cell.a->leftListIdx;
+		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx != NOLIST &&
+				  cell.b->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST ) {
+
+			cell.b->leftListIdx  = cell.a->rightListIdx;
+			cell.b->rightListIdx = cell.a->rightListIdx;
+		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx == NOLIST &&
+				  cell.b->leftListIdx != NOLIST && cell.b->rightListIdx == NOLIST ) {
+
+			cell.a->leftListIdx  = cell.b->leftListIdx;
+			cell.a->rightListIdx = cell.b->leftListIdx;
+		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx == NOLIST &&
+				  cell.b->leftListIdx == NOLIST && cell.b->rightListIdx != NOLIST ) {
+
+			cell.a->leftListIdx  = cell.b->rightListIdx;
+			cell.a->rightListIdx = cell.b->rightListIdx;
+		}
+		cell.print();
+	}
+}
+
 
 
 void RoofFacets::addPointToNewList(SweepItem& item) {

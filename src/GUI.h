@@ -133,6 +133,8 @@ private:
 	bool edges;
 	bool vertices;
 
+	bool drawLabels;
+
 	Geom_utils<LCC_3> geomutils;
 };
 

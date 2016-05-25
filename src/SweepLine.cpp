@@ -246,12 +246,12 @@ EventInfo SweepEvent::getEventType() {
 
 		} else if(numInteriorCells == 0 && numBoundaryCells == 2) {
 			/* create event (1) */
-			return make_pair(EventType::CREATE1ORMERGE,cont);
+			return make_pair(EventType::CREATE1ORENTER,cont);
 
-//		} else if(numInteriorCells == 0 && numBoundaryCells == 1) {
-//			/* merge event */
-//			return make_pair(EventType::CREATE1,cont);
-//
+		} else if(numInteriorCells == 0 && numBoundaryCells == 1) {
+			/* merge event */
+			return make_pair(EventType::ENTER,cont);
+
 		} else {
 			cout << "BN: " << numBoundaryCells << ", IN: " << numInteriorCells << endl;
 			for(auto c : activeCells) {

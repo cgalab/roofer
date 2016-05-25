@@ -108,9 +108,6 @@ void Skeleton::handleNextEvent(SweepEvent& event) {
 
 //	for(auto &e : event) cout << e.a.leftListIdx << "," << e.a.rightListIdx << " - " << e.b.leftListIdx << "," <<e.b.rightListIdx << endl;;
 
-	event.printAll();
-	cout << endl;
-
 	data.facets.handleCell(&event);
 
 

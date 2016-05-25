@@ -11,7 +11,7 @@
 
 GUI::GUI(Skeleton *s) : QGLViewer(),
 wireframe(true), flatShading(false),
-edges(true), vertices(true) {
+edges(true), vertices(true), drawLabels(true) {
 	skeleton = s;
 	data     = &s->data;
 
@@ -40,10 +40,17 @@ Dart_handle GUI::make_facet(const Polygon& poly) {
 	Dart_handle d =
 			CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)poly.size());
 
+//	int vIdx = 0;
+
 	for(auto v = poly.vertices_begin(); v != poly.vertices_end(); ++v) {
 		//for (unsigned int i=0; i<poly.size(); ++i) {
 
 		Point3D p(v->x().doubleValue(),v->y().doubleValue(),0);
+
+//		if(drawLabels) {
+//			drawText(p.x(),p.y(),QString(vIdx),QFont());
+//			++vIdx;
+//		}
 
 		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
 		d = d->beta(1);

@@ -35,8 +35,9 @@ private:
 	void handleEdgeEvent(SweepEventReturnContainer& event);
 	void handleSplitEvent(SweepEventReturnContainer& event);
 	void handleCreate1Event(SweepEventReturnContainer& event);
-	void handleMergeOrCreate1Event(SweepEventReturnContainer& event);
+	void handleEnterOrCreate1Event(SweepEventReturnContainer& event);
 	void handleMergeOrCreate2Event(SweepEventReturnContainer& event);
+	void handleEnterEvent(SweepEventReturnContainer& event);
 
 	void handleMergeEvent(SweepEventReturnContainer& event);
 
