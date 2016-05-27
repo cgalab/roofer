@@ -191,7 +191,21 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 void RoofFacets::handleEdgeEvent(SweepEventReturnContainer& event) {
 	for(auto& cell : event.boundaryNodes) {
 //		cell.print();
-		if(cell.a->rightListIdx == cell.b->leftListIdx && cell.b->leftListIdx != NOLIST) {
+		if(cell.a->rightListIdx == cell.b->leftListIdx && cell.b->leftListIdx != NOLIST &&
+				( (cell.a->leftListIdx == NOLIST && cell.b->rightListIdx != NOLIST) ||
+				  (cell.a->leftListIdx != NOLIST && cell.b->rightListIdx == NOLIST) ) ) {
+			/* an arrangement line is leaving the cell */
+			if(cell.b->rightListIdx != NOLIST) {
+				cell.b->leftListIdx  = NOLIST;
+				cell.b->rightListIdx = NOLIST;
+			} else {
+				cell.a->leftListIdx  = NOLIST;
+				cell.a->rightListIdx = NOLIST;
+			}
+		}
+
+		if(cell.a->rightListIdx == cell.b->leftListIdx && cell.b->leftListIdx != NOLIST &&
+		   cell.a->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST) {
 
 			auto& l = allLists[cell.a->rightListIdx];
 			l.push_back(cell.intersectionPoint);
