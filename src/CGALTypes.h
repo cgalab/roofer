@@ -43,7 +43,7 @@ using Input          = std::vector<Point>;
 #include <CGAL/Linear_cell_complex_constructors.h>
 #include <CGAL/Linear_cell_complex_operations.h>
 
-using GUIKernel = CGAL::Cartesian<double>;
+using GUIKernel   = CGAL::Cartesian<double>;
 
 using LCC_3       = CGAL::Linear_cell_complex<3>;
 using Dart_handle = LCC_3::Dart_handle;

@@ -12,6 +12,10 @@ using namespace std;
 // the lists are directly referenced by the arrangements lines
 using AllLists		  = vector<list<Point>>;
 
+#ifdef QTGUI
+using PointToZ        = map<Point,double>;
+#endif
+
 // a facet groups together all lists that are part of one facet
 using Facet 		  = vector<int>;
 using AllFacets 	  = map<EdgeIterator,vector<Facet>>;
@@ -29,25 +33,32 @@ public:
 	bool aGreaterB(Point a, Point b, EdgeIterator base);
 
 	AllLists    allLists;
+	AllFacets   allFacets;
+	ListToFacet listToFacet;
+
+#ifdef QTGUI
+	PointToZ    zMap;
+#endif
 private:
 	void addCellToFacet(SweepItem& item, int& listIdx);
 
-	void handleEdgeEvent(SweepEventReturnContainer& event);
-	void handleSplitEvent(SweepEventReturnContainer& event);
-	void handleCreate1Event(SweepEventReturnContainer& event);
-	void handleEnterOrCreate1Event(SweepEventReturnContainer& event);
-	void handleMergeOrCreate2Event(SweepEventReturnContainer& event);
-	void handleEnterEvent(SweepEventReturnContainer& event);
+	void handleEdgeEvent(SweepEvent* event);
+	void handleSplitEvent(SweepEvent* event);
+	void handleCreate1Event(SweepEvent* event);
+	void handleEnterOrCreate1Event(SweepEvent* event);
+	void handleMergeOrCreate2Event(SweepEvent* event);
+	void handleEnterEvent(SweepEvent* event);
 
-	void handleMergeEvent(SweepEventReturnContainer& event);
+	void handleLeaveEvent(SweepItem* cell);
+	void handleEnterEvent(SweepItem* cell);
 
-	void addPointToNewList(SweepItem& item);
-	void addPointToCurrentList(SweepItem& item);
+	void handleMergeEvent(SweepEvent* event);
+
+	void addPointToNewList(SweepItem* cell);
+	void addPointToCurrentList(SweepItem* cell);
 
 	int 		numberOfFacets;
 
-	AllFacets   allFacets;
-	ListToFacet listToFacet;
 };
 
 #endif /* FACETS_H_ */

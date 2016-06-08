@@ -158,6 +158,13 @@ struct SweepItem {
 		}
 	}
 
+	inline bool isEdgeEvent() {
+		return a->leftListIdx  == NOLIST    &&
+			   a->rightListIdx != NOLIST    &&
+			   b->leftListIdx  != NOLIST    &&
+			   b->rightListIdx == NOLIST;
+	}
+
 	inline bool isInteriorNode() {
 		return a->leftListIdx  != NOLIST          &&
 			   a->rightListIdx == a->leftListIdx  &&
@@ -181,6 +188,18 @@ struct SweepItem {
 			}
 		}
 		return NOLIST;
+	}
+
+	inline int numberOfActiveIndices() {
+		int cnt = 0;
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				if(get(i,j) != NOLIST) {
+					++cnt;
+				}
+			}
+		}
+		return cnt;
 	}
 
 	inline bool isBoundaryOrInteriorNode() {
@@ -262,12 +281,12 @@ using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
 using LocalSweepLineStatus  = vector<ALIterator>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
 
-struct SweepEventReturnContainer {
-	vector<SweepItem> interiorNodes;
-	vector<SweepItem> boundaryNodes;
-};
-
-using EventInfo = pair<EventType,SweepEventReturnContainer>;
+//struct SweepEventReturnContainer {
+//	vector<SweepItem> interiorNodes;
+//	vector<SweepItem> boundaryNodes;
+//};
+//
+//using EventInfo = pair<EventType,SweepEventReturnContainer>;
 
 struct SweepEvent : public vector<SweepItem> {
 	inline int numberActiveCell() {
@@ -275,7 +294,7 @@ struct SweepEvent : public vector<SweepItem> {
 		if(!empty()) {
 			for(auto& e : *this) {
 //				if(e.isActiveUpToIntersection()) {
-				if(e.isBoundaryOrInteriorNode()) {
+				if(e.hasAtLeastOneListIdx()) {
 					++cnt;
 				}
 			}
@@ -283,16 +302,35 @@ struct SweepEvent : public vector<SweepItem> {
 		return cnt;
 	}
 
+	inline bool containsEdgeEvent() {
+		for(auto& e : *this) {
+			if(e.isEdgeEvent()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	inline bool containsInteriorNode() {
+		for(auto& e : *this) {
+			if(e.isInteriorNode()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	inline void printAll() {for(auto c : *this) {c.print();}}
 
 	inline vector<SweepItem*> getActivCells() {
 		vector<SweepItem*> r;
 //		for(auto c : *this) {if(c.isActiveUpToIntersection()) r.push_back(&c);}
-		for(auto& c : *this) {if(c.isBoundaryOrInteriorNode()) r.push_back(&c);}
+//		for(auto& c : *this) {if(c.isBoundaryOrInteriorNode()) r.push_back(&c);}
+		for(auto& c : *this) {if(c.hasAtLeastOneListIdx()) r.push_back(&c);}
 		return r;
 	}
 
-	EventInfo getEventType();
+//	EventInfo getEventType();
 };
 
 class SweepLine {

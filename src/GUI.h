@@ -120,6 +120,7 @@ protected :
 private:
 	void addSS(const SsPtr& ss);
 	void drawEvent(SweepEvent& event);
+	void drawAllLists();
 	void drawPolygon();
 
 	Skeleton *skeleton;

@@ -139,7 +139,7 @@ void GUI::keyPressEvent(QKeyEvent *e) {
 		if(!data->sweepLine.queueEmpty()) {
 			auto item = data->sweepLine.popEvent();
 
-			drawEvent(item);
+//			drawEvent(item);
 			skeleton->handleNextEvent(item);
 
 			fflush(stdout);
@@ -147,6 +147,12 @@ void GUI::keyPressEvent(QKeyEvent *e) {
 //			skeleton->handleNextEvent(e);
 //			drawWavefrontPolygon(e.time);
 		}
+		updateGL();
+	}
+	else if ((e->key()==Qt::Key_P) && (modifiers==Qt::NoButton))
+	{
+		drawAllLists();
+
 		updateGL();
 	}
 
@@ -260,11 +266,12 @@ void GUI::draw() {
 
 	lcc.free_mark(facettreated);
 }
+
 void GUI::drawEvent(SweepEvent& event) {
 
-	auto cont = event.getEventType();
-	if(cont.first == EventType::EDGE) {
+	auto cont = event.getActivCells();
 		for(auto i : event) {
+			if(i.isEdgeEvent()) {
 			if(i.a->rightListIdx == i.b->leftListIdx && i.a->rightListIdx != NOLIST) {
 				if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
 						data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
@@ -290,8 +297,7 @@ void GUI::drawEvent(SweepEvent& event) {
 //					addSegment(i.intersectionPoint,i.b->start);
 
 				}
-			}
-		}
+			}}
 	}
 //	switch(e.type) {
 //	case EventType::EDGE:
@@ -304,6 +310,25 @@ void GUI::drawEvent(SweepEvent& event) {
 //
 //	default: break;
 //	}
+}
+
+void GUI::drawAllLists() {
+	for(auto& facet : data->facets.allFacets) {
+		for(auto &f : facet.second) {
+			for(auto l : f) {
+				auto& facetList = data->facets.allLists[l];
+				Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)facetList.size());
+				for(auto& pIt : facetList) {
+					double z = -1;
+					z = data->facets.zMap[pIt];
+					if(z!=0) {z*=.4;}
+					Point3D p(pIt.x().doubleValue(),pIt.y().doubleValue(),z);
+					lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
+					d = d->beta(1);
+				}
+			}
+		}
+	}
 }
 
 void GUI::drawPolygon() {

@@ -129,18 +129,103 @@ void RoofFacets::addCellToFacet(SweepItem& item, int& listIdx) {
 //}
 
 void RoofFacets::handleCell(SweepEvent *event) {
-	auto cont = event->getEventType();
-	switch(cont.first) {
-	case EventType::EMPTY:   		cout << "EMPTY EVENT ";		  			break;
-	case EventType::EDGE:    		event->printAll(); cout << endl;handleEdgeEvent(cont.second); 			break;
-	case EventType::SPLIT:   		event->printAll(); cout << endl;handleSplitEvent(cont.second);			break;
-	case EventType::CREATE1: 		event->printAll(); cout << endl;handleCreate1Event(cont.second);		break;
-	case EventType::CREATE2: 		cout << "ERROR: CREATE2 EVENT"; 		break;
-	case EventType::MERGE:   		cout << "ERROR: MERGE EVENT"; 			break;
-	case EventType::CREATE1ORENTER: event->printAll(); cout << endl;handleEnterOrCreate1Event(cont.second); break;
-	case EventType::CREATE2ORMERGE: event->printAll(); cout << endl;handleMergeOrCreate2Event(cont.second); break;
-	case EventType::ENTER:    		event->printAll(); cout << endl;handleEnterEvent(cont.second); 			break;
+	auto activeCells =  event->getActivCells();
+	vector<SweepItem> boundaryNodes;
+	vector<SweepItem> interiorNodes;
+
+	if(activeCells.size() > 0) {event->printAll(); cout << " AC: " << activeCells.size() << " - "; }
+
+	if(activeCells.size() == 3) {
+		/* split or edge event */
+		if(event->containsEdgeEvent()) {
+			handleEdgeEvent(event);
+		} else if(event->containsInteriorNode()){
+			handleSplitEvent(event);
+		}
+
+	} else if(activeCells.size() == 2){
+		/* enter and leave events */
+		for(auto& cell : activeCells) {
+			int numActiveInd = cell->numberOfActiveIndices();
+
+			if(numActiveInd == 1) {
+				handleEnterEvent(cell);
+			} else if(numActiveInd == 3) {
+				handleLeaveEvent(cell);
+			}
+
+		}
+	} else if(activeCells.size() == 1){
+		/* enter and leave events */
+		auto cell = activeCells.front();
+		int numActiveInd = cell->numberOfActiveIndices();
+
+		if(numActiveInd == 1) {
+			handleEnterEvent(cell);
+		} else if(numActiveInd == 3) {
+			handleLeaveEvent(cell);
+		}
+
 	}
+
+
+//	if(activeCells.size() > 0) {
+//		/* edge, split or crate event */
+//		int numBoundaryCells = 0;
+//		int numInteriorCells = 0;
+//		for(auto cell : activeCells) {
+//			if(cell->isInteriorNode()) {++numInteriorCells; interiorNodes.push_back(*cell); }
+//			else {++numBoundaryCells; boundaryNodes.push_back(*cell); }
+//		}
+//
+//
+//
+//		if(numInteriorCells == 1 && numBoundaryCells == 0) {
+//			/* merge or create event (2) */
+////			return make_pair(EventType::CREATE2ORMERGE,cont);
+//
+//		} else if(numInteriorCells == 1 && numBoundaryCells == 2) {
+//			/* split event */
+////			return make_pair(EventType::SPLIT,cont);
+//
+//		} else if(numInteriorCells == 0 && numBoundaryCells == 3) {
+//			/* edge event */
+////			return make_pair(EventType::EDGE,cont);
+//
+//		} else if(numInteriorCells == 0 && numBoundaryCells == 2) {
+//			/* create event (1) */
+////			return make_pair(EventType::CREATE1ORENTER,cont);
+//
+//		} else if(numInteriorCells == 0 && numBoundaryCells == 1) {
+//			/* merge event */
+////			return make_pair(EventType::ENTER,cont);
+//
+//		} else {
+//			cout << "BN: " << numBoundaryCells << ", IN: " << numInteriorCells << endl;
+//			for(auto c : activeCells) {
+//				c->print();
+//			}
+//			cout << endl;
+//			//throw runtime_error("Not supported!");
+////			return make_pair(EventType::EMPTY,cont);
+//		}
+//	}
+//
+
+
+
+//	auto cont = event->getEventType();
+//	switch(cont.first) {
+//	case EventType::EMPTY:   		cout << "EMPTY EVENT ";		  			break;
+//	case EventType::EDGE:    		event->printAll(); cout << endl;handleEdgeEvent(cont.second); 			break;
+//	case EventType::SPLIT:   		event->printAll(); cout << endl;handleSplitEvent(cont.second);			break;
+//	case EventType::CREATE1: 		event->printAll(); cout << endl;handleCreate1Event(cont.second);		break;
+//	case EventType::CREATE2: 		cout << "ERROR: CREATE2 EVENT"; 		break;
+//	case EventType::MERGE:   		cout << "ERROR: MERGE EVENT"; 			break;
+//	case EventType::CREATE1ORENTER: event->printAll(); cout << endl;handleEnterOrCreate1Event(cont.second); break;
+//	case EventType::CREATE2ORMERGE: event->printAll(); cout << endl;handleMergeOrCreate2Event(cont.second); break;
+//	case EventType::ENTER:    		event->printAll(); cout << endl;handleEnterEvent(cont.second); 			break;
+//	}
 }
 
 bool RoofFacets::aGreaterB(Point a, Point b, EdgeIterator base) {
@@ -172,12 +257,18 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 
 		line->rightListIdx = listIdx;
 		cout << "S(" << line->rightListIdx << ") ";
+#ifdef QTGUI
+		zMap[line->start] = 0;
+#endif
 	} else if(line->start == edgeEnd) {
 		// still only one facet on the current plane
 		auto& facet = allFacets[line->base].front();
 		allLists[facet.front()].push_back(line->start);
 		line->leftListIdx = facet.front();
 		cout << "E(" << line->leftListIdx << ") ";
+#ifdef QTGUI
+		zMap[line->start] = 0;
+#endif
 	} else if(aGreaterB(line->start,edgeStart,line->base) &&
 			  aGreaterB(edgeEnd,line->start,line->base)) {
 		// just reference from the arrangement lines that start
@@ -188,156 +279,247 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 	}
 }
 
-void RoofFacets::handleEdgeEvent(SweepEventReturnContainer& event) {
-	for(auto& cell : event.boundaryNodes) {
-//		cell.print();
-		if(cell.a->rightListIdx == cell.b->leftListIdx && cell.b->leftListIdx != NOLIST &&
-				( (cell.a->leftListIdx == NOLIST && cell.b->rightListIdx != NOLIST) ||
-				  (cell.a->leftListIdx != NOLIST && cell.b->rightListIdx == NOLIST) ) ) {
-			/* an arrangement line is leaving the cell */
-			if(cell.b->rightListIdx != NOLIST) {
-				cell.b->leftListIdx  = NOLIST;
-				cell.b->rightListIdx = NOLIST;
+void RoofFacets::handleEdgeEvent(SweepEvent* event) {
+	cout << "EDGE EVENT!" << endl;
+	for(auto cell : event->getActivCells()) {
+
+//		if(cell->a->rightListIdx == cell->b->leftListIdx && cell->b->leftListIdx != NOLIST &&
+//		( (cell->a->leftListIdx  == NOLIST 				 && cell->b->rightListIdx != NOLIST) ||
+//		  (cell->a->leftListIdx  != NOLIST 				 && cell->b->rightListIdx == NOLIST) ) ) {
+//			/* an arrangement line is leaving the cell */
+//			if(cell->b->rightListIdx != NOLIST) {
+//				cell->b->leftListIdx  = NOLIST;
+//				cell->b->rightListIdx = NOLIST;
+//			} else {
+//				cell->a->leftListIdx  = NOLIST;
+//				cell->a->rightListIdx = NOLIST;
+//			}
+//		} else
+		if(cell->a->rightListIdx != NOLIST  &&  cell->b->leftListIdx  != NOLIST &&
+		   cell->a->leftListIdx  == NOLIST  &&  cell->b->rightListIdx == NOLIST) {
+			/* facet ends locally (edge event) */
+			auto& leftList = allLists[cell->a->rightListIdx];
+			if(cell->a->rightListIdx != cell->b->leftListIdx) {
+				auto& rightList = allLists[cell->b->leftListIdx];
+
+				rightList.splice(rightList.end(),leftList);
+
+				allLists[cell->a->rightListIdx].clear();
+
 			} else {
-				cell.a->leftListIdx  = NOLIST;
-				cell.a->rightListIdx = NOLIST;
+				leftList.push_back(cell->intersectionPoint);
 			}
-		}
 
-		if(cell.a->rightListIdx == cell.b->leftListIdx && cell.b->leftListIdx != NOLIST &&
-		   cell.a->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST) {
+			cell->a->rightListIdx = NOLIST;
+			cell->b->leftListIdx  = NOLIST;
 
-			auto& l = allLists[cell.a->rightListIdx];
-			l.push_back(cell.intersectionPoint);
-			cell.a->rightListIdx = NOLIST;
-			cell.b->leftListIdx  = NOLIST;
 
-		} else if(cell.a->leftListIdx != NOLIST) {
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+		} else if(cell->numberOfActiveIndices() == 3) {
+			if(cell->a->leftListIdx == NOLIST) {
 
-			auto& l = allLists[cell.a->leftListIdx];
-			l.push_back(cell.intersectionPoint);
-			cell.b->leftListIdx = cell.a->leftListIdx;
-			cell.a->leftListIdx = NOLIST;
+				auto& l = allLists[cell->a->rightListIdx];
+				l.push_front(cell->intersectionPoint);
+				cell->a->leftListIdx  = cell->a->rightListIdx;
+				cell->b->leftListIdx  = NOLIST;
 
-		} else if(cell.a->rightListIdx != NOLIST) {
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+			} else if(cell->b->rightListIdx == NOLIST) {
 
-			auto& l = allLists[cell.a->rightListIdx];
-			l.push_front(cell.intersectionPoint);
-			cell.b->rightListIdx = cell.a->rightListIdx;
-			cell.a->rightListIdx = NOLIST;
+				auto& l = allLists[cell->b->leftListIdx];
+				l.push_back(cell->intersectionPoint);
 
-		} else if(cell.b->leftListIdx != NOLIST) {
+				cell->b->rightListIdx  = cell->b->leftListIdx;
+				cell->a->rightListIdx  = NOLIST;
 
-			auto& l = allLists[cell.b->leftListIdx];
-			l.push_front(cell.intersectionPoint);
-			cell.a->leftListIdx = cell.b->leftListIdx;
-			cell.b->leftListIdx = NOLIST;
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+			}
+		} else if(cell->a->leftListIdx != NOLIST) {
 
-		} else if(cell.b->rightListIdx != NOLIST) {
+			auto& l = allLists[cell->a->leftListIdx];
+			l.push_back(cell->intersectionPoint);
+			cell->b->leftListIdx = cell->a->leftListIdx;
+			cell->a->leftListIdx = NOLIST;
 
-			auto& l = allLists[cell.b->rightListIdx];
-			l.push_front(cell.intersectionPoint);
-			cell.a->rightListIdx = cell.b->rightListIdx;
-			cell.b->rightListIdx = NOLIST;
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+		} else if(cell->a->rightListIdx != NOLIST) {
 
+			auto& l = allLists[cell->a->rightListIdx];
+			l.push_front(cell->intersectionPoint);
+			cell->b->rightListIdx = cell->a->rightListIdx;
+			cell->a->rightListIdx = NOLIST;
+
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+		} else if(cell->b->leftListIdx != NOLIST) {
+
+			auto& l = allLists[cell->b->leftListIdx];
+			l.push_back(cell->intersectionPoint);
+			cell->a->leftListIdx = cell->b->leftListIdx;
+			cell->b->leftListIdx = NOLIST;
+
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+		} else if(cell->b->rightListIdx != NOLIST) {
+
+			auto& l = allLists[cell->b->rightListIdx];
+			l.push_front(cell->intersectionPoint);
+			cell->a->rightListIdx = cell->b->rightListIdx;
+			cell->b->rightListIdx = NOLIST;
+
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
 		} else {
 			cout << "Warning: Should not occur!" << endl;
 		}
-		cell.print();
+		cell->print();
 	}
 
 	cout << "----------------------------------------> edge, ";
 }
 
-void RoofFacets::handleSplitEvent(SweepEventReturnContainer& event) {
-	for(auto& cell : event.interiorNodes) {
-		cout << "INT: "; cell.print();
-		int facetIdx = listToFacet[cell.a->rightListIdx];
+void RoofFacets::handleSplitEvent(SweepEvent* event) {
+	cout << "SPLIT EVENT!" << endl;
 
-		cell.a->leftListIdx  = cell.a->rightListIdx;
-		cell.b->rightListIdx = cell.b->leftListIdx;
+	for(auto cell : event->getActivCells()) {
+		if(cell->isInteriorNode()) {
+			int facetIdx = listToFacet[cell->a->rightListIdx];
 
-		cell.a->rightListIdx = NOLIST;
-		cell.b->leftListIdx  = NOLIST;
+			list<Point> l;
+			l.push_back(cell->intersectionPoint);
+			allLists.push_back(l);
+			listToFacet[allLists.size()-1] = facetIdx;
 
-		list<Point> l;
-		l.push_back(cell.intersectionPoint);
-		allLists.push_back(l);
-		listToFacet[allLists.size()-1] = facetIdx;
+			cell->a->rightListIdx = facetIdx;
+			cell->b->leftListIdx = facetIdx;
+
+			cell->a->leftListIdx  = NOLIST;
+			cell->b->rightListIdx = NOLIST;
+
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+		} else {
+			if(cell->a->leftListIdx != NOLIST) {
+				cell->a->rightListIdx = cell->a->leftListIdx;
+				cell->a->leftListIdx  = NOLIST;
+				addPointToCurrentList(cell);
+			} else if(cell->b->rightListIdx != NOLIST){
+				cell->b->leftListIdx = cell->b->rightListIdx;
+				cell->b->rightListIdx  = NOLIST;
+				addPointToCurrentList(cell);
+			}
+		}
+
+		cell->print();
 	}
 
-	for(auto& cell : event.boundaryNodes) {
-		cell.print();
-	}
 	cout << "----------------------------------------> split, ";
 }
 
-void RoofFacets::handleCreate1Event(SweepEventReturnContainer& event) {
+void RoofFacets::handleCreate1Event(SweepEvent* event) {
 	cout << "----------------------------------------> create1, ";
 
 }
 
-void RoofFacets::handleEnterOrCreate1Event(SweepEventReturnContainer& event) {
+void RoofFacets::handleEnterOrCreate1Event(SweepEvent* event) {
 	handleEnterEvent(event);
 	cout << "----------------------------------------> enter-create1, ";
 }
 
-void RoofFacets::handleMergeOrCreate2Event(SweepEventReturnContainer& event) {
+void RoofFacets::handleMergeOrCreate2Event(SweepEvent* event) {
 	handleMergeEvent(event);
 	cout << "----------------------------------------> create2ormerge, ";
 }
 
 
-void RoofFacets::handleMergeEvent(SweepEventReturnContainer& event) {
-	for(auto& cell : event.boundaryNodes) {
-		if(cell.a->leftListIdx != NOLIST && cell.a->rightListIdx == NOLIST &&
-		   cell.b->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST ) {
+void RoofFacets::handleMergeEvent(SweepEvent* event) {
+	for(auto cell : event->getActivCells()) {
+		if(cell->a->leftListIdx != NOLIST && cell->a->rightListIdx == NOLIST &&
+		   cell->b->leftListIdx == NOLIST && cell->b->rightListIdx == NOLIST ) {
 
-			cell.b->leftListIdx  = cell.a->leftListIdx;
-			cell.b->rightListIdx = cell.a->leftListIdx;
-		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx == NOLIST &&
-		   cell.b->leftListIdx == NOLIST && cell.b->rightListIdx != NOLIST ) {
+			cell->b->leftListIdx  = cell->a->leftListIdx;
+			cell->b->rightListIdx = cell->a->leftListIdx;
+		} else if(cell->a->leftListIdx == NOLIST && cell->a->rightListIdx == NOLIST &&
+		   cell->b->leftListIdx == NOLIST && cell->b->rightListIdx != NOLIST ) {
 
-			cell.a->leftListIdx  = cell.b->rightListIdx;
-			cell.a->rightListIdx = cell.b->rightListIdx;
+			cell->a->leftListIdx  = cell->b->rightListIdx;
+			cell->a->rightListIdx = cell->b->rightListIdx;
 		}
 	}
 }
 
-void RoofFacets::handleEnterEvent(SweepEventReturnContainer& event) {
-	for(auto& cell : event.boundaryNodes) {
-		if(cell.a->leftListIdx != NOLIST && cell.a->rightListIdx == NOLIST &&
-		   cell.b->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST ) {
 
-			cell.b->leftListIdx  = cell.a->leftListIdx;
-			cell.b->rightListIdx = cell.a->leftListIdx;
-		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx != NOLIST &&
-				  cell.b->leftListIdx == NOLIST && cell.b->rightListIdx == NOLIST ) {
+void RoofFacets::handleEnterEvent(SweepItem* cell) {
+		if(cell->a->leftListIdx != NOLIST && cell->a->rightListIdx == NOLIST &&
+		   cell->b->leftListIdx == NOLIST && cell->b->rightListIdx == NOLIST ) {
 
-			cell.b->leftListIdx  = cell.a->rightListIdx;
-			cell.b->rightListIdx = cell.a->rightListIdx;
-		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx == NOLIST &&
-				  cell.b->leftListIdx != NOLIST && cell.b->rightListIdx == NOLIST ) {
+			cell->b->leftListIdx  = cell->a->leftListIdx;
+			cell->b->rightListIdx = cell->a->leftListIdx;
+		} else if(cell->a->leftListIdx == NOLIST && cell->a->rightListIdx != NOLIST &&
+				  cell->b->leftListIdx == NOLIST && cell->b->rightListIdx == NOLIST ) {
 
-			cell.a->leftListIdx  = cell.b->leftListIdx;
-			cell.a->rightListIdx = cell.b->leftListIdx;
-		} else if(cell.a->leftListIdx == NOLIST && cell.a->rightListIdx == NOLIST &&
-				  cell.b->leftListIdx == NOLIST && cell.b->rightListIdx != NOLIST ) {
+			cell->b->leftListIdx  = cell->a->rightListIdx;
+			cell->b->rightListIdx = cell->a->rightListIdx;
+		} else if(cell->a->leftListIdx == NOLIST && cell->a->rightListIdx == NOLIST &&
+				  cell->b->leftListIdx != NOLIST && cell->b->rightListIdx == NOLIST ) {
 
-			cell.a->leftListIdx  = cell.b->rightListIdx;
-			cell.a->rightListIdx = cell.b->rightListIdx;
+			cell->a->leftListIdx  = cell->b->leftListIdx;
+			cell->a->rightListIdx = cell->b->leftListIdx;
+		} else if(cell->a->leftListIdx == NOLIST && cell->a->rightListIdx == NOLIST &&
+				  cell->b->leftListIdx == NOLIST && cell->b->rightListIdx != NOLIST ) {
+
+			cell->a->leftListIdx  = cell->b->rightListIdx;
+			cell->a->rightListIdx = cell->b->rightListIdx;
 		}
-		cell.print();
+		cell->print();
+}
+
+void RoofFacets::handleEnterEvent(SweepEvent* event) {
+	for(auto cell : event->getActivCells()) {
+		handleEnterEvent(cell);
 	}
 }
 
+void RoofFacets::handleLeaveEvent(SweepItem* cell) {
+	if(cell->a->leftListIdx == NOLIST) {
+		cell->b->leftListIdx  = NOLIST;
+		cell->b->rightListIdx = NOLIST;
+	} else {
+		cell->a->leftListIdx  = NOLIST;
+		cell->a->rightListIdx = NOLIST;
+	}
+	cell->print();
+}
 
 
-void RoofFacets::addPointToNewList(SweepItem& item) {
+void RoofFacets::addPointToNewList(SweepItem* cell) {
 
 }
 
-void RoofFacets::addPointToCurrentList(SweepItem& item) {
+void RoofFacets::addPointToCurrentList(SweepItem* cell) {
+	bool pushBegin = (cell->a->leftListIdx != NOLIST || cell->b->leftListIdx != NOLIST) ? true : false;
+	auto& l = allLists[cell->firstListIndex()];
 
+	if(pushBegin) {
+		l.push_front(cell->intersectionPoint);
+	} else {
+		l.push_back(cell->intersectionPoint);
+	}
+
+#ifdef QTGUI
+	zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
 }
 

@@ -220,51 +220,51 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 /*                               SweepEvent                                  */
 /*****************************************************************************/
 
-EventInfo SweepEvent::getEventType() {
-	SweepEventReturnContainer cont;
-	auto activeCells = getActivCells();
-	if(activeCells.size() > 0) {
-		/* edge, split or crate event */
-		int numBoundaryCells = 0;
-		int numInteriorCells = 0;
-		for(auto cell : activeCells) {
-			if(cell->isInteriorNode()) {++numInteriorCells; cont.interiorNodes.push_back(*cell); }
-			else if(cell->isBoundaryNode()) {++numBoundaryCells; cont.boundaryNodes.push_back(*cell); }
-		}
-
-		if(numInteriorCells == 1 && numBoundaryCells == 0) {
-			/* merge or create event (2) */
-			return make_pair(EventType::CREATE2ORMERGE,cont);
-
-		} else if(numInteriorCells == 1 && numBoundaryCells == 2) {
-			/* split event */
-			return make_pair(EventType::SPLIT,cont);
-
-		} else if(numInteriorCells == 0 && numBoundaryCells == 3) {
-			/* edge event */
-			return make_pair(EventType::EDGE,cont);
-
-		} else if(numInteriorCells == 0 && numBoundaryCells == 2) {
-			/* create event (1) */
-			return make_pair(EventType::CREATE1ORENTER,cont);
-
-		} else if(numInteriorCells == 0 && numBoundaryCells == 1) {
-			/* merge event */
-			return make_pair(EventType::ENTER,cont);
-
-		} else {
-			cout << "BN: " << numBoundaryCells << ", IN: " << numInteriorCells << endl;
-			for(auto c : activeCells) {
-				c->print();
-			}
-			cout << endl;
-			//throw runtime_error("Not supported!");
-			return make_pair(EventType::EMPTY,cont);
-		}
-	}
-	// TODO: fix for non-general position!
-	//throw runtime_error("input not in general position, more than three events!");
-	return make_pair(EventType::EMPTY,cont);
-}
+//EventInfo SweepEvent::getEventType() {
+//	SweepEventReturnContainer cont;
+//	auto activeCells = getActivCells();
+//	if(activeCells.size() > 0) {
+//		/* edge, split or crate event */
+//		int numBoundaryCells = 0;
+//		int numInteriorCells = 0;
+//		for(auto cell : activeCells) {
+//			if(cell->isInteriorNode()) {++numInteriorCells; cont.interiorNodes.push_back(*cell); }
+//			else {++numBoundaryCells; cont.boundaryNodes.push_back(*cell); }
+//		}
+//
+//		if(numInteriorCells == 1 && numBoundaryCells == 0) {
+//			/* merge or create event (2) */
+//			return make_pair(EventType::CREATE2ORMERGE,cont);
+//
+//		} else if(numInteriorCells == 1 && numBoundaryCells == 2) {
+//			/* split event */
+//			return make_pair(EventType::SPLIT,cont);
+//
+//		} else if(numInteriorCells == 0 && numBoundaryCells == 3) {
+//			/* edge event */
+//			return make_pair(EventType::EDGE,cont);
+//
+//		} else if(numInteriorCells == 0 && numBoundaryCells == 2) {
+//			/* create event (1) */
+//			return make_pair(EventType::CREATE1ORENTER,cont);
+//
+//		} else if(numInteriorCells == 0 && numBoundaryCells == 1) {
+//			/* merge event */
+//			return make_pair(EventType::ENTER,cont);
+//
+//		} else {
+//			cout << "BN: " << numBoundaryCells << ", IN: " << numInteriorCells << endl;
+//			for(auto c : activeCells) {
+//				c->print();
+//			}
+//			cout << endl;
+//			//throw runtime_error("Not supported!");
+//			return make_pair(EventType::EMPTY,cont);
+//		}
+//	}
+//	// TODO: fix for non-general position!
+//	//throw runtime_error("input not in general position, more than three events!");
+//	return make_pair(EventType::EMPTY,cont);
+//}
 
 
