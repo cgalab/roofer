@@ -62,13 +62,18 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		input.push_back( Point(12,10));
 		input.push_back( Point(9,9)  );
 		input.push_back( Point(8,12) );
-		input.push_back( Point(7,8)  );
+//		input.push_back( Point(7,8)  );
+//		input.push_back( Point(6,8.8)  );
+		input.push_back( Point(6,9)  );
 		input.push_back( Point(5,11) );
 		input.push_back( Point(0,9)  );
         
         for(auto i : input) polygon.push_back(i);
 
         bbox = CGAL::bounding_box(input.begin(),input.end());
+
+        config.maximize = true;
+        facets.setMaximizing();
 
 	    return true;
         /************************************/

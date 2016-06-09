@@ -23,11 +23,15 @@ bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 }
 bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
     return (a.base == b.base && a.base->direction() == Vector(a.start - b.start).direction()) ||
-    	   (a.base != b.base && a.uid > b.uid);
+    	   (a.base != b.base &&
+     			   CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::RIGHT_TURN
+    	   );
 }
 bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
     return (a.base == b.base && a.base->direction() == Vector(b.start - a.start).direction()) ||
-     	   (a.base != b.base && a.uid < b.uid);
+     	   (a.base != b.base &&
+     			   CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::LEFT_TURN
+     	   );
 }
 
 bool operator== (const SweepItem& a, const SweepItem& b) {
@@ -135,18 +139,29 @@ void SweepLine::printSweepLine(SweepItem& item) {
 			eventQueue.erase(other);
 		}
 
-		if(event.size() != 3 || temp.size() > 0) {
+		if(temp.size() > 0) {
 			cout << "Temp: ";
-			for(auto e : temp)  { cout << "(" << e.intersectionPoint << ") "; }
-			cout << " // Event: ";
-			for(auto e : event) { cout << "(" << e.intersectionPoint << ") "; }
+			for(auto e : temp)  {
+				cout << "(" << e.intersectionPoint.x().doubleValue() << ","
+					 << e.intersectionPoint.y().doubleValue() << ") ";
+				e.print();
+			}
 			cout << endl;
 
 			for(auto e : temp)  { eventQueue.insert(e); }
 		}
 
+		if(event.size() != 3){
+			cout << "Event: ";
+			for(auto e : event) {
+				cout << "(" << e.intersectionPoint.x().doubleValue()
+					 << "," << e.intersectionPoint.y().doubleValue() << ") ";
+				e.print();
+			}
+			cout << endl;
+		}
+
 		for(auto e : event) {
-//			cout << " P"; // << e.intersectionPoint << endl;
 			handlePopEvent(e);
 		}
 
@@ -174,6 +189,7 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 			FoundA = FoundA-1;
 			FoundB = FoundA+1;
 		} else {
+			cout << "Edge: " << a->eid << " ";
 			throw runtime_error("ERROR: handlePopEvent b not at a+-1!");
 		}
 	} else if(!(a == *FoundA) && b == *FoundA) {

@@ -25,11 +25,12 @@
 using namespace std;
 
 struct Config {
-	Config():gui(false),maximize(true),fileName("") {
+	Config():gui(false),minimize(false),maximize(false),fileName("") {
 		printOptions = "[-min|-max] [-gui] <filename>";
 	}
 
 	bool 		gui;
+	bool 		minimize;
 	bool 		maximize;
 	string      fileName;
 

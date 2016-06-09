@@ -32,6 +32,9 @@ public:
 
 	bool aGreaterB(Point a, Point b, EdgeIterator base);
 
+	void setMinimizing() { if(!maximize) minimize = true; }
+	void setMaximizing() { if(!minimize) maximize = true; }
+
 	AllLists    allLists;
 	AllFacets   allFacets;
 	ListToFacet listToFacet;
@@ -44,10 +47,8 @@ private:
 
 	void handleEdgeEvent(SweepEvent* event);
 	void handleSplitEvent(SweepEvent* event);
-	void handleCreate1Event(SweepEvent* event);
-	void handleEnterOrCreate1Event(SweepEvent* event);
-	void handleMergeOrCreate2Event(SweepEvent* event);
-	void handleEnterEvent(SweepEvent* event);
+
+	bool handleCreateEventA(SweepEvent* event);
 
 	void handleLeaveEvent(SweepItem* cell);
 	void handleEnterEvent(SweepItem* cell);
@@ -57,8 +58,11 @@ private:
 	void addPointToNewList(SweepItem* cell);
 	void addPointToCurrentList(SweepItem* cell);
 
-	int 		numberOfFacets;
+	/* a->left to b->left or b->right to a->right */
+	void turnLefRightOnIntersection(SweepItem* cell);
 
+	int 		numberOfFacets;
+	bool		minimize, maximize;
 };
 
 #endif /* FACETS_H_ */

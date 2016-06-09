@@ -80,8 +80,27 @@ void Skeleton::createLineArrangements() {
  * */
 void Skeleton::addAllBaseCells() {
 	for(auto& a : data.sweepLine.status) {
-		for(auto& line : a.second) {
-			data.facets.addBaseCell(line);
+
+		for(auto line = a.second.begin(); line != a.second.end(); ++line) {
+			Point edgeStart((*line)->base->vertex(0));
+			Point edgeEnd((*line)->base->vertex(1));
+cout << "."; fflush(stdout);
+			/* check for duplicates (is already sorted) */
+			if(line-1 != a.second.begin() && (*line)->start == (*(line-1))->start &&
+			   edgeStart == (*line)->start) {
+
+				(*line)->leftListIdx  = (*line-1)->rightListIdx;
+				(*line)->rightListIdx = (*line-1)->rightListIdx;
+
+			} else if(line+1 != a.second.end() && (*line)->start == (*(line+1))->start &&
+			          edgeEnd == (*line)->start) {
+
+				auto idx = data.facets.allFacets[(*line)->base].front().front();
+				(*line)->leftListIdx  = idx;
+				(*line)->rightListIdx = idx;
+			} else {
+				data.facets.addBaseCell(*line);
+			}
 		}
 	}
 }

@@ -317,14 +317,16 @@ void GUI::drawAllLists() {
 		for(auto &f : facet.second) {
 			for(auto l : f) {
 				auto& facetList = data->facets.allLists[l];
-				Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)facetList.size());
-				for(auto& pIt : facetList) {
-					double z = -1;
-					z = data->facets.zMap[pIt];
-					if(z!=0) {z*=.4;}
-					Point3D p(pIt.x().doubleValue(),pIt.y().doubleValue(),z);
-					lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
-					d = d->beta(1);
+				if(!facetList.empty()) {
+					Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)facetList.size());
+					for(auto& pIt : facetList) {
+						double z = -1;
+						z = data->facets.zMap[pIt];
+						if(z!=0) {z*=.4;}
+						Point3D p(pIt.x().doubleValue(),pIt.y().doubleValue(),z);
+						lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
+						d = d->beta(1);
+					}
 				}
 			}
 		}

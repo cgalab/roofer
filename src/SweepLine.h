@@ -158,6 +158,13 @@ struct SweepItem {
 		}
 	}
 
+	inline bool isEmptyNode() {
+		return a->leftListIdx  == NOLIST    &&
+			   a->rightListIdx == NOLIST    &&
+			   b->leftListIdx  == NOLIST    &&
+			   b->rightListIdx == NOLIST;
+	}
+
 	inline bool isEdgeEvent() {
 		return a->leftListIdx  == NOLIST    &&
 			   a->rightListIdx != NOLIST    &&
@@ -324,12 +331,15 @@ struct SweepEvent : public vector<SweepItem> {
 
 	inline vector<SweepItem*> getActivCells() {
 		vector<SweepItem*> r;
-//		for(auto c : *this) {if(c.isActiveUpToIntersection()) r.push_back(&c);}
-//		for(auto& c : *this) {if(c.isBoundaryOrInteriorNode()) r.push_back(&c);}
 		for(auto& c : *this) {if(c.hasAtLeastOneListIdx()) r.push_back(&c);}
 		return r;
 	}
 
+	inline vector<SweepItem*> getAllCells() {
+		vector<SweepItem*> r;
+		for(auto& c : *this) {r.push_back(&c);}
+		return r;
+	}
 //	EventInfo getEventType();
 };
 
