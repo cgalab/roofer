@@ -22,16 +22,22 @@ bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 				a.e     == b.e;
 }
 bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
-    return (a.base == b.base && a.base->direction() == Vector(a.start - b.start).direction()) ||
-    	   (a.base != b.base &&
-     			   CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::RIGHT_TURN
-    	   );
+    return (a.base == b.base && a.start != b.start &&
+    		a.base->direction() == Vector(a.start - b.start).direction())
+    		||
+    	   (a.base == b.base && a.start == b.start &&
+    		CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::RIGHT_TURN)
+		    ||
+		   (a.base != b.base && a.eid > b.eid);
 }
 bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
-    return (a.base == b.base && a.base->direction() == Vector(b.start - a.start).direction()) ||
-     	   (a.base != b.base &&
-     			   CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::LEFT_TURN
-     	   );
+    return (a.base == b.base && a.start != b.start &&
+    		a.base->direction() == Vector(b.start - a.start).direction())
+    		||
+     	   (a.base == b.base && a.start == b.start &&
+     		CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::LEFT_TURN)
+			||
+		   (a.base != b.base && a.eid < b.eid);
 }
 
 bool operator== (const SweepItem& a, const SweepItem& b) {
@@ -74,12 +80,17 @@ void SweepLine::initiateEventQueue() {
 			if(i+1 != arrangementLines.end()) {
 				SweepItem item(i,(i+1));
 
-				if(item.raysIntersect) {
+				if(item.raysIntersect && item.normalDistance > 0) {
 					eventQueue.insert(item);
 				}
 			}
 		}
 	}
+
+	/* remove dist 0 events */
+//	while(!eventQueue.empty() && eventQueue.begin()->normalDistance == 0) {
+//		eventQueue.erase(eventQueue.begin());
+//	}
 
 	for(auto &line : status) {
 		int cnt = 0;
@@ -89,11 +100,15 @@ void SweepLine::initiateEventQueue() {
 	}
 }
 
+void SweepLine::initializePlaneSweepStart() {
+
+}
+
 void SweepLine::printEventQueue() {
 	cout << "Q: ";
 
 	for(auto e : eventQueue) {
-		cout << e.normalDistance << " - ";
+		cout << e.normalDistance.doubleValue() << " - "; e.print(); cout << endl;
 	}
 
 	cout << endl;
@@ -115,7 +130,7 @@ void SweepLine::printSweepLine(SweepItem& item) {
 }
 
 
- SweepEvent SweepLine::popEvent() {
+SweepEvent SweepLine::popEvent() {
 	if(queueEmpty()) {
 		throw out_of_range("EventQueue is empty!");
 	} else {
@@ -155,7 +170,8 @@ void SweepLine::printSweepLine(SweepItem& item) {
 			cout << "Event: ";
 			for(auto e : event) {
 				cout << "(" << e.intersectionPoint.x().doubleValue()
-					 << "," << e.intersectionPoint.y().doubleValue() << ") ";
+					 << "," << e.intersectionPoint.y().doubleValue() << ") D:"
+					 << e.normalDistance.doubleValue();
 				e.print();
 			}
 			cout << endl;

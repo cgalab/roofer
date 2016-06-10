@@ -19,7 +19,9 @@
 #include <CGAL/bounding_box.h>
 
 
-Data::Data() {}
+Data::Data() {
+	facets.setPolygon(&polygon);
+}
 
 //Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
 
@@ -31,14 +33,12 @@ bool Data::loadFile() {
 	return true;
 }
 
-VertexIterator Data::next(VertexIterator i) {
-	return (i+1 == polygon.vertices_end()) ? polygon.vertices_begin() : i+1;
+VertexIterator next(const Polygon* polygon, VertexIterator i) {
+	return (i+1 == polygon->vertices_end()) ? polygon->vertices_begin() : i+1;
 }
-
-VertexIterator Data::prev(VertexIterator i) {
-	return (i == polygon.vertices_begin()) ? polygon.vertices_end()-1 : i-1;
+VertexIterator prev(const Polygon* polygon, VertexIterator i) {
+	return (i == polygon->vertices_begin()) ? polygon->vertices_end()-1 : i-1;
 }
-
 
 bool Data::evaluateArguments(std::list<std::string> args) {
 	std::string argument;

@@ -9,19 +9,29 @@
 
 using namespace std;
 
+class PointExt : public Point {
+public:
+//	using Point::Point;
+	PointExt(Point p):Point(p),nextList(NOLIST) {}
+	PointExt(int next):Point(),nextList(next) {}
+	int nextList;
+};
+
 // the lists are directly referenced by the arrangements lines
-using AllLists		  = vector<list<Point>>;
+using AllLists		  = vector<list<PointExt>>;
 
 #ifdef QTGUI
 using PointToZ        = map<Point,double>;
 #endif
 
-// a facet groups together all lists that are part of one facet
-using Facet 		  = vector<int>;
-using AllFacets 	  = map<EdgeIterator,vector<Facet>>;
+//// a facet groups together all lists that are part of one facet
+//using Facet 		  = vector<int>;
 
-/* ListIdx to FacetIdx */
-using ListToFacet	  = map<int,int>;
+/* for every edge we have and idx to a list correspondig to a facet */
+using AllFacets 	  = map<EdgeIterator,list<int>>;
+
+///* ListIdx points to a list entry for a specific allfacets, list */
+using ListToFacet	  = map<int,list<int>::iterator>;
 
 class RoofFacets {
 public:
@@ -35,6 +45,8 @@ public:
 	void setMinimizing() { if(!maximize) minimize = true; }
 	void setMaximizing() { if(!minimize) maximize = true; }
 
+	inline void setPolygon(const Polygon* poly) { polygon = poly; }
+
 	AllLists    allLists;
 	AllFacets   allFacets;
 	ListToFacet listToFacet;
@@ -42,9 +54,8 @@ public:
 #ifdef QTGUI
 	PointToZ    zMap;
 #endif
-private:
-	void addCellToFacet(SweepItem& item, int& listIdx);
 
+private:
 	void handleEdgeEvent(SweepEvent* event);
 	void handleSplitEvent(SweepEvent* event);
 
@@ -54,6 +65,7 @@ private:
 	void handleEnterEvent(SweepItem* cell);
 
 	void handleMergeEvent(SweepEvent* event);
+	void handleCreateMergeEvent(SweepEvent* event);
 
 	void addPointToNewList(SweepItem* cell);
 	void addPointToCurrentList(SweepItem* cell);
@@ -61,8 +73,11 @@ private:
 	/* a->left to b->left or b->right to a->right */
 	void turnLefRightOnIntersection(SweepItem* cell);
 
-	int 		numberOfFacets;
-	bool		minimize, maximize;
+	bool			minimize, maximize;
+	const Polygon* 	polygon;
+
+	EdgeIterator next(EdgeIterator i);
+	EdgeIterator prev(EdgeIterator i);
 };
 
 #endif /* FACETS_H_ */

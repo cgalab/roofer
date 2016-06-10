@@ -288,19 +288,12 @@ using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
 using LocalSweepLineStatus  = vector<ALIterator>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
 
-//struct SweepEventReturnContainer {
-//	vector<SweepItem> interiorNodes;
-//	vector<SweepItem> boundaryNodes;
-//};
-//
-//using EventInfo = pair<EventType,SweepEventReturnContainer>;
 
 struct SweepEvent : public vector<SweepItem> {
 	inline int numberActiveCell() {
 		int cnt = 0;
 		if(!empty()) {
 			for(auto& e : *this) {
-//				if(e.isActiveUpToIntersection()) {
 				if(e.hasAtLeastOneListIdx()) {
 					++cnt;
 				}
@@ -340,7 +333,6 @@ struct SweepEvent : public vector<SweepItem> {
 		for(auto& c : *this) {r.push_back(&c);}
 		return r;
 	}
-//	EventInfo getEventType();
 };
 
 class SweepLine {
@@ -349,6 +341,8 @@ public:
 
 	inline void addLine(ArrangementLine a) { arrangementStart[a.base].push(a); }
 	void initiateEventQueue();
+
+	void initializePlaneSweepStart();
 
 	inline bool queueEmpty() { return eventQueue.empty(); }
 	inline long queueSize()  { return eventQueue.size(); }

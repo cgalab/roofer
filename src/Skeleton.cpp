@@ -45,9 +45,13 @@ void Skeleton::createSkeleton() {
 	data.sweepLine.initiateEventQueue();
 	cout << "done" << endl;
 
+	data.sweepLine.printEventQueue();
+
 	cout << endl << "add all base cells...";
 	addAllBaseCells();
 	cout << "done" << endl;
+
+	data.sweepLine.printEventQueue();
 
 	/* start wavefront propagation */
 #ifdef QTGUI
@@ -80,29 +84,45 @@ void Skeleton::createLineArrangements() {
  * */
 void Skeleton::addAllBaseCells() {
 	for(auto& a : data.sweepLine.status) {
-
-		for(auto line = a.second.begin(); line != a.second.end(); ++line) {
-			Point edgeStart((*line)->base->vertex(0));
-			Point edgeEnd((*line)->base->vertex(1));
-cout << "."; fflush(stdout);
-			/* check for duplicates (is already sorted) */
-			if(line-1 != a.second.begin() && (*line)->start == (*(line-1))->start &&
-			   edgeStart == (*line)->start) {
-
-				(*line)->leftListIdx  = (*line-1)->rightListIdx;
-				(*line)->rightListIdx = (*line-1)->rightListIdx;
-
-			} else if(line+1 != a.second.end() && (*line)->start == (*(line+1))->start &&
-			          edgeEnd == (*line)->start) {
-
-				auto idx = data.facets.allFacets[(*line)->base].front().front();
-				(*line)->leftListIdx  = idx;
-				(*line)->rightListIdx = idx;
-			} else {
-				data.facets.addBaseCell(*line);
-			}
+		for(auto line : a.second) {
+			data.facets.addBaseCell(line);
 		}
 	}
+
+//	for(auto& a : data.sweepLine.status) {
+//		for(auto line : a.second) {
+//			if(line->base == line->e+1) {
+//				cout << "left ";
+//			} else if (line->base+1 == line->e) {
+//				cout << "right ";
+//			}
+//		}
+//	}
+//	for(auto& a : data.sweepLine.status) {
+//		for(auto line = a.second.begin(); line != a.second.end(); ++line) {
+//			Point edgeStart((*line)->base->vertex(0));
+//			Point edgeEnd((*line)->base->vertex(1));
+//
+//			/* check for duplicates (is already sorted) */
+//			if(line != a.second.begin()   &&
+//			   line-1 != a.second.begin() &&
+//			   (*line)->start == (*(line-1))->start &&
+//			   edgeStart == (*line)->start) {
+//
+//				(*line)->leftListIdx  = (*line-1)->rightListIdx;
+//				(*line)->rightListIdx = (*line-1)->rightListIdx;
+//
+//			} else if(line+1 != a.second.end() && (*line)->start == (*(line+1))->start &&
+//			          edgeEnd == (*line)->start) {
+//
+//				auto idx = data.facets.allFacets[(*line)->base].front();
+//				(*line)->leftListIdx  = idx;
+//				(*line)->rightListIdx = idx;
+//			} else {
+//				data.facets.addBaseCell(*line);
+//			}
+//		}
+//	}
 }
 
 void Skeleton::startPlaneSweep() {
@@ -123,26 +143,9 @@ void Skeleton::startPlaneSweep() {
 
 void Skeleton::handleNextEvent(SweepEvent& event) {
 	cout << "Q: " << data.sweepLine.queueSize() << endl;
-	if(event.size() != 3) cout << ", Items: " << event.size() << endl;
-
-//	for(auto &e : event) cout << e.a.leftListIdx << "," << e.a.rightListIdx << " - " << e.b.leftListIdx << "," <<e.b.rightListIdx << endl;;
+	if(event.size() != 3) cout  << event.size() << " Item(s)"<< endl;
 
 	data.facets.handleCell(&event);
 
-
-//	for(auto i : event) {
-//		data.sweepLine.printSweepLine(i);
-//	}
 }
 
-//void Skeleton::handleSplitEvent(Event& e) {
-//	cout << "Split Event" << endl;
-//}
-//
-//void Skeleton::handleEdgeEvent(Event& e) {
-//	cout << "Divide Event" << endl;
-//}
-//
-//void Skeleton::handleCreateEvent(Event& e) {
-//	cout << "Create Event" << endl;
-//}

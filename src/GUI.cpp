@@ -270,8 +270,8 @@ void GUI::draw() {
 void GUI::drawEvent(SweepEvent& event) {
 
 	auto cont = event.getActivCells();
-		for(auto i : event) {
-			if(i.isEdgeEvent()) {
+	for(auto i : event) {
+		if(i.isEdgeEvent()) {
 			if(i.a->rightListIdx == i.b->leftListIdx && i.a->rightListIdx != NOLIST) {
 				if(data->bbox.xmin() < i.intersectionPoint.x().doubleValue() &&
 						data->bbox.ymin() < i.intersectionPoint.y().doubleValue() &&
@@ -293,42 +293,65 @@ void GUI::drawEvent(SweepEvent& event) {
 					addSegment(p,i.intersectionPoint);
 					addSegment(i.intersectionPoint,l.front());
 
-//					addSegment(i.intersectionPoint,i.a->start);
-//					addSegment(i.intersectionPoint,i.b->start);
+					//					addSegment(i.intersectionPoint,i.a->start);
+					//					addSegment(i.intersectionPoint,i.b->start);
 
 				}
-			}}
+			}
+		}
 	}
-//	switch(e.type) {
-//	case EventType::EDGE:
-//		addSegment(e,e.a->start);
-//		addSegment(e,e.b->start);
-//		break;
-//	case EventType::SPLIT:  cout << "TODO" << endl; break;
-//	case EventType::DIVIDE: cout << "TODO" << endl; break;
-//	case EventType::CREATE: cout << "TODO" << endl; break;
-//
-//	default: break;
-//	}
 }
 
 void GUI::drawAllLists() {
 	for(auto& facet : data->facets.allFacets) {
-		for(auto &f : facet.second) {
-			for(auto l : f) {
-				auto& facetList = data->facets.allLists[l];
-				if(!facetList.empty()) {
-					Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)facetList.size());
-					for(auto& pIt : facetList) {
-						double z = -1;
-						z = data->facets.zMap[pIt];
-						if(z!=0) {z*=.4;}
-						Point3D p(pIt.x().doubleValue(),pIt.y().doubleValue(),z);
-						lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
-						d = d->beta(1);
-					}
+		int size = 0;
+		/* add up all lists */
+		for(auto f : facet.second) {
+			size += data->facets.allLists[f].size();
+		}
+		/* subtract the next elements */
+		size -= facet.second.size()-1;
+		Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)size);
+
+		for(auto f : facet.second) {
+			auto& list = data->facets.allLists[f];
+			if(list.empty()) continue;
+			cout << "a"; fflush(stdout);
+
+			auto listIt = list.begin();
+			do {
+				if(listIt->nextList != NOLIST) {
+			cout << "j"; fflush(stdout);
+					list = data->facets.allLists[listIt->nextList];
+					listIt = list.begin();
+				} else {
+			cout << "."; fflush(stdout);
+					double z = -1;
+					z = data->facets.zMap[*listIt];
+					if(z!=0) {z*=.4;}
+					Point3D p(listIt->x().doubleValue(),listIt->y().doubleValue(),z);
+					lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
+					d = d->beta(1);
+
+					++listIt;
 				}
-			}
+			} while(listIt != list.end());
+
+
+//			for(auto l : f) {
+//				auto& facetList = data->facets.allLists[l];
+//				if(!facetList.empty()) {
+//					Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)facetList.size());
+//					for(auto& pIt : facetList) {
+//						double z = -1;
+//						z = data->facets.zMap[pIt];
+//						if(z!=0) {z*=.4;}
+//						Point3D p(pIt.x().doubleValue(),pIt.y().doubleValue(),z);
+//						lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
+//						d = d->beta(1);
+//					}
+//				}
+//			}
 		}
 	}
 }

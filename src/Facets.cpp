@@ -27,14 +27,7 @@
 //    return a.base->direction() == Vector(bOnBase - aOnBase).direction();
 //}
 
-RoofFacets::RoofFacets():numberOfFacets(0),minimize(false),maximize(false) {}
-
-void RoofFacets::addCellToFacet(SweepItem& item, int& listIdx) {
-	auto& facetList = allLists[listIdx];
-	facetList.push_back(item.intersectionPoint);
-	cout << "THAT REALLY Happened!" << endl;
-}
-
+RoofFacets::RoofFacets():minimize(false),maximize(false) {}
 
 void RoofFacets::handleCell(SweepEvent *event) {
 	auto activeCells =  event->getActivCells();
@@ -93,36 +86,35 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 	Point edgeStart(line->base->vertex(0));
 	Point edgeEnd(line->base->vertex(1));
 
+	auto itBasePrev = prev(line->base);
+	auto itBaseNext = next(line->base);
 
+	bool isNeighbor = (itBasePrev == line->e || itBaseNext == line->e) ? true : false;
 
-	if(line->start == edgeStart && allFacets[line->base].empty()) {
+	if(line->start == edgeStart && isNeighbor) {
 
-		// starts the first facet on a plane
-		int facetIdx = numberOfFacets++;
 		int listIdx  = allLists.size();
-		listToFacet[listIdx] = facetIdx;
 
-		list<Point> l;
+		list<PointExt> l;
 		l.push_back(line->start);
 		allLists.push_back(l);
 
-		Facet f;
-		f.push_back(listIdx);
-		allFacets[line->base].push_back(f);
+		allFacets[line->base].push_back(listIdx);
+		listToFacet[listIdx] = allFacets[line->base].begin();
 
-		line->rightListIdx = listIdx;
+		line->rightListIdx  = listIdx;
 		cout << "S(" << line->rightListIdx << ") ";
 #ifdef QTGUI
 		zMap[line->start] = 0;
 #endif
-	} else if(line->start == edgeEnd && allFacets[line->base].size()==1 ) {
+	} else if(line->start == edgeEnd && isNeighbor ) {
 		// still only one facet on the current plane
 
-		auto& facet = allFacets[line->base].front();
-		allLists[facet.front()].push_back(line->start);
-		line->leftListIdx = facet.front();
+		auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1 ;
+		allLists[listIdx].push_back(line->start);
+		line->leftListIdx = listIdx;
 
-		cout << "E(" << line->leftListIdx << ") ";
+		cout << "E(" << line->leftListIdx << ") ";   fflush(stdout);
 #ifdef QTGUI
 		zMap[line->start] = 0;
 #endif
@@ -130,12 +122,31 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 	if(
 	  (aGreaterB(line->start,edgeStart,line->base) &&
 	   aGreaterB(edgeEnd,line->start,line->base))
+	   ||
+	   (line->start == edgeStart  || line->start == edgeEnd)
 	) {
-		// just reference from the arrangement lines that start
-		// in the interior of the respective edge
-		auto& facet = allFacets[line->base].front();
-		line->leftListIdx  = facet.front();
-		line->rightListIdx = facet.front();
+		bool assign = true;
+
+		if(line->start == edgeStart) {
+			ArrangementLine s(line->base,itBasePrev);
+			if(s > *line) {
+				assign = false;
+			}
+		} else if(line->start == edgeEnd) {
+			ArrangementLine e(line->base,itBaseNext);
+			if(*line < e) {
+				assign = false;
+			}
+		}
+
+		if(assign) {
+			// just reference from the arrangement lines that start
+			// in the interior of the respective edge
+			//		auto listIdx = allFacets[line->base].front();
+			auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1 ;
+			line->leftListIdx  = listIdx;
+			line->rightListIdx = listIdx;
+		}
 	}
 }
 
@@ -150,11 +161,9 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			if(cell->a->rightListIdx != cell->b->leftListIdx) {
 				auto& rightList = allLists[cell->b->leftListIdx];
 
-
-				leftList.reverse();
-				rightList.splice(rightList.end(),leftList);
-
-				allLists[cell->a->rightListIdx].clear();
+				rightList.push_back(cell->intersectionPoint);
+				// adds a next index to find the corresponding following list
+				rightList.push_back(cell->a->rightListIdx);
 
 			} else {
 				leftList.push_back(cell->intersectionPoint);
@@ -163,6 +172,33 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->rightListIdx = NOLIST;
 			cell->b->leftListIdx  = NOLIST;
 
+
+#ifdef QTGUI
+		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+#endif
+		} else if(cell->a->rightListIdx == NOLIST  &&  cell->b->leftListIdx  == NOLIST &&
+		   cell->a->leftListIdx  != NOLIST  &&  cell->b->rightListIdx != NOLIST) {
+			/* facet joins with facet of a create event */
+			auto& leftList    = allLists[cell->a->leftListIdx];
+			auto rightListIdx = cell->b->rightListIdx;
+
+			if(cell->a->leftListIdx == cell->b->rightListIdx) {cout << "ERROR: index equal!" << endl;}
+			cout << "a"; fflush(stdout);
+			leftList.push_back(cell->intersectionPoint);
+			cout << "b"; fflush(stdout);
+			/* adds a next index to find the corresponding following list */
+			leftList.push_back(rightListIdx);
+			cout << "c"; fflush(stdout);
+
+			/* we also have to remove the 2nd facet as it joined up */
+			auto it = listToFacet[rightListIdx];
+			cout << "d"; fflush(stdout);
+			allFacets[cell->base].erase(it);
+			cout << "e"; fflush(stdout);
+
+
+			cell->a->leftListIdx  = NOLIST;
+			cell->b->rightListIdx = NOLIST;
 
 #ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
@@ -240,15 +276,19 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 
 	for(auto cell : event->getActivCells()) {
 		if(cell->isInteriorNode()) {
-			int facetIdx = listToFacet[cell->a->rightListIdx];
+			auto listIdx = allLists.size();
 
-			list<Point> l;
+			list<PointExt> l;
 			l.push_back(cell->intersectionPoint);
 			allLists.push_back(l);
-			listToFacet[allLists.size()-1] = facetIdx;
 
-			cell->a->rightListIdx = allLists.size()-1;
-			cell->b->leftListIdx = allLists.size()-1;
+			auto itToLast = allFacets[cell->base].end();
+			itToLast--;
+			listToFacet[listIdx] = itToLast;
+
+
+			cell->a->rightListIdx = listIdx;
+			cell->b->leftListIdx  = listIdx;
 
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
@@ -338,18 +378,17 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 
 
 			/* create new facet and modify new-cell accordingly */
-			list<Point> l;
+			list<PointExt> l;
 			l.push_back(c_new->intersectionPoint);
 			auto listIdx = allLists.size();
 			allLists.push_back(l);
 
-			Facet f;
-			f.push_back(listIdx);
-			auto& facets  = allFacets[c_new->base];
-			auto facetIdx = facets.size();
-			facets.push_back(f);
+			/* adds entry to this new facet, may be joined later */
+			allFacets[c_new->base].push_back(listIdx);
+			auto it = allFacets[c_new->base].end();
+			it--;
+			listToFacet[listIdx] = it;
 
-			listToFacet[listIdx]   = facetIdx;
 
 			c_new->a->leftListIdx  = listIdx;
 			c_new->b->rightListIdx = listIdx;
@@ -377,6 +416,10 @@ void RoofFacets::handleMergeEvent(SweepEvent* event) {
 			cell->a->rightListIdx = cell->b->rightListIdx;
 		}
 	}
+}
+
+void RoofFacets::handleCreateMergeEvent(SweepEvent* event) {
+
 }
 
 void RoofFacets::turnLefRightOnIntersection(SweepItem* cell) {
@@ -444,4 +487,14 @@ void RoofFacets::addPointToCurrentList(SweepItem* cell) {
 	zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 #endif
 }
+
+EdgeIterator RoofFacets::next(EdgeIterator i) {
+	return (i+1 == polygon->edges_end()) ? polygon->edges_begin() : i+1;
+}
+EdgeIterator RoofFacets::prev(EdgeIterator i) {
+	return (i == polygon->edges_begin()) ? polygon->edges_end()-1 : i-1;
+}
+
+
+
 

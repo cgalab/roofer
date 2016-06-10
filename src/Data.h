@@ -59,8 +59,8 @@ public:
 
 	bool evaluateArguments(list<string> args);
 
-	VertexIterator next(VertexIterator i);
-	VertexIterator prev(VertexIterator i);
+	friend VertexIterator next(const Polygon* poly, VertexIterator i);
+	friend VertexIterator prev(const Polygon* poly, VertexIterator i);
 
 private:
 	bool fileExists(string fileName);
