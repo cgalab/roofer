@@ -144,7 +144,7 @@ void Skeleton::handleNextEvent(SweepEvent& event) {
 	cout << "Q: " << data.sweepLine.queueSize() << endl;
 	if(event.size() != 3) cout  << event.size() << " Item(s)"<< endl;
 
-	data.facets.handleCell(&event);
+	data.facets.handleEvent(&event);
 
 }
 

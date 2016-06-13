@@ -51,29 +51,37 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		std::cout << "Using default test polygon." << std::endl;
 		config.gui = true;
 
-//      input.push_back( Point(0,0)  );
+//		/* MAX EXAMPLE */
+//		input.push_back( Point(0,0)  );
 //		input.push_back( Point(10,0) );
-//		input.push_back( Point(10,7));
-//		input.push_back( Point(2,8)  );
+//		input.push_back( Point(12,10));
+//		input.push_back( Point(9,9)  );
+//		input.push_back( Point(8,12) );
+//		input.push_back( Point(6,9)  );
+//		input.push_back( Point(5,11) );
+//		input.push_back( Point(0,9)  );
+//
+//        config.maximize = true;
+//        facets.setMaximizing();
 
 
-		input.push_back( Point(0,0)  );
-		input.push_back( Point(10,0) );
-		input.push_back( Point(12,10));
-		input.push_back( Point(9,9)  );
-		input.push_back( Point(8,12) );
-//		input.push_back( Point(7,8)  );
-//		input.push_back( Point(6,8.8)  );
-		input.push_back( Point(6,9)  );
-		input.push_back( Point(5,11) );
-		input.push_back( Point(0,9)  );
+		/* MIN EXAMPLE */
+		input.push_back( Point(7,1)  );
+		input.push_back( Point(11,2) );
+		input.push_back( Point(12,0) );
+		input.push_back( Point(12,3) );
+		input.push_back( Point(19,3) );
+		input.push_back( Point(20,15));
+		input.push_back( Point(0,14) );
+
+		config.minimize = true;
+        facets.setMinimizing();
+
+
         
         for(auto i : input) polygon.push_back(i);
 
         bbox = CGAL::bounding_box(input.begin(),input.end());
-
-        config.maximize = true;
-        facets.setMaximizing();
 
 	    return true;
         /************************************/

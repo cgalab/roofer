@@ -38,7 +38,7 @@ class RoofFacets {
 public:
 	RoofFacets();
 
-	void handleCell(SweepEvent *event);
+	void handleEvent(SweepEvent *event);
 	void addBaseCell(ALIterator& line);
 
 	bool aGreaterB(Point a, Point b, EdgeIterator base);
@@ -62,6 +62,7 @@ private:
 	void handleSplitEvent(SweepEvent* event);
 
 	bool handleCreateEventA(SweepEvent* event);
+	bool handleCreateEventB(SweepEvent* event);
 
 	void handleLeaveEvent(SweepItem* cell);
 	void handleEnterEvent(SweepItem* cell);

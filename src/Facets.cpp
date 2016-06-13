@@ -37,9 +37,9 @@ ostream& operator<<(ostream& os, const PointExt& p) {
 }
 
 
-RoofFacets::RoofFacets():minimize(false),maximize(false) {}
+RoofFacets::RoofFacets():minimize(false),maximize(false),polygon(nullptr) {}
 
-void RoofFacets::handleCell(SweepEvent *event) {
+void RoofFacets::handleEvent(SweepEvent *event) {
 	auto activeCells =  event->getActivCells();
 	vector<SweepItem> boundaryNodes;
 	vector<SweepItem> interiorNodes;
@@ -78,6 +78,12 @@ void RoofFacets::handleCell(SweepEvent *event) {
 			handleEnterEvent(cell);
 		} else if(numActiveInd == 3) {
 			handleLeaveEvent(cell);
+		} else if(numActiveInd == 4) {
+			if(minimize) {
+				if(handleCreateEventB(event)) {
+					// TODO: not sure think there is nothing to do here...
+				}
+			}
 		}
 
 	}
@@ -303,7 +309,6 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 //			itToLast--;
 //			listToFacet[listIdx] = itToLast;
 
-
 			cell->a->rightListIdx = listIdx;
 			cell->b->leftListIdx  = listIdx;
 
@@ -384,7 +389,7 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 
 	if(createEvent) {
 		if((min && minimize) || (max && maximize)) {
-			cout << "CREATE EVENT (min:" << min << ",max:" << max << ") ";
+			cout << "CREATE EVENT A (min:" << min << ",max:" << max << ") ";
 
 			/* modify facets of line a and b */
 			addPointToCurrentList(c_a);
@@ -413,6 +418,105 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 		} else {
 			createEvent = false;
 		}
+	}
+	event->printAll();
+	return createEvent;
+}
+
+bool RoofFacets::handleCreateEventB(SweepEvent* event) {
+	bool createEvent = false;
+
+	if(!minimize) { return createEvent; }
+
+	SweepItem* c_base=nullptr;
+	SweepItem* c_a=nullptr;
+	SweepItem* c_b=nullptr;
+
+	for(auto cell : event->getAllCells()) {
+		if(cell->isEmptyNode()) {
+			if(c_a == nullptr) {
+				c_a = cell;
+			} else {
+				c_b = cell;
+			}
+		} else {
+			c_base = cell;
+		}
+	}
+
+	auto l_a    = c_a->base->supporting_line().to_vector();
+	auto l_b    = c_b->base->supporting_line().to_vector();
+	auto l_base = c_base->base->supporting_line().to_vector();
+
+	/* l_a and l_b have to intersect at a reflex vertex, thus must be a right turn */
+	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN) {
+		swap(l_a,l_b);
+		auto tmp = c_a;
+		c_a = c_b;
+		c_b = tmp;
+	}
+
+	/* analyze if a create event occurs and what typ (min/max) */
+	if(CGAL::orientation(l_base,l_a) == CGAL::LEFT_TURN &&
+	   CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
+		createEvent = true;
+//	} else if(CGAL::orientation(l_a,l_base) == CGAL::RIGHT_TURN &&
+//			  CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
+//		createEvent = true;
+//	} else if(CGAL::orientation(l_a,l_base) == CGAL::LEFT_TURN &&
+//			  CGAL::orientation(l_b,l_base) == CGAL::RIGHT_TURN) {
+//		createEvent = false;
+//	} else if(CGAL::orientation(l_a,l_base) == CGAL::LEFT_TURN &&
+//			  CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
+//		createEvent = true;
+//	} else{
+//		throw runtime_error("ERROR: handleCreateEventA: orientation?!");
+	}
+
+	if(createEvent) {
+			cout << "CREATE EVENT B ";
+
+			/* modify base facet */
+			auto baseListIdx = allLists.size();
+			list<PointExt> l;
+			l.push_back(c_base->intersectionPoint);
+			allLists.push_back(l);
+
+			c_base->b->leftListIdx  = baseListIdx;
+			c_base->a->rightListIdx = baseListIdx;
+			c_base->b->rightListIdx = NOLIST;
+			c_base->a->leftListIdx  = NOLIST;
+
+
+			/* add facet to the other two arrangements */
+			list<PointExt> l_a;
+			l_a.push_back(c_a->intersectionPoint);
+			auto listIdxA = allLists.size();
+			allLists.push_back(l_a);
+
+			/* adds entry to this new facet, may be joined later */
+			allFacets[c_a->base].push_back(listIdxA);
+			auto itA = allFacets[c_a->base].end();
+			itA--;
+			listToFacet[listIdxA] = itA;
+
+			c_a->a->leftListIdx  = listIdxA;
+			c_a->b->rightListIdx = listIdxA;
+
+
+			list<PointExt> l_b;
+			l_b.push_back(c_a->intersectionPoint);
+			auto listIdxB = allLists.size();
+			allLists.push_back(l_b);
+
+			/* adds entry to this new facet, may be joined later */
+			allFacets[c_b->base].push_back(listIdxB);
+			auto itB = allFacets[c_b->base].end();
+			itB--;
+			listToFacet[listIdxB] = itB;
+
+			c_b->a->leftListIdx  = listIdxB;
+			c_b->b->rightListIdx = listIdxB;
 	}
 	event->printAll();
 	return createEvent;
