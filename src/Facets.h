@@ -15,6 +15,7 @@ public:
 	PointExt(Point p):Point(p),nextList(NOLIST) {}
 	PointExt(int next):Point(),nextList(next) {}
 	int nextList;
+	friend ostream& operator<<(ostream& os, const PointExt& p);
 };
 
 // the lists are directly referenced by the arrangements lines
@@ -30,7 +31,7 @@ using PointToZ        = map<Point,double>;
 /* for every edge we have and idx to a list correspondig to a facet */
 using AllFacets 	  = map<EdgeIterator,list<int>>;
 
-///* ListIdx points to a list entry for a specific allfacets, list */
+/* ListIdx points to a list entry for a specific allfacets, list */
 using ListToFacet	  = map<int,list<int>::iterator>;
 
 class RoofFacets {
@@ -55,6 +56,7 @@ public:
 	PointToZ    zMap;
 #endif
 
+	void printAllLists();
 private:
 	void handleEdgeEvent(SweepEvent* event);
 	void handleSplitEvent(SweepEvent* event);
@@ -72,6 +74,7 @@ private:
 
 	/* a->left to b->left or b->right to a->right */
 	void turnLefRightOnIntersection(SweepItem* cell);
+
 
 	bool			minimize, maximize;
 	const Polygon* 	polygon;

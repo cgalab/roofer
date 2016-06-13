@@ -45,13 +45,9 @@ void Skeleton::createSkeleton() {
 	data.sweepLine.initiateEventQueue();
 	cout << "done" << endl;
 
-	data.sweepLine.printEventQueue();
-
 	cout << endl << "add all base cells...";
 	addAllBaseCells();
 	cout << "done" << endl;
-
-	data.sweepLine.printEventQueue();
 
 	/* start wavefront propagation */
 #ifdef QTGUI
@@ -60,6 +56,9 @@ void Skeleton::createSkeleton() {
 		cout << "start plane sweep...";
 		startPlaneSweep();
 		cout << "done" << endl;
+
+		data.facets.printAllLists();
+
 #ifdef QTGUI
 	}
 #endif

@@ -303,30 +303,26 @@ void GUI::drawEvent(SweepEvent& event) {
 }
 
 void GUI::drawAllLists() {
+
 	for(auto& facet : data->facets.allFacets) {
 		int size = 0;
-		/* add up all lists */
+		/* add up all facets */
 		for(auto f : facet.second) {
-			size += data->facets.allLists[f].size();
+			size += getFacetSize(f);
 		}
-		/* subtract the next elements */
-		size -= facet.second.size()-1;
 		Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)size);
 
 		for(auto f : facet.second) {
-			auto& list = data->facets.allLists[f];
-			if(list.empty()) continue;
-			cout << "a"; fflush(stdout);
+			auto list = &data->facets.allLists[f];
+			if(list->empty()) continue;
 
-			auto listIt = list.begin();
+			auto listIt = list->begin();
 			do {
 				if(listIt->nextList != NOLIST) {
-			cout << "j"; fflush(stdout);
-					list = data->facets.allLists[listIt->nextList];
-					listIt = list.begin();
+					list   = &data->facets.allLists[listIt->nextList];
+					listIt = list->begin();
 				} else {
-			cout << "."; fflush(stdout);
-					double z = -1;
+					double z = 0;
 					z = data->facets.zMap[*listIt];
 					if(z!=0) {z*=.4;}
 					Point3D p(listIt->x().doubleValue(),listIt->y().doubleValue(),z);
@@ -335,25 +331,27 @@ void GUI::drawAllLists() {
 
 					++listIt;
 				}
-			} while(listIt != list.end());
-
-
-//			for(auto l : f) {
-//				auto& facetList = data->facets.allLists[l];
-//				if(!facetList.empty()) {
-//					Dart_handle d =	CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)facetList.size());
-//					for(auto& pIt : facetList) {
-//						double z = -1;
-//						z = data->facets.zMap[pIt];
-//						if(z!=0) {z*=.4;}
-//						Point3D p(pIt.x().doubleValue(),pIt.y().doubleValue(),z);
-//						lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
-//						d = d->beta(1);
-//					}
-//				}
-//			}
+			} while(listIt != list->end() && listIt->nextList != f);
 		}
 	}
+}
+
+int GUI::getFacetSize(int listIdx) {
+	int size = 0;
+	auto list = &data->facets.allLists[listIdx];
+	if(list->empty()) return size;
+
+	auto listIt = list->begin();
+	do {
+		if(listIt->nextList != NOLIST) {
+			list = &data->facets.allLists[listIt->nextList];
+			listIt = list->begin();
+		} else {
+			++size;
+			++listIt;
+		}
+	} while(listIt != list->end() && listIt->nextList != listIdx);
+	return size;
 }
 
 void GUI::drawPolygon() {

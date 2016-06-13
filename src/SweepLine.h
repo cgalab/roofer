@@ -31,8 +31,8 @@ struct ArrangementLine {
 	int lid;
 	int eid;
 
-	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = -1, int edgeid = -1):
-		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(-1),eid(edgeid) {
+	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = NIL, int edgeid = NIL):
+		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -54,6 +54,7 @@ struct ArrangementLine {
 	friend bool operator>  (const ArrangementLine& a, const ArrangementLine& b);
 	friend bool operator<  (const ArrangementLine& a, const ArrangementLine& b);
 	friend bool operator== (const ArrangementLine& a, const ArrangementLine& b);
+	friend ostream& operator<<(ostream& os, const ArrangementLine& al);
 
 	/* The second Line in the bisector is with changed orientation on purpose */
 	inline Ray setBisector() {

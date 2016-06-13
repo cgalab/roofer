@@ -26,7 +26,7 @@ bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
     		a.base->direction() == Vector(a.start - b.start).direction())
     		||
     	   (a.base == b.base && a.start == b.start &&
-    		CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::RIGHT_TURN)
+    		CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::LEFT_TURN)
 		    ||
 		   (a.base != b.base && a.eid > b.eid);
 }
@@ -35,7 +35,7 @@ bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
     		a.base->direction() == Vector(b.start - a.start).direction())
     		||
      	   (a.base == b.base && a.start == b.start &&
-     		CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::LEFT_TURN)
+     		CGAL::orientation(a.bisector.to_vector(),b.bisector.to_vector()) == CGAL::RIGHT_TURN)
 			||
 		   (a.base != b.base && a.eid < b.eid);
 }
@@ -56,6 +56,10 @@ bool operator< (const SweepItem& a, const SweepItem& b) {
 		   (a.normalDistance == b.normalDistance && a.a < b.a);
 }
 
+ostream& operator<<(ostream& os, const ArrangementLine& al) {
+	os << al.bisector.to_vector().x().doubleValue() << "," << al.bisector.to_vector().y().doubleValue();
+	return os;
+}
 
 void SweepLine::initiateEventQueue() {
 	assert(arrangementStart.empty());
@@ -70,10 +74,8 @@ void SweepLine::initiateEventQueue() {
 			auto a = le.second.top();
 
 			arrangementLines.push_back(a);
-
 			le.second.pop();
 		}
-
 
 		for(auto i = arrangementLines.begin(); i != arrangementLines.end(); ++i) {
 			lStatus.push_back(i);
@@ -86,11 +88,6 @@ void SweepLine::initiateEventQueue() {
 			}
 		}
 	}
-
-	/* remove dist 0 events */
-//	while(!eventQueue.empty() && eventQueue.begin()->normalDistance == 0) {
-//		eventQueue.erase(eventQueue.begin());
-//	}
 
 	for(auto &line : status) {
 		int cnt = 0;
@@ -246,57 +243,5 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 	// swap line segments in status, as of the intersection point.
 	iter_swap(FoundA, FoundB);
 }
-
-
-/*****************************************************************************/
-/*                               SweepEvent                                  */
-/*****************************************************************************/
-
-//EventInfo SweepEvent::getEventType() {
-//	SweepEventReturnContainer cont;
-//	auto activeCells = getActivCells();
-//	if(activeCells.size() > 0) {
-//		/* edge, split or crate event */
-//		int numBoundaryCells = 0;
-//		int numInteriorCells = 0;
-//		for(auto cell : activeCells) {
-//			if(cell->isInteriorNode()) {++numInteriorCells; cont.interiorNodes.push_back(*cell); }
-//			else {++numBoundaryCells; cont.boundaryNodes.push_back(*cell); }
-//		}
-//
-//		if(numInteriorCells == 1 && numBoundaryCells == 0) {
-//			/* merge or create event (2) */
-//			return make_pair(EventType::CREATE2ORMERGE,cont);
-//
-//		} else if(numInteriorCells == 1 && numBoundaryCells == 2) {
-//			/* split event */
-//			return make_pair(EventType::SPLIT,cont);
-//
-//		} else if(numInteriorCells == 0 && numBoundaryCells == 3) {
-//			/* edge event */
-//			return make_pair(EventType::EDGE,cont);
-//
-//		} else if(numInteriorCells == 0 && numBoundaryCells == 2) {
-//			/* create event (1) */
-//			return make_pair(EventType::CREATE1ORENTER,cont);
-//
-//		} else if(numInteriorCells == 0 && numBoundaryCells == 1) {
-//			/* merge event */
-//			return make_pair(EventType::ENTER,cont);
-//
-//		} else {
-//			cout << "BN: " << numBoundaryCells << ", IN: " << numInteriorCells << endl;
-//			for(auto c : activeCells) {
-//				c->print();
-//			}
-//			cout << endl;
-//			//throw runtime_error("Not supported!");
-//			return make_pair(EventType::EMPTY,cont);
-//		}
-//	}
-//	// TODO: fix for non-general position!
-//	//throw runtime_error("input not in general position, more than three events!");
-//	return make_pair(EventType::EMPTY,cont);
-//}
 
 

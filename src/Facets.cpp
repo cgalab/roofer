@@ -27,6 +27,16 @@
 //    return a.base->direction() == Vector(bOnBase - aOnBase).direction();
 //}
 
+ostream& operator<<(ostream& os, const PointExt& p) {
+	if(p.nextList != NOLIST) {
+		os << p.nextList;
+	} else {
+		os << p.x().doubleValue() << "," << p.y().doubleValue();
+	}
+	return os;
+}
+
+
 RoofFacets::RoofFacets():minimize(false),maximize(false) {}
 
 void RoofFacets::handleCell(SweepEvent *event) {
@@ -103,7 +113,8 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		listToFacet[listIdx] = allFacets[line->base].begin();
 
 		line->rightListIdx  = listIdx;
-		cout << "S(" << line->rightListIdx << ") ";
+		cout << "S(" << line->rightListIdx << ":" << line->bisector.to_vector().x().doubleValue()
+				<< "," << line->bisector.to_vector().y().doubleValue() << ") ";
 #ifdef QTGUI
 		zMap[line->start] = 0;
 #endif
@@ -114,32 +125,43 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		allLists[listIdx].push_back(line->start);
 		line->leftListIdx = listIdx;
 
-		cout << "E(" << line->leftListIdx << ") ";   fflush(stdout);
+		cout << "E(" << line->leftListIdx << ":" << line->bisector.to_vector().x().doubleValue()
+				<< "," << line->bisector.to_vector().y().doubleValue() << ") " << endl;
+//		cout << "E(" << line->leftListIdx << ") ";   fflush(stdout);
 #ifdef QTGUI
 		zMap[line->start] = 0;
 #endif
-	}
-	if(
+	} else if(
 	  (aGreaterB(line->start,edgeStart,line->base) &&
 	   aGreaterB(edgeEnd,line->start,line->base))
 	   ||
 	   (line->start == edgeStart  || line->start == edgeEnd)
 	) {
+		cout << "(" << *line << ") ";
 		bool assign = true;
 
 		if(line->start == edgeStart) {
 			ArrangementLine s(line->base,itBasePrev);
+			cout << s << " S";
+
+			if(s < *line) cout << "<";
+
 			if(s > *line) {
 				assign = false;
+				cout << "> ";
+			} else {
+				cout << "<= ";
 			}
 		} else if(line->start == edgeEnd) {
 			ArrangementLine e(line->base,itBaseNext);
+			cout << e << "E";
 			if(*line < e) {
 				assign = false;
 			}
 		}
 
 		if(assign) {
+			cout << "A ";
 			// just reference from the arrangement lines that start
 			// in the interior of the respective edge
 			//		auto listIdx = allFacets[line->base].front();
@@ -172,7 +194,6 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->rightListIdx = NOLIST;
 			cell->b->leftListIdx  = NOLIST;
 
-
 #ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 #endif
@@ -183,18 +204,14 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			auto rightListIdx = cell->b->rightListIdx;
 
 			if(cell->a->leftListIdx == cell->b->rightListIdx) {cout << "ERROR: index equal!" << endl;}
-			cout << "a"; fflush(stdout);
 			leftList.push_back(cell->intersectionPoint);
-			cout << "b"; fflush(stdout);
 			/* adds a next index to find the corresponding following list */
 			leftList.push_back(rightListIdx);
-			cout << "c"; fflush(stdout);
 
 			/* we also have to remove the 2nd facet as it joined up */
 			auto it = listToFacet[rightListIdx];
-			cout << "d"; fflush(stdout);
 			allFacets[cell->base].erase(it);
-			cout << "e"; fflush(stdout);
+			listToFacet.erase(rightListIdx);
 
 
 			cell->a->leftListIdx  = NOLIST;
@@ -282,9 +299,9 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 			l.push_back(cell->intersectionPoint);
 			allLists.push_back(l);
 
-			auto itToLast = allFacets[cell->base].end();
-			itToLast--;
-			listToFacet[listIdx] = itToLast;
+//			auto itToLast = allFacets[cell->base].end();
+//			itToLast--;
+//			listToFacet[listIdx] = itToLast;
 
 
 			cell->a->rightListIdx = listIdx;
@@ -367,7 +384,7 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 
 	if(createEvent) {
 		if((min && minimize) || (max && maximize)) {
-			cout << "Create Event min:" << min << ", max:" << max;
+			cout << "CREATE EVENT (min:" << min << ",max:" << max << ") ";
 
 			/* modify facets of line a and b */
 			addPointToCurrentList(c_a);
@@ -497,4 +514,36 @@ EdgeIterator RoofFacets::prev(EdgeIterator i) {
 
 
 
+void RoofFacets::printAllLists() {
+	cout << "FACETS: " << endl;
+	for(auto& facet : allFacets) {
+		for(auto f : facet.second) {
+			auto list = &allLists[f];
+			cout << f << ": ";
+			if(list->empty()) continue;
+
+			auto listIt = list->begin();
+			do {
+				cout << *listIt << "(" << listIt->nextList << ") - ";
+				if(listIt->nextList != NOLIST) {
+					list = &allLists[listIt->nextList];
+					listIt = list->begin();
+				} else {
+					++listIt;
+				}
+			} while(listIt != list->end() && listIt->nextList != f);
+			cout <<  endl;
+		}
+	}
+
+//	cout << endl << "All Lists: " << endl;
+//	int cnt = 0;
+//	for(auto& list : allLists) {
+//		cout << cnt++ << ": ";
+//		for(auto i : list) {
+//			cout << i << " - ";
+//		}
+//		cout << endl;
+//	}
+}
 

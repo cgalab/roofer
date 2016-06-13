@@ -123,6 +123,8 @@ private:
 	void drawAllLists();
 	void drawPolygon();
 
+	int getFacetSize(int listIdx);
+
 	Skeleton *skeleton;
 	Data     *data;
 
