@@ -360,7 +360,8 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 	auto l_new = c_new->base->supporting_line().to_vector();
 
 	/* l_a and l_b have to intersect at a reflex vertex, thus must be a right turn */
-	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN) {
+//	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN) {
+	if(c_a->b->rightListIdx == NOLIST) {
 		swap(l_a,l_b);
 		auto tmp = c_a;
 		c_a = c_b;
@@ -544,7 +545,15 @@ void RoofFacets::handleCreateMergeEvent(SweepEvent* event) {
 }
 
 void RoofFacets::turnLefRightOnIntersection(SweepItem* cell) {
-	if(cell->a->leftListIdx != NOLIST) {
+	if(cell->numberOfActiveIndices() == 3) {
+		if(cell->a->leftListIdx == NOLIST) {
+			cell->a->leftListIdx = cell->a->rightListIdx;;
+			cell->b->leftListIdx = NOLIST;
+		} else if(cell->b->rightListIdx == NOLIST) {
+			cell->b->rightListIdx = cell->b->leftListIdx;;
+			cell->a->rightListIdx = NOLIST;
+		}
+	} else if(cell->a->leftListIdx != NOLIST) {
 		cell->b->leftListIdx = cell->a->leftListIdx;
 		cell->a->leftListIdx = NOLIST;
 	} else if(cell->b->rightListIdx != NOLIST) {

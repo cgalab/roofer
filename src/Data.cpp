@@ -66,13 +66,13 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 
 
 		/* MIN EXAMPLE */
-		input.push_back( Point(7,1)  );
-		input.push_back( Point(11,2) );
-		input.push_back( Point(12,0) );
-		input.push_back( Point(12,3) );
-		input.push_back( Point(19,3) );
-		input.push_back( Point(20,15));
-		input.push_back( Point(0,14) );
+		input.push_back( Point(8,  2) );
+		input.push_back( Point(11, 3) );
+		input.push_back( Point(12, 0) );
+		input.push_back( Point(12, 4) );
+		input.push_back( Point(19, 4) );
+		input.push_back( Point(20,16) );
+		input.push_back( Point(0, 15) );
 
 		config.minimize = true;
         facets.setMinimizing();
