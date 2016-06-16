@@ -51,31 +51,31 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 		std::cout << "Using default test polygon." << std::endl;
 		config.gui = true;
 
-//		/* MAX EXAMPLE */
-//		input.push_back( Point(0,0)  );
-//		input.push_back( Point(10,0) );
-//		input.push_back( Point(12,10));
-//		input.push_back( Point(9,9)  );
-//		input.push_back( Point(8,12) );
-//		input.push_back( Point(6,9)  );
-//		input.push_back( Point(5,11) );
-//		input.push_back( Point(0,9)  );
+		/* MAX EXAMPLE */
+		input.push_back( Point(0,0)  );
+		input.push_back( Point(10,0) );
+		input.push_back( Point(12,10));
+		input.push_back( Point(9,9)  );
+		input.push_back( Point(8,12) );
+		input.push_back( Point(6,9)  );
+		input.push_back( Point(5,11) );
+		input.push_back( Point(0,9)  );
+
+        config.maximize = true;
+        facets.setMaximizing();
+
+
+//		/* MIN EXAMPLE */
+//		input.push_back( Point(8,  2) );
+//		input.push_back( Point(11, 3) );
+//		input.push_back( Point(12, 0) );
+//		input.push_back( Point(12, 4) );
+//		input.push_back( Point(19, 4) );
+//		input.push_back( Point(20,16) );
+//		input.push_back( Point(0, 15) );
 //
-//        config.maximize = true;
-//        facets.setMaximizing();
-
-
-		/* MIN EXAMPLE */
-		input.push_back( Point(8,  2) );
-		input.push_back( Point(11, 3) );
-		input.push_back( Point(12, 0) );
-		input.push_back( Point(12, 4) );
-		input.push_back( Point(19, 4) );
-		input.push_back( Point(20,16) );
-		input.push_back( Point(0, 15) );
-
-		config.minimize = true;
-        facets.setMinimizing();
+//		config.minimize = true;
+//        facets.setMinimizing();
 
 
         
