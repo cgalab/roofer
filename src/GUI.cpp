@@ -24,6 +24,8 @@ edges(true), vertices(true), drawLabels(true) {
 	resize(1024, 768);
 	updateGL();
 
+	srand(time(0));
+
 	make_facet(data->polygon);
 
 	init();
@@ -40,13 +42,11 @@ Dart_handle GUI::make_facet(const Polygon& poly) {
 	Dart_handle d =
 			CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)poly.size());
 
-//	int vIdx = 0;
 
 	for(auto v = poly.vertices_begin(); v != poly.vertices_end(); ++v) {
 		//for (unsigned int i=0; i<poly.size(); ++i) {
 
 		Point3D p(v->x().doubleValue(),v->y().doubleValue(),0);
-
 //		if(drawLabels) {
 //			drawText(p.x(),p.y(),QString(vIdx),QFont());
 //			++vIdx;
@@ -59,8 +59,8 @@ Dart_handle GUI::make_facet(const Polygon& poly) {
 }
 
 void GUI::addSegment(EdgeIterator& e) {
-	Point3D p(e->vertex(0).x().doubleValue(),e->vertex(0).y().doubleValue(),0);
-	Point3D q(e->vertex(1).x().doubleValue(),e->vertex(1).y().doubleValue(),0);
+	Point3D p(e->vertex(0).x().doubleValue(),e->vertex(0).y().doubleValue(),0+(rand()%5));
+	Point3D q(e->vertex(1).x().doubleValue(),e->vertex(1).y().doubleValue(),0+(rand()%5));
 
 	lcc.make_segment(q,p);
 }

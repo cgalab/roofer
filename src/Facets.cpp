@@ -360,13 +360,25 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 	auto l_new = c_new->base->supporting_line().to_vector();
 
 	/* l_a and l_b have to intersect at a reflex vertex, thus must be a right turn */
-	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN) {
-	//if(c_a->b->rightListIdx == NOLIST) {
+	//if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN) {
+	if(c_b->b->rightListIdx == NOLIST) {
+		if(c_a->b->rightListIdx == NOLIST) {
+			return createEvent;
+		}
+
 		swap(l_a,l_b);
 		auto tmp = c_a;
 		c_a = c_b;
 		c_b = tmp;
 	}
+
+	if(CGAL::orientation(l_a,l_b) == CGAL::RIGHT_TURN) {
+		cout << " right turn ";
+	} else {
+		cout << " left turn ";
+		return createEvent;
+	}
+//	c_a->print(); c_b->print();
 
 	/* analyze if a create event occurs and what typ (min/max) */
 	if(CGAL::orientation(l_a,l_new) == CGAL::RIGHT_TURN &&
