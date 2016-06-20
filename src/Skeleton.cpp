@@ -59,6 +59,8 @@ void Skeleton::createSkeleton() {
 
 		data.facets.printAllLists();
 
+		data.writeOutput();
+
 #ifdef QTGUI
 	}
 #endif

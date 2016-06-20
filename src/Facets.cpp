@@ -121,9 +121,7 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		line->rightListIdx  = listIdx;
 		cout << "S(" << line->rightListIdx << ":" << line->bisector.to_vector().x().doubleValue()
 				<< "," << line->bisector.to_vector().y().doubleValue() << ") ";
-#ifdef QTGUI
 		zMap[line->start] = 0;
-#endif
 	} else if(line->start == edgeEnd && isNeighbor ) {
 		// still only one facet on the current plane
 
@@ -134,9 +132,7 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		cout << "E(" << line->leftListIdx << ":" << line->bisector.to_vector().x().doubleValue()
 				<< "," << line->bisector.to_vector().y().doubleValue() << ") " << endl;
 //		cout << "E(" << line->leftListIdx << ") ";   fflush(stdout);
-#ifdef QTGUI
 		zMap[line->start] = 0;
-#endif
 	} else if(
 	  (aGreaterB(line->start,edgeStart,line->base) &&
 	   aGreaterB(edgeEnd,line->start,line->base))
@@ -200,9 +196,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->rightListIdx = NOLIST;
 			cell->b->leftListIdx  = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else if(cell->a->rightListIdx == NOLIST  &&  cell->b->leftListIdx  == NOLIST &&
 		   cell->a->leftListIdx  != NOLIST  &&  cell->b->rightListIdx != NOLIST) {
 			/* facet joins with facet of a create event */
@@ -223,9 +217,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else if(cell->numberOfActiveIndices() == 3) {
 			if(cell->a->leftListIdx == NOLIST) {
 
@@ -234,9 +226,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				cell->a->leftListIdx  = cell->a->rightListIdx;
 				cell->b->leftListIdx  = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 			} else if(cell->b->rightListIdx == NOLIST) {
 
 				auto& l = allLists[cell->b->leftListIdx];
@@ -245,9 +235,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				cell->b->rightListIdx  = cell->b->leftListIdx;
 				cell->a->rightListIdx  = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 			}
 		} else if(cell->a->leftListIdx != NOLIST) {
 
@@ -255,36 +243,28 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->b->leftListIdx = cell->a->leftListIdx;
 			cell->a->leftListIdx = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else if(cell->a->rightListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->b->rightListIdx = cell->a->rightListIdx;
 			cell->a->rightListIdx = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else if(cell->b->leftListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->a->leftListIdx = cell->b->leftListIdx;
 			cell->b->leftListIdx = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else if(cell->b->rightListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->a->rightListIdx = cell->b->rightListIdx;
 			cell->b->rightListIdx = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else {
 			cout << "Warning: Should not occur!" << endl;
 		}
@@ -315,9 +295,7 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
 
-#ifdef QTGUI
 		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 		} else {
 			if(cell->a->leftListIdx != NOLIST) {
 				cell->b->leftListIdx = cell->a->leftListIdx;
@@ -625,9 +603,7 @@ void RoofFacets::addPointToCurrentList(SweepItem* cell) {
 		l.push_front(cell->intersectionPoint);
 	}
 
-#ifdef QTGUI
 	zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
-#endif
 }
 
 EdgeIterator RoofFacets::next(EdgeIterator i) {

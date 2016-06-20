@@ -21,9 +21,7 @@ public:
 // the lists are directly referenced by the arrangements lines
 using AllLists		  = vector<list<PointExt>>;
 
-#ifdef QTGUI
 using PointToZ        = map<Point,double>;
-#endif
 
 //// a facet groups together all lists that are part of one facet
 //using Facet 		  = vector<int>;
@@ -52,9 +50,7 @@ public:
 	AllFacets   allFacets;
 	ListToFacet listToFacet;
 
-#ifdef QTGUI
 	PointToZ    zMap;
-#endif
 
 	void printAllLists();
 private:

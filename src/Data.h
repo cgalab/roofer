@@ -24,15 +24,25 @@
 
 using namespace std;
 
+
+enum class OutputType : int {OBJ=0,POLY,NONE,OBJ3D};
+
 struct Config {
-	Config():gui(false),minimize(false),maximize(false),fileName("") {
-		printOptions = "[-min|-max] [-gui] <filename>";
+	Config():gui(false),minimize(false),maximize(false),fileName(""),outputType(OutputType::NONE),outputFileName("") {
+#ifdef QTGUI
+		printOptions = "[-min|-max] [-gui] [-poly <filename>] [-obj[3d] <filename>] <filename>";
+#else
+		printOptions = "[-min|-max] [-poly <filename>] [-obj[3d] <filename>] <filename>";
+#endif
 	}
 
 	bool 		gui;
 	bool 		minimize;
 	bool 		maximize;
 	string      fileName;
+
+	OutputType  outputType;
+	string		outputFileName;
 
 	string 		printOptions;
 };
@@ -58,14 +68,21 @@ public:
 	virtual ~Data();
 
 	bool evaluateArguments(list<string> args);
+	void writeOutput();
 
 	friend VertexIterator next(const Polygon* poly, VertexIterator i);
 	friend VertexIterator prev(const Polygon* poly, VertexIterator i);
 
 private:
-	bool fileExists(string fileName);
-	bool loadFile();
+	bool fileExists(const string& fileName);
+	bool loadFile(const string& fileName);
 	void printHelp();
+
+	void writeOBJ(const string& fileName);
+	void writePOLY(const string& fileName);
+
+	bool parseOBJ(const vector<string>& lines);
+	bool parsePOLY(const vector<string>& lines);
 };
 
 #endif /* DATA_H_ */
