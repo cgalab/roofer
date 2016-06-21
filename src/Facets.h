@@ -45,6 +45,7 @@ public:
 	void setMaximizing() { if(!minimize) maximize = true; }
 
 	inline void setPolygon(const Polygon* poly) { polygon = poly; }
+	inline void setConfig(const Config* conf)   { config  = conf;}
 
 	AllLists    allLists;
 	AllFacets   allFacets;
@@ -59,14 +60,13 @@ private:
 
 	bool handleCreateEventA(SweepEvent* event);
 	bool handleCreateEventB(SweepEvent* event);
+	bool handleDivideEvent(SweepEvent* event);
 
 	void handleLeaveEvent(SweepItem* cell);
 	void handleEnterEvent(SweepItem* cell);
 
 	void handleMergeEvent(SweepEvent* event);
-	void handleCreateMergeEvent(SweepEvent* event);
 
-	void addPointToNewList(SweepItem* cell);
 	void addPointToCurrentList(SweepItem* cell);
 
 	/* a->left to b->left or b->right to a->right */
@@ -74,7 +74,9 @@ private:
 
 
 	bool			minimize, maximize;
+
 	const Polygon* 	polygon;
+	const Config*   config;
 
 	EdgeIterator next(EdgeIterator i);
 	EdgeIterator prev(EdgeIterator i);

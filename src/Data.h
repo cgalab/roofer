@@ -9,11 +9,9 @@
 #define DATA_H_
 
 
-#include <vector>
-#include <list>
 #include <memory>
-
 #include <assert.h>
+#include <ctime>
 
 #include <sys/stat.h>
 
@@ -24,51 +22,41 @@
 
 using namespace std;
 
-
-enum class OutputType : int {OBJ=0,POLY,NONE,OBJ3D};
-
-struct Config {
-	Config():gui(false),minimize(false),maximize(false),fileName(""),outputType(OutputType::NONE),outputFileName("") {
-#ifdef QTGUI
-		printOptions = "[-min|-max] [-gui] [-poly <filename>] [-obj[3d] <filename>] <filename>";
-#else
-		printOptions = "[-min|-max] [-poly <filename>] [-obj[3d] <filename>] <filename>";
-#endif
-	}
-
-	bool 		gui;
-	bool 		minimize;
-	bool 		maximize;
-	string      fileName;
-
-	OutputType  outputType;
-	string		outputFileName;
-
-	string 		printOptions;
-};
-
 using AllArrangements = map<EdgeIterator,RoofFacets>;
 
 class Data {
 public:
-    Input                input;
-	Polygon    	  		 polygon;
-	BBox				 bbox;
+    Input        input;
+	Polygon    	 polygon;
+	BBox		 bbox;
 
 	/* handles the sweepLine algorithm (events in a global queue and line arrangements
 	 * in a per base-line vector */
-	SweepLine			 sweepLine;
+	SweepLine	 sweepLine;
 
 	/* handles the cell arrangements and the resulting skeleton */
-	RoofFacets			 facets;
+	RoofFacets	 facets;
 
-	Config        		 config;
+	Config       config;
 
 	Data();
 	virtual ~Data();
 
 	bool evaluateArguments(list<string> args);
 	void writeOutput();
+
+	inline Line getBBoxLine(int i) {
+		if(i == 0) {
+			return Line(Point(bbox.xmin(),bbox.ymin()),Point(bbox.xmax(),bbox.ymin()));
+		} else if(i == 1) {
+			return Line(Point(bbox.xmax(),bbox.ymin()),Point(bbox.xmax(),bbox.ymax()));
+		} else if(i == 2) {
+			return Line(Point(bbox.xmax(),bbox.ymax()),Point(bbox.xmin(),bbox.ymax()));
+		} else if(i == 3) {
+			return Line(Point(bbox.xmin(),bbox.ymax()),Point(bbox.xmin(),bbox.ymin()));
+		}
+		return Line();
+	}
 
 	friend VertexIterator next(const Polygon* poly, VertexIterator i);
 	friend VertexIterator prev(const Polygon* poly, VertexIterator i);
@@ -77,12 +65,16 @@ private:
 	bool fileExists(const string& fileName);
 	bool loadFile(const string& fileName);
 	void printHelp();
+	void printLongHelp();
 
 	void writeOBJ(const string& fileName);
 	void writePOLY(const string& fileName);
 
 	bool parseOBJ(const vector<string>& lines);
 	bool parsePOLY(const vector<string>& lines);
+
+	string currentTimeStamp();
+	void getNormalizer(double& xt, double& xm, double& yt, double& ym, double& zt, double& zm);
 };
 
 #endif /* DATA_H_ */

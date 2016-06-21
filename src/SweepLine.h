@@ -29,10 +29,14 @@ struct ArrangementLine {
 
 	/* TODO: remove, just for testing */
 	int lid;
+
 	int eid;
 
+	bool parallel;
+
 	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = NIL, int edgeid = NIL):
-		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid) {
+		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid),
+		parallel(false) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -42,12 +46,18 @@ struct ArrangementLine {
 				start    = *ipoint;
 				bisector = setBisector();
 			} else {
+				parallel = true;
+				/* we have to set the starting point of the ray externally */
+				bisector = setBisector();
 				// TODO: construct bisector between parallel edges...
-				cout << "ERROR: Constructor: No Intersection?" << endl;
+				// cout << "ERROR: Constructor: No Intersection?" << endl;
 			}
 		} else {
+			parallel = true;
+			/* we have to set the starting point of the ray externally */
+			bisector = setBisector();
 			// TODO: construct bisector between parallel edges...
-			cout << "ERROR: Constructor: Object empty?" << endl;
+			// cout << "ERROR: Constructor: Object empty?" << endl;
 		}
 	}
 
@@ -59,6 +69,10 @@ struct ArrangementLine {
 	/* The second Line in the bisector is with changed orientation on purpose */
 	inline Ray setBisector() {
 		Line bisectorLine = CGAL::bisector(base->supporting_line(), Line(e->vertex(1),e->vertex(0)));
+		if(parallel) {
+			return Ray(bisectorLine.projection(base->vertex(0)),bisectorLine);
+		}
+
 		auto ray = Ray(start,bisectorLine);
 
 		if(Line(*base).has_on_negative_side(start + ray.to_vector()) ||
@@ -157,6 +171,13 @@ struct SweepItem {
 				set(i,j,idx);
 			}
 		}
+	}
+
+	inline bool isPossibleDivideNode() {
+		return a->leftListIdx  != NOLIST    &&
+			   a->rightListIdx == NOLIST    &&
+			   b->leftListIdx  == NOLIST    &&
+			   b->rightListIdx != NOLIST;
 	}
 
 	inline bool isEmptyNode() {
@@ -291,13 +312,24 @@ using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
 
 
 struct SweepEvent : public vector<SweepItem> {
-	inline int numberActiveCell() {
+	inline int numberActiveCells() {
 		int cnt = 0;
 		if(!empty()) {
 			for(auto& e : *this) {
 				if(e.hasAtLeastOneListIdx()) {
 					++cnt;
 				}
+			}
+		}
+		return cnt;
+	}
+
+	inline int numberDivideNodes() {
+		int cnt = 0;
+		auto cells = getActivCells();
+		for(auto cell : cells) {
+			if(cell->isPossibleDivideNode()) {
+				++cnt;
 			}
 		}
 		return cnt;
@@ -338,12 +370,10 @@ struct SweepEvent : public vector<SweepItem> {
 
 class SweepLine {
 public:
-	SweepLine() {}
+	SweepLine():config(nullptr) {}
 
 	inline void addLine(ArrangementLine a) { arrangementStart[a.base].push(a); }
 	void initiateEventQueue();
-
-	void initializePlaneSweepStart();
 
 	inline bool queueEmpty() { return eventQueue.empty(); }
 	inline long queueSize()  { return eventQueue.size(); }
@@ -355,6 +385,8 @@ public:
 	void printSweepLine(SweepItem& item);
 	void printEventQueue();
 
+	inline void setConfig(const Config* conf)   { config  = conf;}
+
 	SweepLineStatus 	status;
 
 private:
@@ -362,6 +394,8 @@ private:
 
 	AllArrangementLines allArrangementLines;
 	EventQueue 			eventQueue;
+
+	const Config*   config;
 };
 
 #endif /* SWEEPLINE_H_*/

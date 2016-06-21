@@ -37,7 +37,7 @@ ostream& operator<<(ostream& os, const PointExt& p) {
 }
 
 
-RoofFacets::RoofFacets():minimize(false),maximize(false),polygon(nullptr) {}
+RoofFacets::RoofFacets():minimize(false),maximize(false),polygon(nullptr),config(nullptr) {}
 
 void RoofFacets::handleEvent(SweepEvent *event) {
 	auto activeCells =  event->getActivCells();
@@ -52,6 +52,8 @@ void RoofFacets::handleEvent(SweepEvent *event) {
 			handleEdgeEvent(event);
 		} else if(event->containsInteriorNode()){
 			handleSplitEvent(event);
+		} else if(handleDivideEvent(event)) {
+			/* divide event is handled in if clause */
 		}
 
 	} else if(activeCells.size() == 2){
@@ -81,7 +83,7 @@ void RoofFacets::handleEvent(SweepEvent *event) {
 		} else if(numActiveInd == 4) {
 			if(minimize) {
 				if(handleCreateEventB(event)) {
-					// TODO: not sure think there is nothing to do here...
+					/* create event is handled in if clause */
 				}
 			}
 		}
@@ -119,19 +121,13 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		listToFacet[listIdx] = allFacets[line->base].begin();
 
 		line->rightListIdx  = listIdx;
-		cout << "S(" << line->rightListIdx << ":" << line->bisector.to_vector().x().doubleValue()
-				<< "," << line->bisector.to_vector().y().doubleValue() << ") ";
 		zMap[line->start] = 0;
 	} else if(line->start == edgeEnd && isNeighbor ) {
-		// still only one facet on the current plane
 
 		auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1 ;
 		allLists[listIdx].push_back(line->start);
 		line->leftListIdx = listIdx;
 
-		cout << "E(" << line->leftListIdx << ":" << line->bisector.to_vector().x().doubleValue()
-				<< "," << line->bisector.to_vector().y().doubleValue() << ") " << endl;
-//		cout << "E(" << line->leftListIdx << ") ";   fflush(stdout);
 		zMap[line->start] = 0;
 	} else if(
 	  (aGreaterB(line->start,edgeStart,line->base) &&
@@ -139,34 +135,22 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 	   ||
 	   (line->start == edgeStart  || line->start == edgeEnd)
 	) {
-		cout << "(" << *line << ") ";
 		bool assign = true;
 
 		if(line->start == edgeStart) {
 			ArrangementLine s(line->base,itBasePrev);
-			cout << s << " S";
-
-			if(s < *line) cout << "<";
 
 			if(s > *line) {
 				assign = false;
-				cout << "> ";
-			} else {
-				cout << "<= ";
 			}
 		} else if(line->start == edgeEnd) {
 			ArrangementLine e(line->base,itBaseNext);
-			cout << e << "E";
 			if(*line < e) {
 				assign = false;
 			}
 		}
 
 		if(assign) {
-			cout << "A ";
-			// just reference from the arrangement lines that start
-			// in the interior of the respective edge
-			//		auto listIdx = allFacets[line->base].front();
 			auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1 ;
 			line->leftListIdx  = listIdx;
 			line->rightListIdx = listIdx;
@@ -513,6 +497,38 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 	return createEvent;
 }
 
+bool RoofFacets::handleDivideEvent(SweepEvent* event) {
+	cout << "DIVIDE EVENT ";
+	auto divideNodes = event->getActivCells();
+	if(event->numberDivideNodes() >= 1) {
+		for(auto cell : divideNodes) {
+
+			if(cell->isPossibleDivideNode()) {
+				auto& la = allLists[cell->a->leftListIdx];
+				la.push_back(cell->intersectionPoint);
+
+				auto& lb = allLists[cell->b->rightListIdx];
+				lb.push_front(cell->intersectionPoint);
+
+				zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+
+				cell->a->rightListIdx = cell->b->rightListIdx;
+				cell->b->leftListIdx  = cell->a->leftListIdx;
+				cell->a->leftListIdx  = NOLIST;
+				cell->b->rightListIdx = NOLIST;
+			} else {
+				addPointToCurrentList(cell);
+				turnLefRightOnIntersection(cell);
+			}
+		}
+
+		event->printAll();
+		return true;
+	}
+
+	return false;
+}
+
 
 void RoofFacets::handleMergeEvent(SweepEvent* event) {
 	for(auto cell : event->getActivCells()) {
@@ -530,9 +546,6 @@ void RoofFacets::handleMergeEvent(SweepEvent* event) {
 	}
 }
 
-void RoofFacets::handleCreateMergeEvent(SweepEvent* event) {
-
-}
 
 void RoofFacets::turnLefRightOnIntersection(SweepItem* cell) {
 	if(cell->numberOfActiveIndices() == 3) {
@@ -590,9 +603,6 @@ void RoofFacets::handleLeaveEvent(SweepItem* cell) {
 }
 
 
-void RoofFacets::addPointToNewList(SweepItem* cell) {
-}
-
 void RoofFacets::addPointToCurrentList(SweepItem* cell) {
 	bool pushEnd = (cell->a->leftListIdx != NOLIST || cell->b->leftListIdx != NOLIST) ? true : false;
 	auto& l = allLists[cell->firstListIndex()];
@@ -614,37 +624,27 @@ EdgeIterator RoofFacets::prev(EdgeIterator i) {
 }
 
 
-
 void RoofFacets::printAllLists() {
-	cout << "FACETS: " << endl;
+	cout << endl << "facet: coordinate list" << endl;
 	for(auto& facet : allFacets) {
 		for(auto f : facet.second) {
 			auto list = &allLists[f];
-			cout << f << ": ";
+			cout << f << ":";
 			if(list->empty()) continue;
 
 			auto listIt = list->begin();
 			do {
-				cout << *listIt << "(" << listIt->nextList << ") - ";
+				// cout << *listIt << "(" << listIt->nextList << ") - ";
 				if(listIt->nextList != NOLIST) {
 					list = &allLists[listIt->nextList];
 					listIt = list->begin();
 				} else {
+					cout << " " << *listIt;
 					++listIt;
 				}
 			} while(listIt != list->end() && listIt->nextList != f);
 			cout <<  endl;
 		}
 	}
-
-//	cout << endl << "All Lists: " << endl;
-//	int cnt = 0;
-//	for(auto& list : allLists) {
-//		cout << cnt++ << ": ";
-//		for(auto i : list) {
-//			cout << i << " - ";
-//		}
-//		cout << endl;
-//	}
 }
 

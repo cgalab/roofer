@@ -97,9 +97,6 @@ void SweepLine::initiateEventQueue() {
 	}
 }
 
-void SweepLine::initializePlaneSweepStart() {
-
-}
 
 void SweepLine::printEventQueue() {
 	cout << "Q: ";

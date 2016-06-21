@@ -37,25 +37,23 @@ void Skeleton::createSkeleton() {
 	/***
 	 * create initial wavefront
 	 ***/
-	cout << endl << "generating line arrangements and event queue...";
+	if(!data.config.silent) {cout << endl << "generating line arrangements and event queue...";}
 	createLineArrangements();
-	cout << "done" << endl;
+	if(!data.config.silent) {cout << "done" << endl;}
 
-	cout << endl << "initiate event queue...";
+	if(!data.config.silent) {cout << endl << "initiate event queue...";}
 	data.sweepLine.initiateEventQueue();
-	cout << "done" << endl;
+	if(!data.config.silent) {cout << "done" << endl;}
 
-	cout << endl << "add all base cells...";
+	if(!data.config.silent) {cout << endl << "add all base cells...";}
 	addAllBaseCells();
-	cout << "done" << endl;
+	if(!data.config.silent) {cout << "done" << endl;}
 
 	/* start wavefront propagation */
 #ifdef QTGUI
 	if(!data.config.gui) {
 #endif
-		cout << "start plane sweep...";
 		startPlaneSweep();
-		cout << "done" << endl;
 
 		data.facets.printAllLists();
 
@@ -72,7 +70,45 @@ void Skeleton::createLineArrangements() {
 		for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
 			if( baseEdgeIt->supporting_line() != edgeIt->supporting_line() ) {
 				ArrangementLine al(baseEdgeIt, edgeIt, uid++, eid);
-				data.sweepLine.addLine(al);
+
+				/* we use a bbox to define a starting point of the parallel bisector ray */
+				if(al.parallel) {
+					/* in the other case the planes do not intersect */
+					if(baseEdgeIt->direction() != edgeIt->direction()) {
+
+						auto line = al.bisector.supporting_line();
+						int cnt = 0;
+
+						auto intersection = CGAL::intersection(data.getBBoxLine(cnt),line);
+						while(intersection.empty() && ++cnt < 4) {
+							intersection = CGAL::intersection(data.getBBoxLine(cnt),line);
+						}
+
+						if(!intersection.empty()) {
+							if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
+								al.start    = *ipoint;
+								al.bisector = Ray(al.start,line);
+
+								auto bboxLine  = data.getBBoxLine(cnt);
+								auto whichSide = al.start + al.bisector.to_vector();
+
+								if(bboxLine.has_on_negative_side(whichSide)) {
+									al.bisector = Ray(al.start,line.opposite());
+								}
+
+								// TODO: correction for parallel lines (not working good)
+								cout << "(adding parallel AL: " << al.eid << ") ";
+								data.sweepLine.addLine(al);
+							} else {
+								cout << "WARINING: NO INTERSECTION! (parallel handling)" << endl;
+							}
+						} else {
+							cout << "WARINING: NO INTERSECTION (2)! (parallel handling)" << endl;
+						}
+					}
+				} else {
+					data.sweepLine.addLine(al);
+				}
 			}
 		}
 		eid++;
@@ -89,45 +125,9 @@ void Skeleton::addAllBaseCells() {
 			data.facets.addBaseCell(line);
 		}
 	}
-
-//	for(auto& a : data.sweepLine.status) {
-//		for(auto line : a.second) {
-//			if(line->base == line->e+1) {
-//				cout << "left ";
-//			} else if (line->base+1 == line->e) {
-//				cout << "right ";
-//			}
-//		}
-//	}
-//	for(auto& a : data.sweepLine.status) {
-//		for(auto line = a.second.begin(); line != a.second.end(); ++line) {
-//			Point edgeStart((*line)->base->vertex(0));
-//			Point edgeEnd((*line)->base->vertex(1));
-//
-//			/* check for duplicates (is already sorted) */
-//			if(line != a.second.begin()   &&
-//			   line-1 != a.second.begin() &&
-//			   (*line)->start == (*(line-1))->start &&
-//			   edgeStart == (*line)->start) {
-//
-//				(*line)->leftListIdx  = (*line-1)->rightListIdx;
-//				(*line)->rightListIdx = (*line-1)->rightListIdx;
-//
-//			} else if(line+1 != a.second.end() && (*line)->start == (*(line+1))->start &&
-//			          edgeEnd == (*line)->start) {
-//
-//				auto idx = data.facets.allFacets[(*line)->base].front();
-//				(*line)->leftListIdx  = idx;
-//				(*line)->rightListIdx = idx;
-//			} else {
-//				data.facets.addBaseCell(*line);
-//			}
-//		}
-//	}
 }
 
 void Skeleton::startPlaneSweep() {
-//	cout << "Beginning Q-State: "; data.sweepLine.printEventQueue();
 	while(!data.sweepLine.queueEmpty()) {
 		try {
 			auto item = data.sweepLine.popEvent();
@@ -143,8 +143,12 @@ void Skeleton::startPlaneSweep() {
 }
 
 void Skeleton::handleNextEvent(SweepEvent& event) {
-	cout << "Q: " << data.sweepLine.queueSize() << endl;
-	if(event.size() != 3) cout  << event.size() << " Item(s)"<< endl;
+	if(!data.config.silent) {
+		cout << "Q: " << data.sweepLine.queueSize() << endl;
+		if(event.size() != 3) {
+			cout  << event.size() << " Item(s)"<< endl;
+		}
+	}
 
 	data.facets.handleEvent(&event);
 

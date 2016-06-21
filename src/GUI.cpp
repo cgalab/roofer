@@ -324,7 +324,7 @@ void GUI::drawAllLists() {
 				} else {
 					double z = 0;
 					z = data->facets.zMap[*listIt];
-					if(z!=0) {z*=.4;}
+					if(z!=0) {z*=ZSCALE;}
 					Point3D p(listIt->x().doubleValue(),listIt->y().doubleValue(),z);
 					lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
 					d = d->beta(1);

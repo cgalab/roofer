@@ -1,0 +1,7 @@
+# manual example geder@cosy.sbg.ac.at
+o simple-polygon
+v 0 0
+v 20 0
+v 20 10
+v 0 10
+f 1 2 3 4

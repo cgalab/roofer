@@ -25,8 +25,8 @@ if( WITH_DEBUG )
    message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 endif( WITH_DEBUG)
 
-add_executable(bis ${SRC_LIST})
-target_link_libraries(bis ${CGAL_LIBRARIES}
+add_executable(roofer ${SRC_LIST})
+target_link_libraries(roofer ${CGAL_LIBRARIES}
                           ${CGAL_3RD_PARTY_LIBRARIES}
                           ${MAP_VIEWER_LIBRARIES}
                      )
