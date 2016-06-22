@@ -18,8 +18,13 @@ using namespace std;
  * */
 struct ArrangementLine {
 	EdgeIterator base, e;
+
 	Point start;
-	Ray bisector;
+	Ray   bisector;
+
+	/* if base and e are parallel the bisector is either a line or there is none*/
+	Line  line;
+	Exact dist;
 
 	/* we will use this idx to referenc to the current facets adjacent to 'bisector' */
 	int leftListIdx, rightListIdx;
@@ -32,11 +37,11 @@ struct ArrangementLine {
 
 	int eid;
 
-	bool parallel;
+	bool parallel, isValid, ghost;
 
 	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = NIL, int edgeid = NIL):
 		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid),
-		parallel(false) {
+		parallel(false),isValid(true),ghost(false) {
 		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
@@ -47,17 +52,25 @@ struct ArrangementLine {
 				bisector = setBisector();
 			} else {
 				parallel = true;
-				/* we have to set the starting point of the ray externally */
-				bisector = setBisector();
-				// TODO: construct bisector between parallel edges...
-				// cout << "ERROR: Constructor: No Intersection?" << endl;
 			}
 		} else {
 			parallel = true;
-			/* we have to set the starting point of the ray externally */
-			bisector = setBisector();
-			// TODO: construct bisector between parallel edges...
-			// cout << "ERROR: Constructor: Object empty?" << endl;
+		}
+
+		if(parallel) {
+			if(base->supporting_line().direction() != e->supporting_line().direction()) {
+				start = INFPOINT;
+				line  = CGAL::bisector(base->supporting_line(), e->supporting_line());
+				dist  = CGAL::squared_distance(base->supporting_line(),line);
+			} else if(base->supporting_line() == e->supporting_line()) {
+				ghost   = true;
+				isValid = false;
+				// TODO: implement ghost vertex!?!
+				//line = base->supporting_line();
+				//bisector = Ray();
+			} else {
+				isValid = false;
+			}
 		}
 	}
 
@@ -69,10 +82,6 @@ struct ArrangementLine {
 	/* The second Line in the bisector is with changed orientation on purpose */
 	inline Ray setBisector() {
 		Line bisectorLine = CGAL::bisector(base->supporting_line(), Line(e->vertex(1),e->vertex(0)));
-		if(parallel) {
-			return Ray(bisectorLine.projection(base->vertex(0)),bisectorLine);
-		}
-
 		auto ray = Ray(start,bisectorLine);
 
 		if(Line(*base).has_on_negative_side(start + ray.to_vector()) ||
@@ -88,7 +97,12 @@ using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine, vect
 /* holds the actual ArrangementLines, to which we point to */
 using AllArrangementLines	= map<EdgeIterator,vector<ArrangementLine> >;
 
-using ALIterator = vector<ArrangementLine>::iterator;
+using ALIterator 			= vector<ArrangementLine>::iterator;
+//struct ALIterator : vector<ArrangementLine>::iterator {
+//	friend bool operator>  (const ALIterator& a, const ALIterator& b);
+//	friend bool operator<  (const ALIterator& a, const ALIterator& b);
+//	friend bool operator== (const ALIterator& a, const ALIterator& b);
+//};
 
 struct SweepItem {
 	ALIterator a, b;
@@ -106,9 +120,33 @@ struct SweepItem {
 	SweepItem(const SweepItem& i):SweepItem(i.a,i.b) {}
 
 	SweepItem(ALIterator pa, ALIterator pb):a(pa),b(pb),base(pa->base) {
-		if(a->base != b->base) {cout << "ERROR: Base Line not equal!" << endl;}
+		if(a->base != b->base) {
+			cout << "ERROR: Base Line not equal!" << endl <<
+			a->uid << " " << b->uid << endl;
+			if(a->parallel) cout << "(a parallel)";
+			if(b->parallel) cout << "(b parallel)";
+			cout << "a: ";
+			cout << a->base->vertex(0).x().doubleValue() << "," <<
+					a->base->vertex(0).y().doubleValue() << "-" <<
+					a->base->vertex(1).x().doubleValue() << "," <<
+					a->base->vertex(1).y().doubleValue() << "  ";
+			cout << "b: ";
+			cout << b->base->vertex(0).x().doubleValue() << "," <<
+					b->base->vertex(0).y().doubleValue() << "-" <<
+					b->base->vertex(1).x().doubleValue() << "," <<
+					b->base->vertex(1).y().doubleValue() << "  ";
+			throw runtime_error("ERROR: Base Lines not equal!");
+		}
 
 		auto intersection = CGAL::intersection(a->bisector,b->bisector);
+
+		if(a->parallel && b->parallel) {
+			intersection = CGAL::intersection(a->line,b->line);
+		} else if(a->parallel) {
+			intersection = CGAL::intersection(a->line,b->bisector);
+		} else if(b->parallel) {
+			intersection = CGAL::intersection(a->bisector,b->line);
+		}
 
 		if(!intersection.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
@@ -254,6 +292,10 @@ struct SweepItem {
 		cout << ")  ";
 	}
 
+	inline void printIntPoint() {
+		cout << intersectionPoint.x().doubleValue() << "," << intersectionPoint.y().doubleValue();
+	}
+
 	friend bool operator>  (const SweepItem& a, const SweepItem& b);
 	friend bool operator<  (const SweepItem& a, const SweepItem& b);
 	friend bool operator== (const SweepItem& a, const SweepItem& b);
@@ -267,25 +309,31 @@ struct DistanceCompare {
 
 	// < Operator
 	bool operator()  (ALIterator a, ALIterator b) {
-		if(a->base != b->base) return a->uid < b->uid;
-
-		Line currentBase(currentIntersection,a->base->direction());
-
-		auto intersectionA = CGAL::intersection(currentBase, a->bisector);
-		auto intersectionB = CGAL::intersection(currentBase, b->bisector);
-
-		if(!intersectionA.empty() && !intersectionB.empty()) {
-			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
-				if(const Point *pointB = CGAL::object_cast<Point>(&intersectionB)) {
-					return a->base->direction() == Vector(*pointB - *pointA).direction();
-				}
-			}
-		}
-
-		throw runtime_error("ERROR: empty intersections!");
+//		if(a->base != b->base) return a->uid < b->uid;
+		return operator()(*a,*b);
+//
+//		Line currentBase(currentIntersection,a->base->direction());
+//
+//		auto intersectionA = CGAL::intersection(currentBase, a->bisector);
+//		auto intersectionB = CGAL::intersection(currentBase, b->bisector);
+//
+//		if(!intersectionA.empty() && !intersectionB.empty()) {
+//			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
+//				if(const Point *pointB = CGAL::object_cast<Point>(&intersectionB)) {
+//					return a->base->direction() == Vector(*pointB - *pointA).direction();
+//				}
+//			}
+//		}
+//
+//		throw runtime_error("ERROR: empty intersections!");
 	}
+
 	bool operator()  (ArrangementLine a, ArrangementLine b) {
 		if(a.base != b.base) return a.uid < b.uid;
+
+		if(a.parallel && b.parallel) {
+			return b.dist < a.dist;
+		}
 
 		Line currentBase(currentIntersection,a.base->direction());
 
@@ -304,8 +352,15 @@ struct DistanceCompare {
 	}
 };
 
+struct ParallelALIteratorLess {
+	// > Operator
+	bool operator()  (ALIterator a, ALIterator b) {
+		return (b->dist > a->dist) || (b->dist == a->dist && b->eid > a->eid);
+	}
+};
 
 using EventQueue 	   		= set<SweepItem,less<SweepItem> >;
+using ParallelEventQueue	= set<ALIterator,ParallelALIteratorLess>;
 
 using LocalSweepLineStatus  = vector<ALIterator>;
 using SweepLineStatus  		= map<EdgeIterator,LocalSweepLineStatus>;
@@ -380,6 +435,11 @@ public:
 
 	SweepEvent popEvent();
 
+
+	inline void addParallelLine(ArrangementLine al) {
+		allParallelAL.push_back(al);
+	}
+
 	void handlePopEvent(SweepItem& item);
 
 	void printSweepLine(SweepItem& item);
@@ -387,15 +447,18 @@ public:
 
 	inline void setConfig(const Config* conf)   { config  = conf;}
 
-	SweepLineStatus 	status;
+	SweepLineStatus 			status;
 
 private:
-	ArrangementStart 	arrangementStart;
+	ArrangementStart 			arrangementStart;
 
-	AllArrangementLines allArrangementLines;
-	EventQueue 			eventQueue;
+	AllArrangementLines 		allArrangementLines;
+	EventQueue 					eventQueue;
 
-	const Config*   config;
+	vector<ArrangementLine> 	allParallelAL;
+	ParallelEventQueue 			parallelEventQueue;
+
+	const Config*   			config;
 };
 
 #endif /* SWEEPLINE_H_*/

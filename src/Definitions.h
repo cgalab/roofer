@@ -5,8 +5,9 @@ using namespace std;
 
 #define NIL    -1
 #define NOLIST -2
-#define ZSCALE 0.4
+#define ZSCALE 0.5
 
+#define INFPOINT Point(numeric_limits<double>::max(),numeric_limits<double>::max())
 
 //enum class EventType : int {EMPTY=0,EDGE,SPLIT,CREATE1,CREATE2,MERGE,CREATE1ORENTER,CREATE2ORMERGE,ENTER};
 

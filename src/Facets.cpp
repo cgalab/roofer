@@ -180,28 +180,36 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->rightListIdx = NOLIST;
 			cell->b->leftListIdx  = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else if(cell->a->rightListIdx == NOLIST  &&  cell->b->leftListIdx  == NOLIST &&
 		   cell->a->leftListIdx  != NOLIST  &&  cell->b->rightListIdx != NOLIST) {
-			/* facet joins with facet of a create event */
+			/* facet joins with facet of a create event OR parallel AL */
 			auto& leftList    = allLists[cell->a->leftListIdx];
 			auto rightListIdx = cell->b->rightListIdx;
 
-			if(cell->a->leftListIdx == cell->b->rightListIdx) {cout << "ERROR: index equal!" << endl;}
-			leftList.push_back(cell->intersectionPoint);
-			/* adds a next index to find the corresponding following list */
-			leftList.push_back(rightListIdx);
+			if((cell->a->parallel || cell->b->parallel) && cell->a->leftListIdx == cell->b->rightListIdx) {
+				cout << " (PAR) ";
+				leftList.push_back(cell->intersectionPoint);
+			} else {
+				if(cell->a->leftListIdx == cell->b->rightListIdx) {
+					cout << "ERROR: index equal!" << endl;
+				}
 
-			/* we also have to remove the 2nd facet as it joined up */
-			auto it = listToFacet[rightListIdx];
-			allFacets[cell->base].erase(it);
-			listToFacet.erase(rightListIdx);
+				leftList.push_back(cell->intersectionPoint);
+				/* adds a next index to find the corresponding following list */
+				leftList.push_back(rightListIdx);
+
+				/* we also have to remove the 2nd facet as it joined up */
+				auto it = listToFacet[rightListIdx];
+				allFacets[cell->base].erase(it);
+				listToFacet.erase(rightListIdx);
+			}
 
 
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else if(cell->numberOfActiveIndices() == 3) {
 			if(cell->a->leftListIdx == NOLIST) {
 
@@ -210,7 +218,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				cell->a->leftListIdx  = cell->a->rightListIdx;
 				cell->b->leftListIdx  = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+				zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 			} else if(cell->b->rightListIdx == NOLIST) {
 
 				auto& l = allLists[cell->b->leftListIdx];
@@ -219,7 +227,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				cell->b->rightListIdx  = cell->b->leftListIdx;
 				cell->a->rightListIdx  = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+				zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 			}
 		} else if(cell->a->leftListIdx != NOLIST) {
 
@@ -227,28 +235,28 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->b->leftListIdx = cell->a->leftListIdx;
 			cell->a->leftListIdx = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else if(cell->a->rightListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->b->rightListIdx = cell->a->rightListIdx;
 			cell->a->rightListIdx = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else if(cell->b->leftListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->a->leftListIdx = cell->b->leftListIdx;
 			cell->b->leftListIdx = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else if(cell->b->rightListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->a->rightListIdx = cell->b->rightListIdx;
 			cell->b->rightListIdx = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else {
 			cout << "Warning: Should not occur!" << endl;
 		}
@@ -279,7 +287,7 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
 
-		zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else {
 			if(cell->a->leftListIdx != NOLIST) {
 				cell->b->leftListIdx = cell->a->leftListIdx;
@@ -300,6 +308,10 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 
 bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 	bool createEvent = false, max = false, min = false;
+
+	if(!minimize && !maximize) {
+		return false;
+	}
 
 	SweepItem* c_a=nullptr;
 	SweepItem* c_b=nullptr;

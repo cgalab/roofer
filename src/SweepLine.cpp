@@ -16,13 +16,20 @@ using namespace std;
 //    return (a->base == b->base && a->base->direction() == Vector(b->start - a->start).direction()) ||
 //     	   (a->base != b->base && a->uid < b->uid);
 //}
+
+bool operator==(const ALIterator& a, const ALIterator& b) {return operator==(*a,*b);}
+bool operator> (const ALIterator& a, const ALIterator& b) {return operator> (*a,*b);}
+bool operator< (const ALIterator& a, const ALIterator& b) {return operator< (*a,*b);}
+
 bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
-		return  a.base  == b.base &&
+		return  a.base  == b.base  &&
 				a.start == b.start &&
 				a.e     == b.e;
 }
 bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
-    return (a.base == b.base && a.start != b.start &&
+    return (!a.parallel && b.parallel) || (a.parallel && b.parallel && a.dist > b.dist)
+    		||
+		   (a.base == b.base && a.start != b.start &&
     		a.base->direction() == Vector(a.start - b.start).direction())
     		||
     	   (a.base == b.base && a.start == b.start &&
@@ -31,7 +38,9 @@ bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
 		   (a.base != b.base && a.eid > b.eid);
 }
 bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
-    return (a.base == b.base && a.start != b.start &&
+    return (a.parallel && !b.parallel) || (a.parallel && b.parallel && a.dist < b.dist)
+    		||
+    	   (a.base == b.base && a.start != b.start &&
     		a.base->direction() == Vector(b.start - a.start).direction())
     		||
      	   (a.base == b.base && a.start == b.start &&
@@ -41,7 +50,12 @@ bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
 }
 
 bool operator== (const SweepItem& a, const SweepItem& b) {
-	return a.normalDistance == b.normalDistance && (
+//	return a.normalDistance == b.normalDistance && (
+//		   (a.a 				== b.a &&
+//		    b.b 				== b.b) || (
+//			a.a 				== b.b &&
+//		    b.b 				== b.a  ) );
+	return a.intersectionPoint  == b.intersectionPoint && a.base == b.base && (
 		   (a.a 				== b.a &&
 		    b.b 				== b.b) || (
 			a.a 				== b.b &&
@@ -49,11 +63,17 @@ bool operator== (const SweepItem& a, const SweepItem& b) {
 }
 bool operator> (const SweepItem& a, const SweepItem& b) {
 	return (a.normalDistance  > b.normalDistance) ||
-		   (a.normalDistance == b.normalDistance && a.a > b.a);
+		   (a.normalDistance == b.normalDistance && a.intersectionPoint > b.intersectionPoint) || (
+			a.normalDistance == b.normalDistance && a.intersectionPoint == b.intersectionPoint && (
+			a.a > b.a || ( a.a == b.a && a.b > b.b ))
+		   );
 }
 bool operator< (const SweepItem& a, const SweepItem& b) {
 	return (a.normalDistance  < b.normalDistance) ||
-		   (a.normalDistance == b.normalDistance && a.a < b.a);
+		   (a.normalDistance == b.normalDistance && a.intersectionPoint < b.intersectionPoint) || (
+			a.normalDistance == b.normalDistance && a.intersectionPoint == b.intersectionPoint && (
+			a.a < b.a  || (a.a == b.a && a.b < b.b))
+		   );
 }
 
 ostream& operator<<(ostream& os, const ArrangementLine& al) {
@@ -89,6 +109,10 @@ void SweepLine::initiateEventQueue() {
 		}
 	}
 
+	for(auto pit = allParallelAL.begin(); pit != allParallelAL.end(); ++pit) {
+		parallelEventQueue.insert(pit);
+	}
+
 	for(auto &line : status) {
 		int cnt = 0;
 		for(auto l : line.second) {
@@ -102,10 +126,16 @@ void SweepLine::printEventQueue() {
 	cout << "Q: ";
 
 	for(auto e : eventQueue) {
-		cout << e.normalDistance.doubleValue() << " - "; e.print(); cout << endl;
+		cout << e.normalDistance.doubleValue() << " - "; e.print(); cout << ", ";
 	}
 
-	cout << endl;
+	if(!parallelEventQueue.empty()) {
+		cout << endl << "PQ: ";
+		for(auto e : parallelEventQueue) {
+			cout << e->dist.doubleValue() << "  ";
+		}
+		cout << endl;
+	}
 }
 
 void SweepLine::printSweepLine(SweepItem& item) {
@@ -132,21 +162,62 @@ SweepEvent SweepLine::popEvent() {
 		SweepEvent temp;
 
 		auto first = *eventQueue.begin();
+
+//		cout << endl;
+//		printEventQueue();
+		/* checking the parallel queue if a line has to be 'added' */
+		while(!parallelEventQueue.empty() && (*parallelEventQueue.begin())->dist <= first.dist()) {
+			auto parallelItem = *parallelEventQueue.begin();
+//			cout << "handle parallel line ";
+			/* the parallel line has to be intersected with all
+			 * arrangement lines in its corresponding arrangement */
+
+			for(auto al : status[parallelItem->base]) {
+
+				SweepItem item(parallelItem,al);
+//				item.print();
+				if(item.raysIntersect) {
+//					cout << endl <<" ->ins " << item.dist().doubleValue() << " "; item.printIntPoint();
+//					cout << " "; item.print();
+					eventQueue.insert(item);
+				}
+			}
+			parallelEventQueue.erase(parallelEventQueue.begin());
+			first = *eventQueue.begin();
+		}
+
+//		cout << endl;
+//		printEventQueue();
+
 		eventQueue.erase(eventQueue.begin());
 		event.push_back(first);
 
+//		cout << endl << "events: ";
+//		first.printIntPoint();
+//		cout << " - ";
 		while(!queueEmpty() && first.normalDistance == eventQueue.begin()->normalDistance) {
-			auto other = eventQueue.begin();
-
-			if((first.base != other->base) &&
-			   (first.a->e  == other->base || first.b->e  == other->base ) ) {
-				event.push_back(*other);
+			auto other = *eventQueue.begin();
+//			if((first.base != other->base) &&
+//			   (first.a->e  == other->base || first.b->e  == other->base ) ) {
+//				event.push_back(*other);
+//			}
+//			else
+			if(first.intersectionPoint == other.intersectionPoint) {
+				event.push_back(other);
 			} else {
-				temp.push_back(*other);
-				cout << "Warning: event added to temp!" << endl;
+				temp.push_back(other);
+				cout << "(TE)";
 			}
-			eventQueue.erase(other);
+//			other.printIntPoint();
+//			cout << " - ";
+			eventQueue.erase(eventQueue.begin());
 		}
+
+//		cout << "event: ";
+//		for(auto c : event) c.print();
+//		cout << endl << "temp: ";
+//		for(auto c : temp) c.print();
+//		cout << endl;
 
 		if(temp.size() > 0) {
 			cout << "Temp: ";
@@ -161,7 +232,7 @@ SweepEvent SweepLine::popEvent() {
 		}
 
 		if(event.size() != 3){
-			cout << "Event: ";
+			cout << endl << "Event: ";
 			for(auto e : event) {
 				cout << "(" << e.intersectionPoint.x().doubleValue()
 					 << "," << e.intersectionPoint.y().doubleValue() << ") D:"
@@ -172,7 +243,9 @@ SweepEvent SweepLine::popEvent() {
 		}
 
 		for(auto e : event) {
-			handlePopEvent(e);
+			if(!e.a->parallel && !e.b->parallel) {
+				handlePopEvent(e);
+			}
 		}
 
 		return event;
@@ -217,7 +290,6 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		throw runtime_error("ERROR: handlePopEvent a,b not found!");
 	}
 
-//	cout << "+"; fflush(stdout);
 
 	if(!(*FoundA == lStatus.front())) {
 		SweepItem beforeA(*(FoundA-1), *FoundB);
@@ -226,7 +298,6 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		}
 	}
 
-//	cout << "+"; fflush(stdout);
 
 	if(!(*FoundB == lStatus.back()))  {
 		SweepItem afterB(*FoundA, *(FoundB+1) );
@@ -235,7 +306,6 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		}
 	}
 
-//	cout << "+" << endl; fflush(stdout);
 
 	// swap line segments in status, as of the intersection point.
 	iter_swap(FoundA, FoundB);
