@@ -78,7 +78,6 @@ void Skeleton::createLineArrangements() {
 				if(al.isValid) {
 					++uid;
 					if(al.parallel) {
-						cout << "-P-";
 						data.sweepLine.addParallelLine(al);
 					} else {
 						data.sweepLine.addLine(al);
@@ -97,7 +96,6 @@ void Skeleton::createLineArrangements() {
 void Skeleton::addAllBaseCells() {
 	for(auto& a : data.sweepLine.status) {
 		for(auto line : a.second) {
-			cout << line->eid; fflush(stdout);
 			data.facets.addBaseCell(line);
 		}
 	}
@@ -120,10 +118,10 @@ void Skeleton::startPlaneSweep() {
 
 void Skeleton::handleNextEvent(SweepEvent& event) {
 	if(!data.config.silent) {
-		cout << "Q: " << data.sweepLine.queueSize() << endl;
-		if(event.size() != 3) {
-			cout  << event.size() << " Item(s)"<< endl;
-		}
+		cout << "Q: " << data.sweepLine.queueSize() << " ";
+//		if(event.size() != 3) {
+//			cout  << event.size() << " Item(s)"<< endl;
+//		}
 	}
 
 	data.facets.handleEvent(&event);

@@ -42,7 +42,6 @@ struct ArrangementLine {
 	ArrangementLine(EdgeIterator pbase, EdgeIterator pe, int id = NIL, int edgeid = NIL):
 		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid),
 		parallel(false),isValid(true),ghost(false) {
-		assert(base != e);
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
 
@@ -65,9 +64,6 @@ struct ArrangementLine {
 			} else if(base->supporting_line() == e->supporting_line()) {
 				ghost   = true;
 				isValid = false;
-				// TODO: implement ghost vertex!?!
-				//line = base->supporting_line();
-				//bisector = Ray();
 			} else {
 				isValid = false;
 			}
@@ -90,6 +86,15 @@ struct ArrangementLine {
 		}
 		return ray;
 	}
+
+	inline void setGhostVertex(Point s) {
+		isValid  = true;
+		ghost    = true;
+		parallel = false;
+		start    = s;
+		bisector = Ray(start,base->supporting_line().perpendicular(s));
+	}
+
 };
 
 /* used to initially sort the ArrangementLines along their 'base' line */
@@ -290,6 +295,18 @@ struct SweepItem {
 			}
 		}
 		cout << ")  ";
+
+		cout << "a(";
+		if(a->parallel) { cout << "_,_)-"; } else { cout <<
+		a->bisector.to_vector().x().doubleValue() << "," <<
+		a->bisector.to_vector().y().doubleValue() << ")-";
+		}
+		cout << "b(";
+		if(b->parallel) { cout << "_,_) "; } else { cout <<
+		b->bisector.to_vector().x().doubleValue() << "," <<
+		b->bisector.to_vector().y().doubleValue() << ") ";
+		}
+
 	}
 
 	inline void printIntPoint() {
@@ -337,8 +354,8 @@ struct DistanceCompare {
 
 		Line currentBase(currentIntersection,a.base->direction());
 
-		auto intersectionA = CGAL::intersection(currentBase, a.bisector);
-		auto intersectionB = CGAL::intersection(currentBase, b.bisector);
+		auto intersectionA = CGAL::intersection(currentBase, a.bisector.supporting_line());
+		auto intersectionB = CGAL::intersection(currentBase, b.bisector.supporting_line());
 
 		if(!intersectionA.empty() && !intersectionB.empty()) {
 			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
@@ -408,7 +425,7 @@ struct SweepEvent : public vector<SweepItem> {
 		return false;
 	}
 
-	inline void printAll() {for(auto c : *this) {c.print();}}
+	inline void printAll() {for(auto c : *this) {c.print(); cout << " --- ";}}
 
 	inline vector<SweepItem*> getActivCells() {
 		vector<SweepItem*> r;
@@ -423,6 +440,9 @@ struct SweepEvent : public vector<SweepItem> {
 	}
 };
 
+//using ColinearEP    = set<EdgeIterator>;
+//using ColinearEdges = set<ColinearEP>;
+
 class SweepLine {
 public:
 	SweepLine():config(nullptr) {}
@@ -431,7 +451,7 @@ public:
 	void initiateEventQueue();
 
 	inline bool queueEmpty() { return eventQueue.empty(); }
-	inline long queueSize()  { return eventQueue.size(); }
+	inline int queueSize()  { return eventQueue.size(); }
 
 	SweepEvent popEvent();
 
@@ -442,21 +462,31 @@ public:
 
 	void handlePopEvent(SweepItem& item);
 
+//	inline void addColinearEdgePair(EdgeIterator& a, EdgeIterator& b) {
+//		set<EdgeIterator> s;
+//		s.insert(a);
+//		s.insert(b);
+//		colinearEdges.insert(s);
+//	}
+
 	void printSweepLine(SweepItem& item);
 	void printEventQueue();
 
 	inline void setConfig(const Config* conf)   { config  = conf;}
+	SweepEvent insertGhostVertex(SweepItem* cell);
 
 	SweepLineStatus 			status;
 
 private:
 	ArrangementStart 			arrangementStart;
-
 	AllArrangementLines 		allArrangementLines;
+
 	EventQueue 					eventQueue;
 
 	vector<ArrangementLine> 	allParallelAL;
 	ParallelEventQueue 			parallelEventQueue;
+
+//	ColinearEdges				colinearEdges;
 
 	const Config*   			config;
 };

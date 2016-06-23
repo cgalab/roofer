@@ -44,8 +44,10 @@ public:
 	void setMinimizing() { if(!maximize) minimize = true; }
 	void setMaximizing() { if(!minimize) maximize = true; }
 
-	inline void setPolygon(const Polygon* poly) { polygon = poly; }
-	inline void setConfig(const Config* conf)   { config  = conf;}
+	inline void setPolygon(const Polygon* poly)   { polygon   = poly; }
+	inline void setConfig(const Config* conf)     { config    = conf;}
+
+	inline void setSweepLine(SweepLine* sl)       { sweepLine = sl;}
 
 	AllLists    allLists;
 	AllFacets   allFacets;
@@ -65,6 +67,8 @@ private:
 	void handleLeaveEvent(SweepItem* cell);
 	void handleEnterEvent(SweepItem* cell);
 
+	void handleGhostInsert(SweepEvent* event);
+
 	void handleMergeEvent(SweepEvent* event);
 
 	void addPointToCurrentList(SweepItem* cell);
@@ -73,10 +77,11 @@ private:
 	void turnLefRightOnIntersection(SweepItem* cell);
 
 
-	bool			minimize, maximize;
+	bool			  minimize, maximize;
 
-	const Polygon* 	polygon;
-	const Config*   config;
+	const Polygon* 	  polygon;
+	const Config*     config;
+	SweepLine*  	  sweepLine;
 
 	EdgeIterator next(EdgeIterator i);
 	EdgeIterator prev(EdgeIterator i);

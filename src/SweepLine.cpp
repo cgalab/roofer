@@ -22,9 +22,11 @@ bool operator> (const ALIterator& a, const ALIterator& b) {return operator> (*a,
 bool operator< (const ALIterator& a, const ALIterator& b) {return operator< (*a,*b);}
 
 bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
-		return  a.base  == b.base  &&
-				a.start == b.start &&
-				a.e     == b.e;
+//		return  a.base  == b.base  &&
+//				a.start == b.start &&
+//				a.e     == b.e;
+		return  (!a.parallel && !b.parallel && a.start == b.start && a.bisector == b.bisector) ||
+				( a.parallel &&  b.parallel && a.line  == b.line);
 }
 bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
     return (!a.parallel && b.parallel) || (a.parallel && b.parallel && a.dist > b.dist)
@@ -175,6 +177,10 @@ SweepEvent SweepLine::popEvent() {
 			for(auto al : status[parallelItem->base]) {
 
 				SweepItem item(parallelItem,al);
+				if(al->leftListIdx != NOLIST) {
+					item = SweepItem(al,parallelItem);
+				}
+
 //				item.print();
 				if(item.raysIntersect) {
 //					cout << endl <<" ->ins " << item.dist().doubleValue() << " "; item.printIntPoint();
@@ -206,7 +212,7 @@ SweepEvent SweepLine::popEvent() {
 				event.push_back(other);
 			} else {
 				temp.push_back(other);
-				cout << "(TE)";
+				cout << "T";
 			}
 //			other.printIntPoint();
 //			cout << " - ";
@@ -220,27 +226,27 @@ SweepEvent SweepLine::popEvent() {
 //		cout << endl;
 
 		if(temp.size() > 0) {
-			cout << "Temp: ";
-			for(auto e : temp)  {
-				cout << "(" << e.intersectionPoint.x().doubleValue() << ","
-					 << e.intersectionPoint.y().doubleValue() << ") ";
-				e.print();
-			}
-			cout << endl;
+//			cout << " Temp: ";
+//			for(auto e : temp)  {
+//				cout << "(" << e.intersectionPoint.x().doubleValue() << ","
+//					 << e.intersectionPoint.y().doubleValue() << ") ";
+//				e.print();
+//			}
+//			cout << endl;
 
 			for(auto e : temp)  { eventQueue.insert(e); }
 		}
 
-		if(event.size() != 3){
-			cout << endl << "Event: ";
-			for(auto e : event) {
-				cout << "(" << e.intersectionPoint.x().doubleValue()
-					 << "," << e.intersectionPoint.y().doubleValue() << ") D:"
-					 << e.normalDistance.doubleValue();
-				e.print();
-			}
-			cout << endl;
-		}
+//		if(event.size() != 3){
+//			cout << endl << "Event: ";
+//			for(auto e : event) {
+//				cout << "(" << e.intersectionPoint.x().doubleValue()
+//					 << "," << e.intersectionPoint.y().doubleValue() << ") D:"
+//					 << e.normalDistance.doubleValue() << " ";
+//				e.print();
+//			}
+//			cout << endl;
+//		}
 
 		for(auto e : event) {
 			if(!e.a->parallel && !e.b->parallel) {
@@ -306,9 +312,41 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 		}
 	}
 
-
 	// swap line segments in status, as of the intersection point.
 	iter_swap(FoundA, FoundB);
 }
 
+SweepEvent SweepLine::insertGhostVertex(SweepItem* cell) {
+	cout << endl << " --- INSERT GHOST VERTEX !! --- " << endl;
+	SweepEvent newItems;
 
+	/* define ghost vertex */
+	ArrangementLine al(cell->base,cell->base);
+	al.setGhostVertex(cell->intersectionPoint);
+
+	/* insert ghost vertex*/
+	auto allAL = allArrangementLines[al.base];
+	allAL.push_back(al);
+	auto newAl = allAL.end()-1;
+
+	auto lStatus = status[al.base];
+	DistanceCompare comp(cell->b->start);
+	auto itBefore = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
+
+	lStatus.insert(itBefore,newAl);
+
+	itBefore = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
+
+	/* compute events for both sides in local sweep line status */
+	if(itBefore+1 != lStatus.end()) {
+		SweepItem iBefore(*itBefore,*(itBefore+1));
+		newItems.push_back(iBefore);
+	}
+
+	if(itBefore+1 != lStatus.end() && itBefore+2 != lStatus.end()) {
+		SweepItem iAfter(*(itBefore+1),*(itBefore+2));
+		newItems.push_back(iAfter);
+	}
+
+	return newItems;
+}

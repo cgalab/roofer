@@ -22,6 +22,7 @@
 Data::Data() {
 	facets.setPolygon(&polygon);
 	facets.setConfig(&config);
+	facets.setSweepLine(&sweepLine);
 
 	sweepLine.setConfig(&config);
 }
