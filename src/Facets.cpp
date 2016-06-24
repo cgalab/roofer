@@ -40,8 +40,19 @@ ostream& operator<<(ostream& os, const PointExt& p) {
 RoofFacets::RoofFacets():minimize(false),maximize(false),polygon(nullptr),
 		config(nullptr),sweepLine(nullptr) {}
 
-void RoofFacets::handleEvent(SweepEvent *event) {
-	auto activeCells =  event->getActivCells();
+void RoofFacets::handleEnterLeaveEvent(SweepEvent* event) {
+	for(auto& cell : event->getActiveCells()) {
+		int numActiveInd = cell->numberOfActiveIndices();
+		if(numActiveInd == 1) {
+			handleEnterEvent(cell);
+		} else if(numActiveInd == 3) {
+			handleLeaveEvent(cell);
+		}
+	}
+}
+
+void RoofFacets::handleEvent(SweepEvent* event) {
+	auto activeCells =  event->getActiveCells();
 	vector<SweepItem> boundaryNodes;
 	vector<SweepItem> interiorNodes;
 
@@ -54,33 +65,16 @@ void RoofFacets::handleEvent(SweepEvent *event) {
 			handleEdgeEvent(event);
 		} else if(event->containsInteriorNode()){
 			handleSplitEvent(event);
-		} else if(handleDivideEvent(event)) {
+		} else if(handleVertexEvent(event)) {
 			/* divide event is handled in if clause */
 		} else {
-			for(auto cell : activeCells) {
-				int numActiveInd = cell->numberOfActiveIndices();
-				if(numActiveInd == 1) {
-					handleEnterEvent(cell);
-				} else if(numActiveInd == 3) {
-					handleLeaveEvent(cell);
-				}
-			}
+			handleEnterLeaveEvent(event);
 		}
 
 	} else if(activeCells.size() == 2){
 		/* possible create event */
 		if(!handleCreateEventA(event)) {
-
-			/* enter and leave events */
-			for(auto& cell : activeCells) {
-				int numActiveInd = cell->numberOfActiveIndices();
-
-				if(numActiveInd == 1) {
-					handleEnterEvent(cell);
-				} else if(numActiveInd == 3) {
-					handleLeaveEvent(cell);
-				}
-			}
+			handleEnterLeaveEvent(event);
 		}
 	} else if(activeCells.size() == 1){
 		/* enter and leave events */
@@ -114,14 +108,18 @@ bool RoofFacets::aGreaterB(Point a, Point b, EdgeIterator base) {
 void RoofFacets::addBaseCell(ALIterator& line) {
 	Point edgeStart(line->base->vertex(0));
 	Point edgeEnd(line->base->vertex(1));
-
+	cout << "."; fflush(stdout);
 	auto itBasePrev = prev(line->base);
 	auto itBaseNext = next(line->base);
 
-	bool isNeighbor = (itBasePrev == line->e || itBaseNext == line->e) ? true : false;
+//	bool isNeighbor = (itBasePrev == line->e || itBaseNext == line->e) ? true : false;
 
-	if(line->start == edgeStart && isNeighbor) {
+	ArrangementLine s(line->base,itBasePrev);
+	ArrangementLine e(line->base,itBaseNext);
 
+//	if(line->start == edgeStart && isNeighbor) {
+	if(*line == s) {
+		//cout << "S" << line->eid << " ";
 		int listIdx  = allLists.size();
 
 		list<PointExt> l;
@@ -133,9 +131,11 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 
 		line->rightListIdx  = listIdx;
 		zMap[line->start] = 0;
-	} else if(line->start == edgeEnd && isNeighbor ) {
+//	} else if(line->start == edgeEnd && isNeighbor ) {
+	} else if(*line == e) {
+		//cout << "E" << line->eid << " ";
 
-		auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1 ;
+		auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1;
 		allLists[listIdx].push_back(line->start);
 		line->leftListIdx = listIdx;
 
@@ -149,13 +149,13 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		bool assign = true;
 
 		if(line->start == edgeStart) {
-			ArrangementLine s(line->base,itBasePrev);
+			//ArrangementLine s(line->base,itBasePrev);
 
 			if(s > *line || s == *line) {
 				assign = false;
 			}
 		} else if(line->start == edgeEnd) {
-			ArrangementLine e(line->base,itBaseNext);
+			//ArrangementLine e(line->base,itBaseNext);
 			if(*line < e || *line == e) {
 				assign = false;
 			}
@@ -172,7 +172,7 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	cout << "EDGE EVENT!" << endl;
 
-	auto cells = event->getActivCells();
+	auto cells = event->getActiveCells();
 	set<SweepItem*> colinearCells;
 
 	for(auto cella : cells) {
@@ -290,7 +290,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	if(!colinearCells.empty()) cout << "Ghost 'cells': ";
 	for(auto cell : colinearCells) {
 		/* previous bisectors no go into the facets interior */
-		if(cell->a->leftListIdx != NOLIST) {cell->a->rightListIdx = cell->a->leftListIdx;}
+		if(cell->a->leftListIdx != NOLIST)       {cell->a->rightListIdx = cell->a->leftListIdx;}
 		else if(cell->a->rightListIdx != NOLIST) {cell->a->leftListIdx  = cell->a->rightListIdx;}
 		else if(cell->b->leftListIdx  != NOLIST) {cell->b->rightListIdx = cell->b->leftListIdx; }
 		else if(cell->b->rightListIdx != NOLIST) {cell->b->leftListIdx  = cell->b->rightListIdx;}
@@ -310,13 +310,20 @@ void RoofFacets::handleGhostInsert(SweepEvent* event) {
 		/* intersection point is already added, list indices have to be added though */
 		if(cell->a->leftListIdx  != NOLIST) {cell->b->leftListIdx   = cell->a->leftListIdx; }
 		if(cell->b->rightListIdx != NOLIST) {cell->a->rightListIdx  = cell->b->rightListIdx;}
+		cell->print();
+		if(cell->a->ghost || cell->b->ghost) {
+			cout << "has ghost vertex";
+		} else {
+			cout << "no ghost?";
+		}
 	}
+	cout << endl;
 }
 
 void RoofFacets::handleSplitEvent(SweepEvent* event) {
 	cout << "SPLIT EVENT!" << endl;
 
-	for(auto cell : event->getActivCells()) {
+	for(auto cell : event->getActiveCells()) {
 		if(cell->isInteriorNode()) {
 			auto listIdx = allLists.size();
 
@@ -556,18 +563,20 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 	return createEvent;
 }
 
-bool RoofFacets::handleDivideEvent(SweepEvent* event) {
-	auto divideNodes = event->getActivCells();
+bool RoofFacets::handleVertexEvent(SweepEvent* event) {
+	auto divideNodes = event->getActiveCells();
 	if(event->numberDivideNodes() >= 1) {
-		cout << "DIVIDE EVENT ";
+		cout << "Vertex/Divide EVENT ";
 		for(auto cell : divideNodes) {
 
 			if(cell->isPossibleDivideNode()) {
 				auto& la = allLists[cell->a->leftListIdx];
 				la.push_back(cell->intersectionPoint);
 
-				auto& lb = allLists[cell->b->rightListIdx];
-				lb.push_front(cell->intersectionPoint);
+				if(cell->a->leftListIdx != cell->b->rightListIdx) {
+					auto& lb = allLists[cell->b->rightListIdx];
+					lb.push_front(cell->intersectionPoint);
+				}
 
 				zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 
@@ -590,7 +599,7 @@ bool RoofFacets::handleDivideEvent(SweepEvent* event) {
 
 
 void RoofFacets::handleMergeEvent(SweepEvent* event) {
-	for(auto cell : event->getActivCells()) {
+	for(auto cell : event->getActiveCells()) {
 		if(cell->a->leftListIdx != NOLIST && cell->a->rightListIdx == NOLIST &&
 		   cell->b->leftListIdx == NOLIST && cell->b->rightListIdx == NOLIST ) {
 

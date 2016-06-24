@@ -93,12 +93,16 @@ struct ArrangementLine {
 		parallel = false;
 		start    = s;
 		bisector = Ray(start,base->supporting_line().perpendicular(s));
+		Point q(base->supporting_line().projection(s));
+		if(Line(q,s).direction() != bisector.direction()) {
+			bisector = Ray(start,base->supporting_line().perpendicular(s).opposite());
+		}
 	}
 
 };
 
 /* used to initially sort the ArrangementLines along their 'base' line */
-using ArrangementStart 		= map<EdgeIterator,priority_queue<ArrangementLine, vector<ArrangementLine>, greater<ArrangementLine> > >;
+using ArrangementStart 		= map<EdgeIterator,set<ArrangementLine, less<ArrangementLine> > >;
 /* holds the actual ArrangementLines, to which we point to */
 using AllArrangementLines	= map<EdgeIterator,vector<ArrangementLine> >;
 
@@ -155,9 +159,9 @@ struct SweepItem {
 
 		if(!intersection.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
-				raysIntersect  = true;
-				normalDistance = CGAL::squared_distance(a->base->supporting_line(),*ipoint);
-				intersectionPoint   = *ipoint;
+				raysIntersect     = true;
+				normalDistance    = CGAL::squared_distance(a->base->supporting_line(),*ipoint);
+				intersectionPoint = *ipoint;
 			} else {
 				raysIntersect  = false;
 				normalDistance = -1;
@@ -296,11 +300,14 @@ struct SweepItem {
 		}
 		cout << ")  ";
 
+		if(a->ghost) {cout << "g";}
+
 		cout << "a(";
 		if(a->parallel) { cout << "_,_)-"; } else { cout <<
 		a->bisector.to_vector().x().doubleValue() << "," <<
 		a->bisector.to_vector().y().doubleValue() << ")-";
 		}
+		if(b->ghost) {cout << "g";}
 		cout << "b(";
 		if(b->parallel) { cout << "_,_) "; } else { cout <<
 		b->bisector.to_vector().x().doubleValue() << "," <<
@@ -398,7 +405,7 @@ struct SweepEvent : public vector<SweepItem> {
 
 	inline int numberDivideNodes() {
 		int cnt = 0;
-		auto cells = getActivCells();
+		auto cells = getActiveCells();
 		for(auto cell : cells) {
 			if(cell->isPossibleDivideNode()) {
 				++cnt;
@@ -427,7 +434,7 @@ struct SweepEvent : public vector<SweepItem> {
 
 	inline void printAll() {for(auto c : *this) {c.print(); cout << " --- ";}}
 
-	inline vector<SweepItem*> getActivCells() {
+	inline vector<SweepItem*> getActiveCells() {
 		vector<SweepItem*> r;
 		for(auto& c : *this) {if(c.hasAtLeastOneListIdx()) r.push_back(&c);}
 		return r;
@@ -447,7 +454,7 @@ class SweepLine {
 public:
 	SweepLine():config(nullptr) {}
 
-	inline void addLine(ArrangementLine a) { arrangementStart[a.base].push(a); }
+	inline void addLine(ArrangementLine a) { arrangementStart[a.base].insert(a); }
 	void initiateEventQueue();
 
 	inline bool queueEmpty() { return eventQueue.empty(); }

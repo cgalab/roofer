@@ -26,7 +26,10 @@ bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 //				a.start == b.start &&
 //				a.e     == b.e;
 		return  (!a.parallel && !b.parallel && a.start == b.start && a.bisector == b.bisector) ||
-				( a.parallel &&  b.parallel && a.line  == b.line);
+				( a.parallel &&  b.parallel && (
+					a.line  == b.line || a.line.opposite() == b.line || a.line == b.line.opposite()
+				  )
+				);
 }
 bool operator> (const ArrangementLine& a, const ArrangementLine& b) {
     return (!a.parallel && b.parallel) || (a.parallel && b.parallel && a.dist > b.dist)
@@ -57,7 +60,7 @@ bool operator== (const SweepItem& a, const SweepItem& b) {
 //		    b.b 				== b.b) || (
 //			a.a 				== b.b &&
 //		    b.b 				== b.a  ) );
-	return a.intersectionPoint  == b.intersectionPoint && a.base == b.base && (
+	return a.intersectionPoint  == b.intersectionPoint && ( //a.base == b.base && (
 		   (a.a 				== b.a &&
 		    b.b 				== b.b) || (
 			a.a 				== b.b &&
@@ -65,14 +68,14 @@ bool operator== (const SweepItem& a, const SweepItem& b) {
 }
 bool operator> (const SweepItem& a, const SweepItem& b) {
 	return (a.normalDistance  > b.normalDistance) ||
-		   (a.normalDistance == b.normalDistance && a.intersectionPoint > b.intersectionPoint) || (
+		   (a.normalDistance == b.normalDistance && a.intersectionPoint >  b.intersectionPoint) || (
 			a.normalDistance == b.normalDistance && a.intersectionPoint == b.intersectionPoint && (
 			a.a > b.a || ( a.a == b.a && a.b > b.b ))
 		   );
 }
 bool operator< (const SweepItem& a, const SweepItem& b) {
 	return (a.normalDistance  < b.normalDistance) ||
-		   (a.normalDistance == b.normalDistance && a.intersectionPoint < b.intersectionPoint) || (
+		   (a.normalDistance == b.normalDistance && a.intersectionPoint <  b.intersectionPoint) || (
 			a.normalDistance == b.normalDistance && a.intersectionPoint == b.intersectionPoint && (
 			a.a < b.a  || (a.a == b.a && a.b < b.b))
 		   );
@@ -93,10 +96,10 @@ void SweepLine::initiateEventQueue() {
 		auto& lStatus          = status[le.first];
 
 		while(!le.second.empty()) {
-			auto a = le.second.top();
+			auto a = le.second.begin();
 
-			arrangementLines.push_back(a);
-			le.second.pop();
+			arrangementLines.push_back(*a);
+			le.second.erase(a);
 		}
 
 		for(auto i = arrangementLines.begin(); i != arrangementLines.end(); ++i) {
@@ -177,9 +180,9 @@ SweepEvent SweepLine::popEvent() {
 			for(auto al : status[parallelItem->base]) {
 
 				SweepItem item(parallelItem,al);
-				if(al->leftListIdx != NOLIST) {
-					item = SweepItem(al,parallelItem);
-				}
+//				if(al->leftListIdx != NOLIST) {
+//					item = SweepItem(al,parallelItem);
+//				}
 
 //				item.print();
 				if(item.raysIntersect) {
@@ -324,27 +327,45 @@ SweepEvent SweepLine::insertGhostVertex(SweepItem* cell) {
 	ArrangementLine al(cell->base,cell->base);
 	al.setGhostVertex(cell->intersectionPoint);
 
-	/* insert ghost vertex*/
+	/* store ghost vertex */
 	auto allAL = allArrangementLines[al.base];
 	allAL.push_back(al);
-	auto newAl = allAL.end()-1;
+	auto newAlIt = allAL.end()-1;
 
-	auto lStatus = status[al.base];
-	DistanceCompare comp(cell->b->start);
-	auto itBefore = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
+	/* insert ghost vertex in local sweep line status */
+	auto lStatus = status[cell->base];
+	DistanceCompare comp(cell->intersectionPoint);
+	/* after handlepopevent positions of a and b are already switched in local status */
+	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->a,comp);
+	/* lower_bound finds first occurence */
+	// TODO: fix if more than two AL's meet here.
+	++itFirstOcc;
 
-	lStatus.insert(itBefore,newAl);
+	/* inserts element before iterator position */
+	lStatus.insert(itFirstOcc,newAlIt);
 
-	itBefore = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
+	/* iterator may have changed after insert */
+	itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->a,comp);
+	++itFirstOcc;
+
+	if((*itFirstOcc) == newAlIt) {
+		cout << "NEW FOUND! "; fflush(stdout);
+	}
+	if((*(itFirstOcc-1)) == cell->b) {
+		cout << "B FOUND! "; fflush(stdout);
+	}
+	if((*(itFirstOcc+1)) == cell->a) {
+		cout << "A FOUND! "; fflush(stdout);
+	}
 
 	/* compute events for both sides in local sweep line status */
-	if(itBefore+1 != lStatus.end()) {
-		SweepItem iBefore(*itBefore,*(itBefore+1));
+	if(itFirstOcc != lStatus.begin()) {
+		SweepItem iBefore(*(itFirstOcc-1),*(itFirstOcc));
 		newItems.push_back(iBefore);
 	}
 
-	if(itBefore+1 != lStatus.end() && itBefore+2 != lStatus.end()) {
-		SweepItem iAfter(*(itBefore+1),*(itBefore+2));
+	if(itFirstOcc+1 != lStatus.end()) {
+		SweepItem iAfter(*(itFirstOcc),*(itFirstOcc+1));
 		newItems.push_back(iAfter);
 	}
 
