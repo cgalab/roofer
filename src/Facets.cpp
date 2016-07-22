@@ -287,7 +287,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 		cell->print();
 	}
 
-	if(!colinearCells.empty()) cout << "Ghost 'cells': ";
+	if(!colinearCells.empty()) cout << "Ghost 'cells' (" << colinearCells.size() << "): ";
 	for(auto cell : colinearCells) {
 		/* previous bisectors no go into the facets interior */
 		if(cell->a->leftListIdx != NOLIST)       {cell->a->rightListIdx = cell->a->leftListIdx;}
@@ -295,9 +295,10 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 		else if(cell->b->leftListIdx  != NOLIST) {cell->b->rightListIdx = cell->b->leftListIdx; }
 		else if(cell->b->rightListIdx != NOLIST) {cell->b->leftListIdx  = cell->b->rightListIdx;}
 
-		/* ghost vertex adds aditional AL, thus additional events */
-		auto newCells = sweepLine->insertGhostVertex(cell);
-		handleGhostInsert(&newCells);
+		/* ghost vertex adds additional AL, thus additional events */
+		SweepEvent ghostCells;
+		sweepLine->insertGhostVertex(cell,ghostCells);
+		handleGhostInsert(&ghostCells);
 
 		cell->print();
 	}

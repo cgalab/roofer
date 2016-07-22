@@ -319,21 +319,20 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 	iter_swap(FoundA, FoundB);
 }
 
-SweepEvent SweepLine::insertGhostVertex(SweepItem* cell) {
+void SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells) {
 	cout << endl << " --- INSERT GHOST VERTEX !! --- " << endl;
-	SweepEvent newItems;
 
 	/* define ghost vertex */
-	ArrangementLine al(cell->base,cell->base);
+	ArrangementLine al(cell->a->base,cell->b->base);
 	al.setGhostVertex(cell->intersectionPoint);
 
 	/* store ghost vertex */
-	auto allAL = allArrangementLines[al.base];
+	auto& allAL = allArrangementLines[al.base];
 	allAL.push_back(al);
 	auto newAlIt = allAL.end()-1;
 
 	/* insert ghost vertex in local sweep line status */
-	auto lStatus = status[cell->base];
+	auto& lStatus = status[cell->base];
 	DistanceCompare comp(cell->intersectionPoint);
 	/* after handlepopevent positions of a and b are already switched in local status */
 	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->a,comp);
@@ -348,26 +347,24 @@ SweepEvent SweepLine::insertGhostVertex(SweepItem* cell) {
 	itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->a,comp);
 	++itFirstOcc;
 
-	if((*itFirstOcc) == newAlIt) {
-		cout << "NEW FOUND! "; fflush(stdout);
-	}
-	if((*(itFirstOcc-1)) == cell->b) {
-		cout << "B FOUND! "; fflush(stdout);
-	}
-	if((*(itFirstOcc+1)) == cell->a) {
-		cout << "A FOUND! "; fflush(stdout);
-	}
+//	if((*itFirstOcc) == newAlIt) {
+//		cout << "NEW FOUND! "; fflush(stdout);
+//	}
+//	if((*(itFirstOcc-1)) == cell->b) {
+//		cout << "B FOUND! "; fflush(stdout);
+//	}
+//	if((*(itFirstOcc+1)) == cell->a) {
+//		cout << "A FOUND! "; fflush(stdout);
+//	}
 
 	/* compute events for both sides in local sweep line status */
 	if(itFirstOcc != lStatus.begin()) {
 		SweepItem iBefore(*(itFirstOcc-1),*(itFirstOcc));
-		newItems.push_back(iBefore);
+		ghostCells.push_back(iBefore);
 	}
 
 	if(itFirstOcc+1 != lStatus.end()) {
 		SweepItem iAfter(*(itFirstOcc),*(itFirstOcc+1));
-		newItems.push_back(iAfter);
+		ghostCells.push_back(iAfter);
 	}
-
-	return newItems;
 }

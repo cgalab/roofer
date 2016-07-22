@@ -45,10 +45,14 @@ struct ArrangementLine {
 
 		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
 
-		if(!intersection.empty()) {
-			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
-				start    = *ipoint;
-				bisector = setBisector();
+		if(base != e) {
+			if(!intersection.empty()) {
+				if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
+					start    = *ipoint;
+					bisector = setBisector();
+				} else {
+					parallel = true;
+				}
 			} else {
 				parallel = true;
 			}
@@ -98,7 +102,6 @@ struct ArrangementLine {
 			bisector = Ray(start,base->supporting_line().perpendicular(s).opposite());
 		}
 	}
-
 };
 
 /* used to initially sort the ArrangementLines along their 'base' line */
@@ -300,7 +303,7 @@ struct SweepItem {
 		}
 		cout << ")  ";
 
-		if(a->ghost) {cout << "g";}
+		if(a->ghost) {cout << "g ";}
 
 		cout << "a(";
 		if(a->parallel) { cout << "_,_)-"; } else { cout <<
@@ -480,7 +483,7 @@ public:
 	void printEventQueue();
 
 	inline void setConfig(const Config* conf)   { config  = conf;}
-	SweepEvent insertGhostVertex(SweepItem* cell);
+	void insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells);
 
 	SweepLineStatus 			status;
 
