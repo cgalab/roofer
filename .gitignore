@@ -11,3 +11,4 @@ weasel/
 *.swp
 buildgcc
 qtbuild
+cmakeb/

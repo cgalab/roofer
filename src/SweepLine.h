@@ -4,6 +4,8 @@
 /** 1. add all lines to SweepLine with addLine
  *  2. initiate event queue */
 
+#include <CGAL/intersections.h>
+
 #include <map>
 #include <vector>
 
@@ -43,11 +45,16 @@ struct ArrangementLine {
 		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid),
 		parallel(false),isValid(true),ghost(false) {
 
-		auto intersection = CGAL::intersection(base->supporting_line(),e->supporting_line());
+
+//		Point ipoint;
+//		CGAL::Object intersect = intersection(base->supporting_line(),e->supporting_line());
+		CGAL::Object intersect = intersection(base->supporting_line(),e->supporting_line());
 
 		if(base != e) {
-			if(!intersection.empty()) {
-				if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
+			if(!intersect.empty()) {
+//			if(CGAL::assign(ipoint, intersect)) {
+				//if(const Point *ipoint = boost::get<Point>(&*intersection)) {
+				if(const Point *ipoint = CGAL::object_cast<Point>(&intersect)) {
 					start    = *ipoint;
 					bisector = setBisector();
 				} else {
@@ -150,18 +157,18 @@ struct SweepItem {
 			throw runtime_error("ERROR: Base Lines not equal!");
 		}
 
-		auto intersection = CGAL::intersection(a->bisector,b->bisector);
+		CGAL::Object intersect = intersection(a->bisector,b->bisector);
 
 		if(a->parallel && b->parallel) {
-			intersection = CGAL::intersection(a->line,b->line);
+			intersect = intersection(a->line,b->line);
 		} else if(a->parallel) {
-			intersection = CGAL::intersection(a->line,b->bisector);
+			intersect = intersection(a->line,b->bisector);
 		} else if(b->parallel) {
-			intersection = CGAL::intersection(a->bisector,b->line);
+			intersect = intersection(a->bisector,b->line);
 		}
 
-		if(!intersection.empty()) {
-			if(const Point *ipoint = CGAL::object_cast<Point>(&intersection)) {
+		if(!intersect.empty()) {
+			if(const Point *ipoint = CGAL::object_cast<Point>(&intersect)) {
 				raysIntersect     = true;
 				normalDistance    = CGAL::squared_distance(a->base->supporting_line(),*ipoint);
 				intersectionPoint = *ipoint;
@@ -364,8 +371,8 @@ struct DistanceCompare {
 
 		Line currentBase(currentIntersection,a.base->direction());
 
-		auto intersectionA = CGAL::intersection(currentBase, a.bisector.supporting_line());
-		auto intersectionB = CGAL::intersection(currentBase, b.bisector.supporting_line());
+		CGAL::Object intersectionA = intersection(currentBase, a.bisector.supporting_line());
+		CGAL::Object intersectionB = intersection(currentBase, b.bisector.supporting_line());
 
 		if(!intersectionA.empty() && !intersectionB.empty()) {
 			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {

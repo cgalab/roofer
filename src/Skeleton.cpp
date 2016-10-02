@@ -41,7 +41,7 @@ void Skeleton::createSkeleton() {
 	createLineArrangements();
 	if(!data.config.silent) {cout << "done" << endl;}
 
-	if(!data.config.silent) {cout << "initiate event queue...";}
+   if(!data.config.silent) {cout << "initiate event queue...";fflush(stdout);}
 	data.sweepLine.initiateEventQueue();
 	if(!data.config.silent) {cout << "done" << endl;}
 

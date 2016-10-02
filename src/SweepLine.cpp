@@ -1,6 +1,8 @@
 
 #include "SweepLine.h"
 
+#include <iostream>
+
 using namespace std;
 
 //bool operator==(const ArrangementLine* a, const ArrangementLine* b) {
@@ -94,18 +96,26 @@ void SweepLine::initiateEventQueue() {
 
 		auto& arrangementLines = allArrangementLines[le.first];
 		auto& lStatus          = status[le.first];
-
+cout << "a" << endl; fflush(stdout);
 		while(!le.second.empty()) {
 			auto a = le.second.begin();
-
+			cout << ".";
 			arrangementLines.push_back(*a);
 			le.second.erase(a);
 		}
+		cout << "size: " << arrangementLines.size() << endl;
+		cout << endl;
+		cout << "b" << endl; fflush(stdout);
 
 		for(auto i = arrangementLines.begin(); i != arrangementLines.end(); ++i) {
+			cout << "b01" << endl; fflush(stdout);
+
 			lStatus.push_back(i);
+			cout << "b02" << endl; fflush(stdout);
 			if(i+1 != arrangementLines.end()) {
+				cout << "b1" << endl; fflush(stdout);
 				SweepItem item(i,(i+1));
+				cout << "b2" << endl; fflush(stdout);
 
 				if(item.raysIntersect && item.normalDistance > 0) {
 					eventQueue.insert(item);
@@ -113,6 +123,7 @@ void SweepLine::initiateEventQueue() {
 			}
 		}
 	}
+	cout << "c" << endl; fflush(stdout);
 
 	for(auto pit = allParallelAL.begin(); pit != allParallelAL.end(); ++pit) {
 		parallelEventQueue.insert(pit);
@@ -128,7 +139,7 @@ void SweepLine::initiateEventQueue() {
 
 
 void SweepLine::printEventQueue() {
-	cout << "Q: ";
+   cout << "Q: ";
 
 	for(auto e : eventQueue) {
 		cout << e.normalDistance.doubleValue() << " - "; e.print(); cout << ", ";

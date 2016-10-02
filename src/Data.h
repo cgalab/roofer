@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <ctime>
 
+#include <list>
+
 #include <sys/stat.h>
 
 #include "CGALTypes.h"

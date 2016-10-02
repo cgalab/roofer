@@ -10,6 +10,7 @@
 
 #include "Data.h"
 
+
 class Skeleton {
 public:
 	Skeleton(std::list<std::string>& args);
