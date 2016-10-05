@@ -19,9 +19,9 @@ using namespace std;
 //     	   (a->base != b->base && a->uid < b->uid);
 //}
 
-bool operator==(const ALIterator& a, const ALIterator& b) {return operator==(*a,*b);}
-bool operator> (const ALIterator& a, const ALIterator& b) {return operator> (*a,*b);}
-bool operator< (const ALIterator& a, const ALIterator& b) {return operator< (*a,*b);}
+//bool operator==(const ALIterator& a, const ALIterator& b) {return operator==(*a,*b);}
+//bool operator> (const ALIterator& a, const ALIterator& b) {return operator> (*a,*b);}
+//bool operator< (const ALIterator& a, const ALIterator& b) {return operator< (*a,*b);}
 
 bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 //		return  a.base  == b.base  &&
@@ -96,26 +96,18 @@ void SweepLine::initiateEventQueue() {
 
 		auto& arrangementLines = allArrangementLines[le.first];
 		auto& lStatus          = status[le.first];
-cout << "a" << endl; fflush(stdout);
+
 		while(!le.second.empty()) {
 			auto a = le.second.begin();
-			cout << ".";
 			arrangementLines.push_back(*a);
 			le.second.erase(a);
 		}
-		cout << "size: " << arrangementLines.size() << endl;
-		cout << endl;
-		cout << "b" << endl; fflush(stdout);
 
 		for(auto i = arrangementLines.begin(); i != arrangementLines.end(); ++i) {
-			cout << "b01" << endl; fflush(stdout);
 
 			lStatus.push_back(i);
-			cout << "b02" << endl; fflush(stdout);
 			if(i+1 != arrangementLines.end()) {
-				cout << "b1" << endl; fflush(stdout);
 				SweepItem item(i,(i+1));
-				cout << "b2" << endl; fflush(stdout);
 
 				if(item.raysIntersect && item.normalDistance > 0) {
 					eventQueue.insert(item);
@@ -123,7 +115,6 @@ cout << "a" << endl; fflush(stdout);
 			}
 		}
 	}
-	cout << "c" << endl; fflush(stdout);
 
 	for(auto pit = allParallelAL.begin(); pit != allParallelAL.end(); ++pit) {
 		parallelEventQueue.insert(pit);

@@ -1,5 +1,8 @@
-project( Roofer )
+project( roofer )
 #LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "/usr/lib/CGAL")
+
+# YCM gets its compilation flags
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1) 
 
 cmake_minimum_required(VERSION 2.8.12)
 if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}" VERSION_GREATER 2.8.3)
@@ -14,16 +17,15 @@ endif()
 #set(cmake_cxx_flags "${cmake_cxx_flags} -std=c++11 -stdlib=libc++")
 #set(cmake_exe_linker_flags "${cMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 
-option(WITH_GUI "Enable QT GUI (requieres libQGLViewer)!" "OFF")
-option(WITH_DEBUG "Enable Debug Mode!" "OFF")
-
+option(WITH_GUI    "Enable QT GUI (requieres libQGLViewer)!"  "OFF")
+option(WITH_DEBUG  "Enable Debug Mode!"                       "OFF")
 
 include_directories(BEFORE ../../include)
 
-include(CheckCXXCompilerFlag)
+#include(CheckCXXCompilerFlag)
 
 # compiler warnings 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
  
 #find_package(CGAL COMPONENTS Qt4 Core REQUIRED)
 find_package(CGAL COMPONENTS Core REQUIRED)

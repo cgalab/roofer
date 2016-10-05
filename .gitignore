@@ -12,3 +12,5 @@ weasel/
 buildgcc
 qtbuild
 cmakeb/
+src/tags
+testinput/output/

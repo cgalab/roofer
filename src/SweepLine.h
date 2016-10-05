@@ -310,16 +310,15 @@ struct SweepItem {
 		}
 		cout << ")  ";
 
-		if(a->ghost) {cout << "g ";}
-
+		if(a->ghost) {cout << "g";}
 		cout << "a(";
-		if(a->parallel) { cout << "_,_)-"; } else { cout <<
+		if(a->parallel) { cout << "p,p)-"; } else { cout <<
 		a->bisector.to_vector().x().doubleValue() << "," <<
 		a->bisector.to_vector().y().doubleValue() << ")-";
 		}
 		if(b->ghost) {cout << "g";}
 		cout << "b(";
-		if(b->parallel) { cout << "_,_) "; } else { cout <<
+		if(b->parallel) { cout << "p,p) "; } else { cout <<
 		b->bisector.to_vector().x().doubleValue() << "," <<
 		b->bisector.to_vector().y().doubleValue() << ") ";
 		}

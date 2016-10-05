@@ -172,20 +172,53 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	cout << "EDGE EVENT!" << endl;
 
-	auto cells = event->getActiveCells();
-	set<SweepItem*> colinearCells;
+	/* preps for ghost vertices if needed */
+	int ghostLeftIdx, ghostRightIdx;
+	SweepItem* cellA = nullptr;
+	SweepItem* cellB = nullptr;
 
-	for(auto cella : cells) {
-		for(auto cellb : cells) {
-			if(cella != cellb && cella->base->supporting_line() == cellb->base->supporting_line()) {
-				colinearCells.insert(cella);
-				colinearCells.insert(cellb);
+	ghostLeftIdx = ghostRightIdx = NOLIST;
+
+	auto cells = event->getActiveCells();
+	vector<SweepItem*> colinearCells;
+	for(auto cella = cells.begin(); cella != cells.end(); ++cella) {
+		for(auto cellb = std::next(cella); cellb != cells.end(); ++cellb) {
+			if((*cella)->base->supporting_line() == (*cellb)->base->supporting_line()) {
+				colinearCells.push_back(*cella);
+				colinearCells.push_back(*cellb);
 			}
 		}
 	}
 
-	for(auto cell : cells) {
+	if(colinearCells.size() > 1) {
+		cellA = *cells.begin();
+		cellB = *(cells.begin()+1);
+//		if(cellA < cellB) {
+//			cout << "A < B: "; cellA->print(); cellB->print();
+//			ghostLeftIdx  = (cellA->a->leftListIdx  != NOLIST) ? cellA->a->leftListIdx  : NOLIST;
+//			ghostLeftIdx  = (cellA->a->rightListIdx != NOLIST) ? cellA->a->rightListIdx : ghostLeftIdx;
+//			ghostLeftIdx  = (cellA->b->leftListIdx  != NOLIST) ? cellA->b->leftListIdx  : ghostLeftIdx;
+//			ghostLeftIdx  = (cellA->b->rightListIdx != NOLIST) ? cellA->b->rightListIdx : ghostLeftIdx;
+//			ghostRightIdx = (cellB->a->leftListIdx  != NOLIST) ? cellB->a->leftListIdx  : NOLIST;
+//			ghostRightIdx = (cellB->a->rightListIdx != NOLIST) ? cellB->a->rightListIdx : ghostRightIdx;
+//			ghostRightIdx = (cellB->b->leftListIdx  != NOLIST) ? cellB->b->leftListIdx  : ghostRightIdx;
+//			ghostRightIdx = (cellB->b->rightListIdx != NOLIST) ? cellB->b->rightListIdx : ghostRightIdx;
+//		} else {
+//			cout << "A >= B: "; cellA->print(); cellB->print();
+//			ghostRightIdx = (cellA->a->leftListIdx  != NOLIST) ? cellA->a->leftListIdx  : NOLIST;
+//			ghostRightIdx = (cellA->a->rightListIdx != NOLIST) ? cellA->a->rightListIdx : ghostLeftIdx;
+//			ghostRightIdx = (cellA->b->leftListIdx  != NOLIST) ? cellA->b->leftListIdx  : ghostLeftIdx;
+//			ghostRightIdx = (cellA->b->rightListIdx != NOLIST) ? cellA->b->rightListIdx : ghostLeftIdx;
+//			ghostLeftIdx  = (cellB->a->leftListIdx  != NOLIST) ? cellB->a->leftListIdx  : NOLIST;
+//			ghostLeftIdx  = (cellB->a->rightListIdx != NOLIST) ? cellB->a->rightListIdx : ghostRightIdx;
+//			ghostLeftIdx  = (cellB->b->leftListIdx  != NOLIST) ? cellB->b->leftListIdx  : ghostRightIdx;
+//			ghostLeftIdx  = (cellB->b->rightListIdx != NOLIST) ? cellB->b->rightListIdx : ghostRightIdx;
+//		}
+	}
+	/* end ghost vertex prep */
 
+	/* standard edge event handling */
+	for(auto cell : cells) {
 		if(cell->a->rightListIdx != NOLIST  &&  cell->b->leftListIdx  != NOLIST &&
 		   cell->a->leftListIdx  == NOLIST  &&  cell->b->rightListIdx == NOLIST) {
 			/* facet ends locally (edge event) */
@@ -286,21 +319,49 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 		}
 		cell->print();
 	}
+	/* end standard edge event handling */
 
-	if(!colinearCells.empty()) cout << "Ghost 'cells' (" << colinearCells.size() << "): ";
-	for(auto cell : colinearCells) {
-		/* previous bisectors no go into the facets interior */
-		if(cell->a->leftListIdx != NOLIST)       {cell->a->rightListIdx = cell->a->leftListIdx;}
-		else if(cell->a->rightListIdx != NOLIST) {cell->a->leftListIdx  = cell->a->rightListIdx;}
-		else if(cell->b->leftListIdx  != NOLIST) {cell->b->rightListIdx = cell->b->leftListIdx; }
-		else if(cell->b->rightListIdx != NOLIST) {cell->b->leftListIdx  = cell->b->rightListIdx;}
+	/* ghost vertex hanling if needed */
+	// TODO: verify this:
+	/* I guess this can be at most two cells, at an edge event (for now at least) */
+	if(colinearCells.size() > 1) {
+		cout << "Ghost 'cells' (" << colinearCells.size() << "): ";
 
-		/* ghost vertex adds additional AL, thus additional events */
-		SweepEvent ghostCells;
-		sweepLine->insertGhostVertex(cell,ghostCells);
-		handleGhostInsert(&ghostCells);
+		if(colinearCells.size() > 2) {cout << "WARNING: more than two cells meet with parallel baseline!" << endl;}
 
-		cell->print();
+		if(cellA->a->start != cellB->a->start) {
+
+			/* ghost vertex adds additional AL, thus additional events */
+			SweepEvent ghostCells;
+
+			for(auto cell : colinearCells) {
+				/* previous bisectors now go into the facets interior */
+				if(cell->a->leftListIdx != NOLIST)       {cell->a->rightListIdx = cell->a->leftListIdx;}
+				else if(cell->a->rightListIdx != NOLIST) {cell->a->leftListIdx  = cell->a->rightListIdx;}
+				else if(cell->b->leftListIdx  != NOLIST) {cell->b->rightListIdx = cell->b->leftListIdx; }
+				else if(cell->b->rightListIdx != NOLIST) {cell->b->leftListIdx  = cell->b->rightListIdx;}
+
+				sweepLine->insertGhostVertex(cell,ghostCells);
+			}
+
+			handleGhostInsert(&ghostCells);
+
+//			for(auto cell : ghostCells.getActiveCells()) {
+//				if(cell->a->ghost) {
+//					cell->a->leftListIdx  = ghostLeftIdx;
+//					cell->a->rightListIdx = ghostRightIdx;
+//				}
+//				if(cell->b->ghost) {
+//					cell->b->leftListIdx  = ghostLeftIdx;
+//					cell->b->rightListIdx = ghostRightIdx;
+//				}
+//			}
+
+			ghostCells.printAll();
+		} else {
+			// TODO: edge event (ref,conv,ref) merges wavefront edges, no outgoing arc, thus, no ghost vertex
+		}
+
 	}
 
 	cout << "----------------------------------------> edge, ";
