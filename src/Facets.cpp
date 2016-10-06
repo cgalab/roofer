@@ -72,10 +72,16 @@ void RoofFacets::handleEvent(SweepEvent* event) {
 		}
 
 	} else if(activeCells.size() == 2){
-		/* possible create event */
-		if(!handleCreateEventA(event)) {
+		if(handlePossibleGhostVertexEnd(event)) {
+			/* possible ghost vertex end */
+			/* degree two node due to ending ghost vertex */
+		} else if(handleCreateEventA(event)) {
+			/* possible create event */
+			/* all done in function call */
+		} else {
 			handleEnterLeaveEvent(event);
 		}
+
 	} else if(activeCells.size() == 1){
 		/* enter and leave events */
 		auto cell = activeCells.front();
@@ -173,11 +179,8 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	cout << "EDGE EVENT!" << endl;
 
 	/* preps for ghost vertices if needed */
-	int ghostLeftIdx, ghostRightIdx;
 	SweepItem* cellA = nullptr;
 	SweepItem* cellB = nullptr;
-
-	ghostLeftIdx = ghostRightIdx = NOLIST;
 
 	auto cells = event->getActiveCells();
 	vector<SweepItem*> colinearCells;
@@ -193,27 +196,6 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	if(colinearCells.size() > 1) {
 		cellA = *cells.begin();
 		cellB = *(cells.begin()+1);
-//		if(cellA < cellB) {
-//			cout << "A < B: "; cellA->print(); cellB->print();
-//			ghostLeftIdx  = (cellA->a->leftListIdx  != NOLIST) ? cellA->a->leftListIdx  : NOLIST;
-//			ghostLeftIdx  = (cellA->a->rightListIdx != NOLIST) ? cellA->a->rightListIdx : ghostLeftIdx;
-//			ghostLeftIdx  = (cellA->b->leftListIdx  != NOLIST) ? cellA->b->leftListIdx  : ghostLeftIdx;
-//			ghostLeftIdx  = (cellA->b->rightListIdx != NOLIST) ? cellA->b->rightListIdx : ghostLeftIdx;
-//			ghostRightIdx = (cellB->a->leftListIdx  != NOLIST) ? cellB->a->leftListIdx  : NOLIST;
-//			ghostRightIdx = (cellB->a->rightListIdx != NOLIST) ? cellB->a->rightListIdx : ghostRightIdx;
-//			ghostRightIdx = (cellB->b->leftListIdx  != NOLIST) ? cellB->b->leftListIdx  : ghostRightIdx;
-//			ghostRightIdx = (cellB->b->rightListIdx != NOLIST) ? cellB->b->rightListIdx : ghostRightIdx;
-//		} else {
-//			cout << "A >= B: "; cellA->print(); cellB->print();
-//			ghostRightIdx = (cellA->a->leftListIdx  != NOLIST) ? cellA->a->leftListIdx  : NOLIST;
-//			ghostRightIdx = (cellA->a->rightListIdx != NOLIST) ? cellA->a->rightListIdx : ghostLeftIdx;
-//			ghostRightIdx = (cellA->b->leftListIdx  != NOLIST) ? cellA->b->leftListIdx  : ghostLeftIdx;
-//			ghostRightIdx = (cellA->b->rightListIdx != NOLIST) ? cellA->b->rightListIdx : ghostLeftIdx;
-//			ghostLeftIdx  = (cellB->a->leftListIdx  != NOLIST) ? cellB->a->leftListIdx  : NOLIST;
-//			ghostLeftIdx  = (cellB->a->rightListIdx != NOLIST) ? cellB->a->rightListIdx : ghostRightIdx;
-//			ghostLeftIdx  = (cellB->b->leftListIdx  != NOLIST) ? cellB->b->leftListIdx  : ghostRightIdx;
-//			ghostLeftIdx  = (cellB->b->rightListIdx != NOLIST) ? cellB->b->rightListIdx : ghostRightIdx;
-//		}
 	}
 	/* end ghost vertex prep */
 
@@ -325,39 +307,44 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	// TODO: verify this:
 	/* I guess this can be at most two cells, at an edge event (for now at least) */
 	if(colinearCells.size() > 1) {
-		cout << "Ghost 'cells' (" << colinearCells.size() << "): ";
+		cout << "Ghost 'cells' (" << colinearCells.size() << "): "  << endl;
 
 		if(colinearCells.size() > 2) {cout << "WARNING: more than two cells meet with parallel baseline!" << endl;}
 
-		if(cellA->a->start != cellB->a->start) {
+		if(cellA->base != cellB->base) {
 
-			/* ghost vertex adds additional AL, thus additional events */
-			SweepEvent ghostCells;
+			if(minimize) {
+				/* create event! */
+//				SweepEvent createCells;
+//				cells.push_back(cellA);
+//				cells.push_back(cellB);
+				handleCreateEventB(event);
+			} else {
+				/* ghost vertex adds additional AL, thus additional events */
+				SweepEvent ghostCells;
 
-			for(auto cell : colinearCells) {
-				/* previous bisectors now go into the facets interior */
-				if(cell->a->leftListIdx != NOLIST)       {cell->a->rightListIdx = cell->a->leftListIdx;}
-				else if(cell->a->rightListIdx != NOLIST) {cell->a->leftListIdx  = cell->a->rightListIdx;}
-				else if(cell->b->leftListIdx  != NOLIST) {cell->b->rightListIdx = cell->b->leftListIdx; }
-				else if(cell->b->rightListIdx != NOLIST) {cell->b->leftListIdx  = cell->b->rightListIdx;}
+				for(auto cell : colinearCells) {
+					/* previous bisectors now go into the facets interior */
 
-				sweepLine->insertGhostVertex(cell,ghostCells);
+					auto ghostVertIt = sweepLine->insertGhostVertex(cell,ghostCells);
+
+					if(cell->a->leftListIdx != NOLIST)       {cell->a->rightListIdx = cell->a->leftListIdx; }
+					else if(cell->a->rightListIdx != NOLIST) {cell->a->leftListIdx  = cell->a->rightListIdx;}
+					else if(cell->b->leftListIdx  != NOLIST) {cell->b->rightListIdx = cell->b->leftListIdx; }
+					else if(cell->b->rightListIdx != NOLIST) {cell->b->leftListIdx  = cell->b->rightListIdx;}
+
+					/* add correct list indices for ghost vertex */
+					if(cell->a->leftListIdx != NOLIST) {
+						ghostVertIt->rightListIdx = cell->a->leftListIdx;
+					} else if(cell->b->leftListIdx != NOLIST) {
+						ghostVertIt->leftListIdx = cell->b->leftListIdx;
+					}
+					cout << " ghost: " << ghostVertIt->eid << " L/R " << ghostVertIt->leftListIdx << "/" << ghostVertIt->rightListIdx << endl;
+				}
+				cout << endl;
 			}
+			for(auto cp : cells) {cp->print();}
 
-			handleGhostInsert(&ghostCells);
-
-//			for(auto cell : ghostCells.getActiveCells()) {
-//				if(cell->a->ghost) {
-//					cell->a->leftListIdx  = ghostLeftIdx;
-//					cell->a->rightListIdx = ghostRightIdx;
-//				}
-//				if(cell->b->ghost) {
-//					cell->b->leftListIdx  = ghostLeftIdx;
-//					cell->b->rightListIdx = ghostRightIdx;
-//				}
-//			}
-
-			ghostCells.printAll();
 		} else {
 			// TODO: edge event (ref,conv,ref) merges wavefront edges, no outgoing arc, thus, no ghost vertex
 		}
@@ -370,13 +357,27 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 void RoofFacets::handleGhostInsert(SweepEvent* event) {
 	for(auto cell : event->getAllCells()) {
 		/* intersection point is already added, list indices have to be added though */
-		if(cell->a->leftListIdx  != NOLIST) {cell->b->leftListIdx   = cell->a->leftListIdx; }
-		if(cell->b->rightListIdx != NOLIST) {cell->a->rightListIdx  = cell->b->rightListIdx;}
+		// TODO maybe check where we are AL to start of ghost vertex
+
+		if(cell->b->ghost) {
+			if(*cell->a < cell->intersectionPoint) {
+				cell->b->rightListIdx = cell->a->leftListIdx;
+			} else {
+				cell->b->leftListIdx = cell->a->leftListIdx;
+			}
+		} else if(cell->a->ghost) {
+			if(*cell->b < cell->intersectionPoint) {
+				cell->a->rightListIdx = cell->b->leftListIdx;
+			} else {
+				cell->a->leftListIdx = cell->b->leftListIdx;
+			}
+		}
+
 		cell->print();
 		if(cell->a->ghost || cell->b->ghost) {
-			cout << "has ghost vertex";
+			cout << " -has GV  ";
 		} else {
-			cout << "no ghost?";
+			cout << " -no GV?  ";
 		}
 	}
 	cout << endl;
@@ -405,14 +406,27 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 
 			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
 		} else {
+//			if(cell->a->parallel || cell->b->parallel) {
+//				/* more involved */
+//				// TODO: project parallel edge and second AL to plane, find direction, decide right left
+//
+//			} else
 			if(cell->a->leftListIdx != NOLIST) {
 				cell->b->leftListIdx = cell->a->leftListIdx;
 				cell->a->leftListIdx = NOLIST;
+				addPointToCurrentList(cell);
+			} else if(cell->a->parallel && cell->a->rightListIdx != NOLIST) {
+				cell->b->rightListIdx = cell->a->rightListIdx;
+				cell->a->rightListIdx = NOLIST;
 				addPointToCurrentList(cell);
 			} else if(cell->b->rightListIdx != NOLIST){
 				cell->a->rightListIdx = cell->b->rightListIdx;
 				cell->b->rightListIdx = NOLIST;
 				addPointToCurrentList(cell);
+//			} else if(cell->b->parallel && cell->b->leftListIdx != NOLIST){
+//				cell->a->rightListIdx = cell->b->leftListIdx;
+//				cell->b->leftListIdx = NOLIST;
+//				addPointToCurrentList(cell);
 			}
 		}
 
@@ -420,6 +434,61 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 	}
 
 	cout << "----------------------------------------> split, ";
+}
+
+bool RoofFacets::handlePossibleGhostVertexEnd(SweepEvent* event) {
+	int numGhostVertices = 0;
+	auto activeCells = event->getActiveCells();
+	for(auto cell : activeCells) {
+		if(cell->hasGhostVertex()) {
+			++numGhostVertices;
+		}
+	}
+
+	if(numGhostVertices == 2) {
+		cout << "Ghost Vertex deg-2 node ";
+		for(auto cell : activeCells) {
+			/* add point to facet list */
+			addPointToCurrentList(cell);
+
+			/* adapt list indices */
+			if(cell->a->ghost) {
+				if(cell->b->leftListIdx == NOLIST && cell->b->rightListIdx == NOLIST) {
+					if(cell->a->leftListIdx != NOLIST) {
+						cell->b->leftListIdx = cell->a->leftListIdx;
+					} else {
+						cell->b->rightListIdx = cell->a->rightListIdx;
+					}
+				} else {
+					cell->b->leftListIdx = cell->b->rightListIdx = NOLIST;
+				}
+				cell->a->leftListIdx = cell->a->rightListIdx = NOLIST;
+			} else if(cell->b->ghost) {
+				if(cell->a->leftListIdx == NOLIST && cell->a->rightListIdx == NOLIST) {
+					if(cell->b->leftListIdx != NOLIST) {
+						cell->a->leftListIdx = cell->b->leftListIdx;
+					} else {
+						cell->a->rightListIdx = cell->b->rightListIdx;
+					}
+				} else {
+					cell->a->leftListIdx = cell->a->rightListIdx = NOLIST;
+				}
+				cell->b->leftListIdx = cell->b->rightListIdx = NOLIST;
+			}
+
+			/* add point to z-Map for simpler 3D reconstucition */
+			zMap[cell->intersectionPoint] = cell->normalDistance.doubleValue();
+
+			/* remove ghost vertex from local sweep line status */
+			auto gv = (cell->a->ghost) ? cell->a : cell->b;
+			sweepLine->deleteGhostVertex(cell,gv);
+		}
+		event->printAll();
+
+		return true;
+	}
+
+	return false;
 }
 
 bool RoofFacets::handleCreateEventA(SweepEvent* event) {
@@ -531,9 +600,12 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 
 	if(!minimize) { return createEvent; }
 
-	SweepItem* c_base=nullptr;
-	SweepItem* c_a=nullptr;
-	SweepItem* c_b=nullptr;
+	SweepItem* c_base  = nullptr;
+	SweepItem* c_a     = nullptr;
+	SweepItem* c_b	   = nullptr;
+
+	/* in case there is a parallel counterpart */
+	SweepItem* c_baseP = nullptr;
 
 	for(auto cell : event->getAllCells()) {
 		if(cell->isEmptyNode()) {
@@ -542,26 +614,45 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 			} else {
 				c_b = cell;
 			}
-		} else {
+		} else if(c_base == nullptr) {
 			c_base = cell;
+		} else {
+			c_baseP = cell;
 		}
 	}
 
-	auto l_a    = c_a->base->supporting_line().to_vector();
-	auto l_b    = c_b->base->supporting_line().to_vector();
-	auto l_base = c_base->base->supporting_line().to_vector();
+	auto l_a     = c_a->base->supporting_line().to_vector();
+	auto l_b     = c_b->base->supporting_line().to_vector();
+	auto l_base  = c_base->base->supporting_line().to_vector();
+	Vector l_baseP = (c_baseP != nullptr) ? c_baseP->base->supporting_line().to_vector() : Vector(INFPOINT.x(),INFPOINT.y());
+
+	if(l_baseP != Vector(INFPOINT.x(),INFPOINT.y())) {
+		if(c_baseP->a < c_base->a) {
+			swap(l_base,l_baseP);
+			auto tmp = c_base;
+			c_base = c_baseP;
+			c_baseP = tmp;
+			cout << " swapped ";
+		}
+	}
 
 	/* l_a and l_b have to intersect at a reflex vertex, thus must be a right turn */
-	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN) {
+	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN && CGAL::orientation(l_a,l_b) != CGAL::COLLINEAR) {
 		swap(l_a,l_b);
 		auto tmp = c_a;
 		c_a = c_b;
 		c_b = tmp;
 	}
 
+	// CGAL::COLLINEAR check use bisector between l_a and l_b
+
+	auto bis = CGAL::bisector(c_a->base->supporting_line(),c_b->base->supporting_line()).direction().to_vector();
+
 	/* analyze if a create event occurs and what typ (min/max) */
-	if(CGAL::orientation(l_base,l_a) == CGAL::LEFT_TURN &&
-	   CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
+	if(Line(c_base->base->supporting_line()).has_on_positive_side(c_base->a->start+bis)) {
+		createEvent = true;
+	} else if(CGAL::orientation(l_base,l_a) == CGAL::LEFT_TURN &&
+	          CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
 		createEvent = true;
 //	} else if(CGAL::orientation(l_a,l_base) == CGAL::RIGHT_TURN &&
 //			  CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
@@ -576,20 +667,31 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 //		throw runtime_error("ERROR: handleCreateEventA: orientation?!");
 	}
 
+	// TODO: what to do with colinear edges
+
+	//createEvent = true;
+
+
 	if(createEvent) {
 			cout << "CREATE EVENT B ";
 
-			/* modify base facet */
-			auto baseListIdx = allLists.size();
-			list<PointExt> l;
-			l.push_back(c_base->intersectionPoint);
-			allLists.push_back(l);
+			if(c_base->a->leftListIdx  == c_base->a->rightListIdx &&
+			   c_base->a->rightListIdx == c_base->b->leftListIdx  &&
+		       c_base->b->leftListIdx  == c_base->b->rightListIdx ) {
 
-			c_base->b->leftListIdx  = baseListIdx;
-			c_base->a->rightListIdx = baseListIdx;
-			c_base->b->rightListIdx = NOLIST;
-			c_base->a->leftListIdx  = NOLIST;
+				/* modify base facet */
+				auto baseListIdx = allLists.size();
+				list<PointExt> l;
+				l.push_back(c_base->intersectionPoint);
+				allLists.push_back(l);
 
+				c_base->b->leftListIdx  = baseListIdx;
+				c_base->a->rightListIdx = baseListIdx;
+				c_base->b->rightListIdx = NOLIST;
+				c_base->a->leftListIdx  = NOLIST;
+			}
+
+			// TODO: can the above happen if parallel occurs?
 
 			/* add facet to the other two arrangements */
 			list<PointExt> l_a;
@@ -618,8 +720,12 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 			itB--;
 			listToFacet[listIdxB] = itB;
 
-			c_b->a->leftListIdx  = listIdxB;
-			c_b->b->rightListIdx = listIdxB;
+			c_b->a->rightListIdx = listIdxB;
+			c_b->b->leftListIdx  = listIdxB;
+//			c_b->a->leftListIdx  = listIdxB;
+//			c_b->b->rightListIdx = listIdxB;
+	} else {
+		cout << " no create event! ";
 	}
 	event->printAll();
 	return createEvent;

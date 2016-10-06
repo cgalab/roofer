@@ -63,6 +63,7 @@ private:
 	bool handleCreateEventA(SweepEvent* event);
 	bool handleCreateEventB(SweepEvent* event);
 	bool handleVertexEvent(SweepEvent* event);
+	bool handlePossibleGhostVertexEnd(SweepEvent* event);
 	void handleEnterLeaveEvent(SweepEvent* event);
 
 	void handleLeaveEvent(SweepItem* cell);

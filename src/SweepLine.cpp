@@ -55,6 +55,14 @@ bool operator< (const ArrangementLine& a, const ArrangementLine& b) {
 			||
 		   (a.base != b.base && a.eid < b.eid);
 }
+bool operator< (const ArrangementLine& a, const Point& p) {
+    return (a.start != p &&
+    		a.base->direction() == Vector(a.e->supporting_line().projection(p) - a.e->supporting_line().projection(a.start)).direction());
+}
+bool operator> (const ArrangementLine& a, const Point& p) {
+    return (a.start != p &&
+    		a.base->direction() == Vector(a.e->supporting_line().projection(a.start) - a.e->supporting_line().projection(p)).direction());
+}
 
 bool operator== (const SweepItem& a, const SweepItem& b) {
 //	return a.normalDistance == b.normalDistance && (
@@ -105,9 +113,9 @@ void SweepLine::initiateEventQueue() {
 
 		for(auto i = arrangementLines.begin(); i != arrangementLines.end(); ++i) {
 
-			lStatus.push_back(i);
-			if(i+1 != arrangementLines.end()) {
-				SweepItem item(i,(i+1));
+			lStatus.push_back(&*i);
+			if(std::next(i) != arrangementLines.end()) {
+				SweepItem item(&*i,&*(std::next(i)));
 
 				if(item.raysIntersect && item.normalDistance > 0) {
 					eventQueue.insert(item);
@@ -117,7 +125,7 @@ void SweepLine::initiateEventQueue() {
 	}
 
 	for(auto pit = allParallelAL.begin(); pit != allParallelAL.end(); ++pit) {
-		parallelEventQueue.insert(pit);
+		parallelEventQueue.insert(&*pit);
 	}
 
 	for(auto &line : status) {
@@ -170,12 +178,9 @@ SweepEvent SweepLine::popEvent() {
 
 		auto first = *eventQueue.begin();
 
-//		cout << endl;
-//		printEventQueue();
 		/* checking the parallel queue if a line has to be 'added' */
 		while(!parallelEventQueue.empty() && (*parallelEventQueue.begin())->dist <= first.dist()) {
 			auto parallelItem = *parallelEventQueue.begin();
-//			cout << "handle parallel line ";
 			/* the parallel line has to be intersected with all
 			 * arrangement lines in its corresponding arrangement */
 
@@ -253,17 +258,25 @@ SweepEvent SweepLine::popEvent() {
 //			cout << endl;
 //		}
 
+		/* some events may longer by valid, we know via handlePopEvent */
+		SweepEvent actualEvents;
 		for(auto e : event) {
 			if(!e.a->parallel && !e.b->parallel) {
-				handlePopEvent(e);
+				if(handlePopEvent(e)){
+					/* only add events that were found in status */
+					actualEvents.push_back(e);
+				}
+			} else {
+				/* adding events with parallel lines */
+				actualEvents.push_back(e);
 			}
 		}
 
-		return event;
+		return actualEvents;
 	}
 }
 
-void SweepLine::handlePopEvent(SweepItem& item) {
+bool SweepLine::handlePopEvent(SweepItem& item) {
 	const ALIterator a = item.a;
 	const ALIterator b = item.b;
 	auto& lStatus = status[item.base];
@@ -283,8 +296,9 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 			FoundA = FoundA-1;
 			FoundB = FoundA+1;
 		} else {
-			cout << "Edge: " << a->eid << " ";
-			throw runtime_error("ERROR: handlePopEvent b not at a+-1!");
+			item.print();
+			cout << "WARNING: handlePopEvent b not at a+-1!";
+			return false;
 		}
 	} else if(!(a == *FoundA) && b == *FoundA) {
 		FoundB = FoundA;
@@ -295,10 +309,13 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 			FoundA = FoundB-1;
 		} else {
 			if(a == *find(lStatus.begin(),lStatus.end(),a)) {cout << "--found A with normal find...." << endl;}
-			throw runtime_error("ERROR: handlePopEvent a not at b+-1!");
+			cout << "WARNING: handlePopEvent a not at b+-1!";
+			return false;
 		}
 	} else {
-		throw runtime_error("ERROR: handlePopEvent a,b not found!");
+		item.print();
+		cout << "WARNING: handlePopEvent a,b not found!";
+		return false;
 	}
 
 
@@ -319,44 +336,53 @@ void SweepLine::handlePopEvent(SweepItem& item) {
 
 	// swap line segments in status, as of the intersection point.
 	iter_swap(FoundA, FoundB);
+	return true;
 }
 
-void SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells) {
-	cout << endl << " --- INSERT GHOST VERTEX !! --- " << endl;
+ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells) {
+	cout << " --- INSERT GHOST VERTEX !! --- ";
 
 	/* define ghost vertex */
 	ArrangementLine al(cell->a->base,cell->b->base);
 	al.setGhostVertex(cell->intersectionPoint);
+	al.setEID(cell->a->eid);
 
 	/* store ghost vertex */
 	auto& allAL = allArrangementLines[al.base];
 	allAL.push_back(al);
-	auto newAlIt = allAL.end()-1;
+	auto newAlIt = std::prev(allAL.end());
 
 	/* insert ghost vertex in local sweep line status */
 	auto& lStatus = status[cell->base];
 	DistanceCompare comp(cell->intersectionPoint);
 	/* after handlepopevent positions of a and b are already switched in local status */
-	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->a,comp);
+	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
 	/* lower_bound finds first occurence */
 	// TODO: fix if more than two AL's meet here.
 	++itFirstOcc;
 
 	/* inserts element before iterator position */
-	lStatus.insert(itFirstOcc,newAlIt);
+	lStatus.insert(itFirstOcc,&*newAlIt);
 
 	/* iterator may have changed after insert */
-	itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->a,comp);
+	itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
 	++itFirstOcc;
 
-//	if((*itFirstOcc) == newAlIt) {
-//		cout << "NEW FOUND! "; fflush(stdout);
-//	}
 //	if((*(itFirstOcc-1)) == cell->b) {
 //		cout << "B FOUND! "; fflush(stdout);
+//		cout << cell->b->bisector.to_vector().x().doubleValue() << "," <<
+//				cell->b->bisector.to_vector().y().doubleValue() << ")-";
+//
+//	}
+//	if((**itFirstOcc) == al) {
+//		cout << "NEW FOUND! "; fflush(stdout);
+//		cout << al.bisector.to_vector().x().doubleValue() << "," <<
+//				al.bisector.to_vector().y().doubleValue() << ")-";
 //	}
 //	if((*(itFirstOcc+1)) == cell->a) {
 //		cout << "A FOUND! "; fflush(stdout);
+//		cout << cell->a->bisector.to_vector().x().doubleValue() << "," <<
+//				cell->a->bisector.to_vector().y().doubleValue() << ")-";
 //	}
 
 	/* compute events for both sides in local sweep line status */
@@ -368,5 +394,19 @@ void SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells) {
 	if(itFirstOcc+1 != lStatus.end()) {
 		SweepItem iAfter(*(itFirstOcc),*(itFirstOcc+1));
 		ghostCells.push_back(iAfter);
+	}
+
+	return &*std::prev(allAL.end());
+}
+
+void SweepLine::deleteGhostVertex(SweepItem* cell, ALIterator gv) {
+	cout << " is gv:" << gv->ghost << " ";
+	auto& lStatus = status[cell->base];
+	DistanceCompare comp(cell->intersectionPoint);
+	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
+
+	if(*itFirstOcc == gv) {
+		lStatus.erase(itFirstOcc);
+		cout << " ghost vertex erased " << endl;
 	}
 }

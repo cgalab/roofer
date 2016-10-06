@@ -84,6 +84,8 @@ struct ArrangementLine {
 	friend bool operator>  (const ArrangementLine& a, const ArrangementLine& b);
 	friend bool operator<  (const ArrangementLine& a, const ArrangementLine& b);
 	friend bool operator== (const ArrangementLine& a, const ArrangementLine& b);
+	friend bool operator>  (const ArrangementLine& a, const Point& b);
+	friend bool operator<  (const ArrangementLine& a, const Point& b);
 	friend ostream& operator<<(ostream& os, const ArrangementLine& al);
 
 	/* The second Line in the bisector is with changed orientation on purpose */
@@ -97,6 +99,8 @@ struct ArrangementLine {
 		}
 		return ray;
 	}
+
+	inline void setEID(int _eid) {eid=_eid;}
 
 	inline void setGhostVertex(Point s) {
 		isValid  = true;
@@ -114,9 +118,10 @@ struct ArrangementLine {
 /* used to initially sort the ArrangementLines along their 'base' line */
 using ArrangementStart 		= map<EdgeIterator,set<ArrangementLine, less<ArrangementLine> > >;
 /* holds the actual ArrangementLines, to which we point to */
-using AllArrangementLines	= map<EdgeIterator,vector<ArrangementLine> >;
+using AllArrangementLines	= map<EdgeIterator,list<ArrangementLine> >;
 
-using ALIterator 			= vector<ArrangementLine>::iterator;
+//using ALIterator 			= vector<ArrangementLine>::iterator;
+using ALIterator 			= ArrangementLine*;
 //struct ALIterator : vector<ArrangementLine>::iterator {
 //	friend bool operator>  (const ALIterator& a, const ALIterator& b);
 //	friend bool operator<  (const ALIterator& a, const ALIterator& b);
@@ -140,6 +145,7 @@ struct SweepItem {
 
 	SweepItem(ALIterator pa, ALIterator pb):a(pa),b(pb),base(pa->base) {
 		if(a->base != b->base) {
+			if(a->base->supporting_line() == b->base->supporting_line()) {cout << " same line though ";}
 			cout << "ERROR: Base Line not equal!" << endl <<
 			a->uid << " " << b->uid << endl;
 			if(a->parallel) cout << "(a parallel)";
@@ -296,6 +302,8 @@ struct SweepItem {
 		return firstListIndex() != NOLIST;
 	}
 
+	inline bool hasGhostVertex() {return a->ghost || b->ghost;}
+
 	inline void print() {
 		cout <<  a->eid << " (";
 		for(int i = 0; i < 2; ++i) {
@@ -362,7 +370,7 @@ struct DistanceCompare {
 	}
 
 	bool operator()  (ArrangementLine a, ArrangementLine b) {
-		if(a.base != b.base) return a.uid < b.uid;
+		if(a.base != b.base) {return a.uid < b.uid;}
 
 		if(a.parallel && b.parallel) {
 			return b.dist < a.dist;
@@ -443,6 +451,15 @@ struct SweepEvent : public vector<SweepItem> {
 
 	inline void printAll() {for(auto c : *this) {c.print(); cout << " --- ";}}
 
+	inline bool hasGhostVertex() {
+		for(auto c : *this) {
+			if(c.a->ghost || c.b->ghost) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	inline vector<SweepItem*> getActiveCells() {
 		vector<SweepItem*> r;
 		for(auto& c : *this) {if(c.hasAtLeastOneListIdx()) r.push_back(&c);}
@@ -476,20 +493,14 @@ public:
 		allParallelAL.push_back(al);
 	}
 
-	void handlePopEvent(SweepItem& item);
-
-//	inline void addColinearEdgePair(EdgeIterator& a, EdgeIterator& b) {
-//		set<EdgeIterator> s;
-//		s.insert(a);
-//		s.insert(b);
-//		colinearEdges.insert(s);
-//	}
+	bool handlePopEvent(SweepItem& item);
 
 	void printSweepLine(SweepItem& item);
 	void printEventQueue();
 
 	inline void setConfig(const Config* conf)   { config  = conf;}
-	void insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells);
+	ALIterator insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells);
+	void deleteGhostVertex(SweepItem* cell, ALIterator gv);
 
 	SweepLineStatus 			status;
 
