@@ -720,10 +720,13 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 			itB--;
 			listToFacet[listIdxB] = itB;
 
-			c_b->a->rightListIdx = listIdxB;
-			c_b->b->leftListIdx  = listIdxB;
-//			c_b->a->leftListIdx  = listIdxB;
-//			c_b->b->rightListIdx = listIdxB;
+			if(c_b->a->parallel) {
+				c_b->a->rightListIdx = listIdxB;
+				c_b->b->leftListIdx  = listIdxB;
+			} else {
+				c_b->a->leftListIdx  = listIdxB;
+				c_b->b->rightListIdx = listIdxB;
+			}
 	} else {
 		cout << " no create event! ";
 	}
