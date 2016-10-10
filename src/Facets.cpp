@@ -646,7 +646,9 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 
 	// CGAL::COLLINEAR check use bisector between l_a and l_b
 
-	auto bis = CGAL::bisector(c_a->base->supporting_line(),c_b->base->supporting_line()).direction().to_vector();
+	auto bis = CGAL::bisector(c_a->base->supporting_line(),c_b->base->supporting_line().opposite()).direction().to_vector();
+
+	// TODO: fix this!  compute normals of both lines, add up, use as a vector do determine if side is correct
 
 	/* analyze if a create event occurs and what typ (min/max) */
 	if(Line(c_base->base->supporting_line()).has_on_positive_side(c_base->a->start+bis)) {
