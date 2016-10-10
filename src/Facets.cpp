@@ -621,8 +621,8 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 		}
 	}
 
-	auto l_a     = c_a->base->supporting_line().to_vector();
-	auto l_b     = c_b->base->supporting_line().to_vector();
+	auto l_a     = c_a->base->supporting_line();
+	auto l_b     = c_b->base->supporting_line();
 	auto l_base  = c_base->base->supporting_line().to_vector();
 	Vector l_baseP = (c_baseP != nullptr) ? c_baseP->base->supporting_line().to_vector() : Vector(INFPOINT.x(),INFPOINT.y());
 
@@ -637,7 +637,7 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 	}
 
 	/* l_a and l_b have to intersect at a reflex vertex, thus must be a right turn */
-	if(CGAL::orientation(l_a,l_b) != CGAL::RIGHT_TURN && CGAL::orientation(l_a,l_b) != CGAL::COLLINEAR) {
+	if(CGAL::orientation(l_a.to_vector(),l_b.to_vector()) != CGAL::RIGHT_TURN && CGAL::orientation(l_a.to_vector(),l_b.to_vector()) != CGAL::COLLINEAR) {
 		swap(l_a,l_b);
 		auto tmp = c_a;
 		c_a = c_b;
@@ -646,15 +646,19 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 
 	// CGAL::COLLINEAR check use bisector between l_a and l_b
 
-	auto bis = CGAL::bisector(c_a->base->supporting_line(),c_b->base->supporting_line().opposite()).direction().to_vector();
+	//auto bis = CGAL::bisector(c_a->base->supporting_line(),c_b->base->supporting_line().opposite()).direction().to_vector();
+
+	auto normalA = l_a.perpendicular(c_a->intersectionPoint).to_vector();
+	auto normalB = l_b.perpendicular(c_b->intersectionPoint).to_vector();
 
 	// TODO: fix this!  compute normals of both lines, add up, use as a vector do determine if side is correct
 
 	/* analyze if a create event occurs and what typ (min/max) */
-	if(Line(c_base->base->supporting_line()).has_on_positive_side(c_base->a->start+bis)) {
+	if(Line(c_base->base->supporting_line()).has_on_positive_side(c_base->intersectionPoint+normalA) &&
+	   Line(c_base->base->supporting_line()).has_on_positive_side(c_base->intersectionPoint+normalB) ) {
 		createEvent = true;
-	} else if(CGAL::orientation(l_base,l_a) == CGAL::LEFT_TURN &&
-	          CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {
+	} else if(CGAL::orientation(l_base,l_a.to_vector()) == CGAL::LEFT_TURN &&
+	          CGAL::orientation(l_b.to_vector(),l_base) == CGAL::LEFT_TURN) {
 		createEvent = true;
 //	} else if(CGAL::orientation(l_a,l_base) == CGAL::RIGHT_TURN &&
 //			  CGAL::orientation(l_b,l_base) == CGAL::LEFT_TURN) {

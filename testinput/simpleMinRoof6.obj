@@ -1,0 +1,13 @@
+# manual example geder@cosy.sbg.ac.at
+# one create event and one vertex event
+# where two reflex vertices meet
+o simple-min-roof-and-vertex-event
+v 136 548
+v 245 633
+v 221 643
+v 199 623
+v 191 651
+v 210 642
+v 341 759
+v 208 768
+f 1 2 3 4 5 6 7 8
