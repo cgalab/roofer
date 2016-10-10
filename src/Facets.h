@@ -73,6 +73,8 @@ private:
 
 	void handleMergeEvent(SweepEvent* event);
 
+	vector<SweepItem*> checkColinearCells(vector<SweepItem*>& cells);
+
 	void addPointToCurrentList(SweepItem* cell);
 
 	/* a->left to b->left or b->right to a->right */

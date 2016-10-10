@@ -183,19 +183,11 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 	SweepItem* cellB = nullptr;
 
 	auto cells = event->getActiveCells();
-	vector<SweepItem*> colinearCells;
-	for(auto cella = cells.begin(); cella != cells.end(); ++cella) {
-		for(auto cellb = std::next(cella); cellb != cells.end(); ++cellb) {
-			if((*cella)->base->supporting_line() == (*cellb)->base->supporting_line()) {
-				colinearCells.push_back(*cella);
-				colinearCells.push_back(*cellb);
-			}
-		}
-	}
+	auto colinearCells = checkColinearCells(cells);
 
 	if(colinearCells.size() > 1) {
-		cellA = *cells.begin();
-		cellB = *(cells.begin()+1);
+		cellA = *colinearCells.begin();
+		cellB = *(colinearCells.begin()+1);
 	}
 	/* end ghost vertex prep */
 
@@ -740,10 +732,36 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 	return createEvent;
 }
 
+vector<SweepItem*> RoofFacets::checkColinearCells(vector<SweepItem*>& cells) {
+	vector<SweepItem*> colinearCells;
+
+	for(auto cella = cells.begin(); cella != cells.end(); ++cella) {
+		for(auto cellb = std::next(cella); cellb != cells.end(); ++cellb) {
+			if((*cella)->base->supporting_line() == (*cellb)->base->supporting_line()) {
+				colinearCells.push_back(*cella);
+				colinearCells.push_back(*cellb);
+			}
+		}
+	}
+	return colinearCells;
+}
+
 bool RoofFacets::handleVertexEvent(SweepEvent* event) {
 	auto divideNodes = event->getActiveCells();
 	if(event->numberDivideNodes() >= 1) {
 		cout << "Vertex/Divide EVENT ";
+
+//		SweepItem* cellA = nullptr;
+//		SweepItem* cellB = nullptr;
+//
+//		auto colinearCells = checkColinearCells(divideNodes);
+//
+//		if(colinearCells.size() > 1) {
+//			cellA = *colinearCells.begin();
+//			cellB = *(colinearCells.begin()+1);
+//		}
+
+
 		for(auto cell : divideNodes) {
 
 			if(cell->isPossibleDivideNode()) {
