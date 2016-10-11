@@ -77,16 +77,16 @@ bool operator== (const SweepItem& a, const SweepItem& b) {
 		    b.b 				== b.a  ) );
 }
 bool operator> (const SweepItem& a, const SweepItem& b) {
-	return (a.normalDistance  > b.normalDistance) ||
-		   (a.normalDistance == b.normalDistance && a.intersectionPoint >  b.intersectionPoint) || (
-			a.normalDistance == b.normalDistance && a.intersectionPoint == b.intersectionPoint && (
+	return (a.squaredDistance  > b.squaredDistance) ||
+		   (a.squaredDistance == b.squaredDistance && a.intersectionPoint >  b.intersectionPoint) || (
+			a.squaredDistance == b.squaredDistance && a.intersectionPoint == b.intersectionPoint && (
 			a.a > b.a || ( a.a == b.a && a.b > b.b ))
 		   );
 }
 bool operator< (const SweepItem& a, const SweepItem& b) {
-	return (a.normalDistance  < b.normalDistance) ||
-		   (a.normalDistance == b.normalDistance && a.intersectionPoint <  b.intersectionPoint) || (
-			a.normalDistance == b.normalDistance && a.intersectionPoint == b.intersectionPoint && (
+	return (a.squaredDistance  < b.squaredDistance) ||
+		   (a.squaredDistance == b.squaredDistance && a.intersectionPoint <  b.intersectionPoint) || (
+			a.squaredDistance == b.squaredDistance && a.intersectionPoint == b.intersectionPoint && (
 			a.a < b.a  || (a.a == b.a && a.b < b.b))
 		   );
 }
@@ -117,7 +117,7 @@ void SweepLine::initiateEventQueue() {
 			if(std::next(i) != arrangementLines.end()) {
 				SweepItem item(&*i,&*(std::next(i)));
 
-				if(item.raysIntersect && item.normalDistance > 0) {
+				if(item.raysIntersect && item.squaredDistance > 0) {
 					eventQueue.insert(item);
 				}
 			}
@@ -141,7 +141,7 @@ void SweepLine::printEventQueue() {
    cout << "Q: ";
 
 	for(auto e : eventQueue) {
-		cout << e.normalDistance.doubleValue() << " - "; e.print(); cout << ", ";
+		cout << e.squaredDistance.doubleValue() << " - "; e.print(); cout << ", ";
 	}
 
 	if(!parallelEventQueue.empty()) {
@@ -211,7 +211,7 @@ SweepEvent SweepLine::popEvent() {
 //		cout << endl << "events: ";
 //		first.printIntPoint();
 //		cout << " - ";
-		while(!queueEmpty() && first.normalDistance == eventQueue.begin()->normalDistance) {
+		while(!queueEmpty() && first.squaredDistance == eventQueue.begin()->squaredDistance) {
 			auto other = *eventQueue.begin();
 //			if((first.base != other->base) &&
 //			   (first.a->e  == other->base || first.b->e  == other->base ) ) {
@@ -321,7 +321,7 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 
 	if(!(*FoundA == lStatus.front())) {
 		SweepItem beforeA(*(FoundA-1), *FoundB);
-		if(beforeA.raysIntersect && beforeA.normalDistance > item.normalDistance) {
+		if(beforeA.raysIntersect && beforeA.squaredDistance > item.squaredDistance) {
 			eventQueue.insert(beforeA);
 		}
 	}
@@ -329,7 +329,7 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 
 	if(!(*FoundB == lStatus.back()))  {
 		SweepItem afterB(*FoundA, *(FoundB+1) );
-		if(afterB.raysIntersect && afterB.normalDistance > item.normalDistance) {
+		if(afterB.raysIntersect && afterB.squaredDistance > item.squaredDistance) {
 			eventQueue.insert(afterB);
 		}
 	}

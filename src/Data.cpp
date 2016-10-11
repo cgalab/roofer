@@ -210,12 +210,12 @@ bool Data::parseOBJ(const vector<string>& lines) {
 }
 
 bool Data::parsePOLY(const vector<string>& lines) {
-	cout << "no yet supported!";
+	cout << "POLY: no yet supported!";
 	return false;
 }
 
 void Data::writePOLY(const string& fileName) {
-	cout << "no yet supported!";
+	cout << "POLY: no yet supported!";
 }
 
 void Data::writeOutput() {
@@ -256,10 +256,13 @@ void Data::writeOBJ(const string& fileName) {
 			<< config.fileName << ") - "
 			<< currentTimeStamp() <<  endl;
 	for(auto v : rightOrder) {
-		double x = (v.x().doubleValue() * xm) - xt;
-		double y = (v.y().doubleValue() * ym) - yt;
+		double x = (v.x().doubleValue() - xt) * xm;
+		double y = (v.y().doubleValue() - yt) * ym;
 		if(config.outputType == OutputType::OBJ3D) {
-			double z = (facets.zMap[v] * zm)  - zt;
+			/* we take the sqrt of z as it is the squared distance, not the normal distance */
+
+			double z = (facets.zMap[v] != 0.0) ? (std::sqrt(facets.zMap[v])  - zt) * zm : 0.0;
+			outfile << "# " << v.x().doubleValue() << " " << v.y().doubleValue() << " " << ((facets.zMap[v] != 0.0) ? (std::sqrt(facets.zMap[v])  - zt) * zm : 0.0) << endl;
 			outfile << "v " << x << " " << y << " " << z << endl;
 		} else {
 			outfile << "v " << x << " " << y << endl;
@@ -293,12 +296,12 @@ void Data::writeOBJ(const string& fileName) {
 
 
 void Data::getNormalizer(double& xt, double& xm, double& yt, double& ym, double& zt, double& zm) {
-	xt = bbox.min().x().doubleValue() + 1;
-	yt = bbox.min().y().doubleValue() +	1;
-	zt = 0.0;
-
 	double x_span  = bbox.max().x().doubleValue() - bbox.min().x().doubleValue();
 	double y_span  = bbox.max().y().doubleValue() - bbox.min().y().doubleValue();
+
+	xt = bbox.min().x().doubleValue() + (x_span/2.0);
+	yt = bbox.min().y().doubleValue() +	(y_span/2.0);
+	zt = 0.0;
 
 	double z_max = 0;
 	for(auto z : facets.zMap) {
@@ -306,9 +309,11 @@ void Data::getNormalizer(double& xt, double& xm, double& yt, double& ym, double&
 	}
 
 	xm = (x_span != 0) ? 2.0/x_span : 1;
-	ym = (x_span != 0) ? 2.0/y_span : 1;
-	zm = (z_max  != 0) ? 1.0/z_max  : 1;
+	ym = (y_span != 0) ? 2.0/y_span : 1;
+	zm = (z_max  != 0) ? 1.0/std::sqrt(z_max)  : 1;
 	zm *= ZSCALE;
+
+	xm = ym = std::max(xm,ym);
 }
 
 string Data::currentTimeStamp() {
@@ -330,6 +335,7 @@ void Data::printLongHelp() {
 	cout << "  -h \t\t\tprint this help" << endl;
 	cout << "  -v \t\t\tverbose mode, shows more information about the computation" << endl;
 	cout << "  -s \t\t\tsilent mode, shows no information" << endl;
+	cout << "  -l \t\t\tlogging verbose output to <filename>.log" << endl;
 #ifdef QTGUI
 	cout << "  -gui \t\t\tenable GUI" << endl;
 #endif

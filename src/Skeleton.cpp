@@ -37,7 +37,7 @@ void Skeleton::createSkeleton() {
 	/***
 	 * create initial wavefront
 	 ***/
-	if(!data.config.silent) {cout << "generating line arrangements and event queue...";}
+	if(!data.config.silent) {LOG(INFO) << "generating line arrangements and event queue...";}
 	createLineArrangements();
 	if(!data.config.silent) {cout << "done" << endl;}
 

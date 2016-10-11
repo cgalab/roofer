@@ -1,6 +1,8 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
+#include "easyloggingpp/src/easylogging++.h"
+
 using namespace std;
 
 #define NIL    -1

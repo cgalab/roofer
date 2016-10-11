@@ -133,12 +133,12 @@ struct SweepItem {
 	EdgeIterator base;
 
 	bool  raysIntersect;
-	Exact normalDistance;
+	Exact squaredDistance;
 	Point intersectionPoint;
 
 #ifdef QTGUI
 	inline Point3D getPoint3D() {return Point3D(intersectionPoint.x().doubleValue(),
-			intersectionPoint.y().doubleValue(),normalDistance.doubleValue());}
+			intersectionPoint.y().doubleValue(),squaredDistance.doubleValue());}
 #endif
 
 	SweepItem(const SweepItem& i):SweepItem(i.a,i.b) {}
@@ -176,19 +176,19 @@ struct SweepItem {
 		if(!intersect.empty()) {
 			if(const Point *ipoint = CGAL::object_cast<Point>(&intersect)) {
 				raysIntersect     = true;
-				normalDistance    = CGAL::squared_distance(a->base->supporting_line(),*ipoint);
+				squaredDistance    = CGAL::squared_distance(a->base->supporting_line(),*ipoint);
 				intersectionPoint = *ipoint;
 			} else {
 				raysIntersect  = false;
-				normalDistance = -1;
+				squaredDistance = -1;
 			}
 		} else {
 			raysIntersect  	   = false;
-			normalDistance     = -1;
+			squaredDistance     = -1;
 		}
 	}
 
-	inline Exact dist() { return normalDistance; }
+	inline Exact dist() { return squaredDistance; }
 
 	/* enable accessing the list indices of left/right refs of a,b via setter/getter
 	 * (0,0) a left, (0,1) a right, (1,0) b left, (1,1) b right
