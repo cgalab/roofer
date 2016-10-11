@@ -41,6 +41,12 @@ void Skeleton::createSkeleton() {
 	createLineArrangements();
 	if(!data.config.silent) {cout << "done" << endl;}
 
+	el::Loggers::setVerboseLevel(1);
+	LOG(INFO) << " -- INFO -- ";
+	LOG(WARNING) << " -- WARNING -- ";
+	LOG(ERROR) << " -- ERROR -- ";
+	LOG(DEBUG) << " -- DEBUG -- ";
+
     if(!data.config.silent) {cout << "initiate event queue...";}
 	data.sweepLine.initiateEventQueue();
 	if(!data.config.silent) {cout << "done" << endl;}
