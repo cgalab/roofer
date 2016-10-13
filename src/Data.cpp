@@ -90,9 +90,17 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 				printLongHelp();
 				return false;
 			} else if (argument == "-v") {
+				if(config.silent) {
+					cout << "Use either verbose or silent, -v or -s, not both!" << endl;
+				}
 				config.verbose 		= true;
+				el::Loggers::setLoggingLevel(el::Level::Global);
 			} else if (argument == "-s") {
-				config.silent 		= true;
+				if(config.verbose) {
+					cout << "Use either verbose or silent, -v or -s, not both!" << endl;
+				}
+					config.silent 		= true;
+				el::Loggers::setLoggingLevel(el::Level::Unknown);
 			} else if (argument == "-obj" || argument == "-obj3d") {
 				if(args.empty()) {return false;}
 

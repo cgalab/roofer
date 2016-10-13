@@ -39,21 +39,15 @@ void Skeleton::createSkeleton() {
 	 ***/
 	if(!data.config.silent) {LOG(INFO) << "generating line arrangements and event queue...";}
 	createLineArrangements();
-	if(!data.config.silent) {cout << "done" << endl;}
+	if(!data.config.silent) {LOG(INFO) << "done";}
 
-	el::Loggers::setVerboseLevel(1);
-	LOG(INFO) << " -- INFO -- ";
-	LOG(WARNING) << " -- WARNING -- ";
-	LOG(ERROR) << " -- ERROR -- ";
-	LOG(DEBUG) << " -- DEBUG -- ";
-
-    if(!data.config.silent) {cout << "initiate event queue...";}
+    if(!data.config.silent) {LOG(INFO) << "initiate event queue...";}
 	data.sweepLine.initiateEventQueue();
-	if(!data.config.silent) {cout << "done" << endl;}
+	if(!data.config.silent) {LOG(INFO) << "done" << endl;}
 
-	if(!data.config.silent) {cout << "add all base cells...";}
+	if(!data.config.silent) {LOG(INFO) << "add all base cells...";}
 	addAllBaseCells();
-	if(!data.config.silent) {cout << "done" << endl;}
+	if(!data.config.silent) {LOG(INFO) << "done" << endl;}
 
 	data.sweepLine.printEventQueue();
 
@@ -61,9 +55,9 @@ void Skeleton::createSkeleton() {
 #ifdef QTGUI
 	if(!data.config.gui) {
 #endif
-		if(!data.config.silent) {cout << "start plane-sweep...";}
+		if(!data.config.silent) {LOG(INFO) << "start plane-sweep...";}
 		startPlaneSweep();
-		if(!data.config.silent) {cout << "done" << endl;}
+		if(!data.config.silent) {LOG(INFO) << "done" << endl;}
 
 		data.facets.printAllLists();
 

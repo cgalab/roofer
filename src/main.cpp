@@ -10,12 +10,15 @@ INITIALIZE_EASYLOGGINGPP
 using namespace std;
 
 int main(int argc, char** argv) {
+
 	el::Configurations defaultConf;
 	defaultConf.setToDefault();
-	//defaultConf.setGlobally(el::ConfigurationType::Format, "%datetime %level %func(): %msg");
-	//defaultConf.set(el::Level::Error, el::ConfigurationType::Format, "%datetime{H:%m:%s.%g} %level %func: %msg");
 	defaultConf.setGlobally(el::ConfigurationType::Format, "%datetime{H:%m:%s.%g} %level %func: %msg");
-	el::Loggers::reconfigureLogger("default", defaultConf);
+	el::Loggers::addFlag(el::LoggingFlag::HierarchicalLogging);
+	el::Loggers::setLoggingLevel(el::Level::Global);
+	el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
+	el::Loggers::reconfigureAllLoggers(defaultConf);
+    el::Loggers::reconfigureLogger("default", defaultConf);
 
 	START_EASYLOGGINGPP(argc, argv);
 
