@@ -251,7 +251,6 @@ SweepEvent SweepLine::popEvent() {
 				event.push_back(other);
 			} else {
 				temp.push_back(other);
-				LOG_IF(config->verbose,INFO) << "T";
 			}
 			eventQueue.erase(eventQueue.begin());
 		}
