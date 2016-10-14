@@ -14,7 +14,7 @@ same format, optional with 3D coordinates which can be imported to programs like
 blender.
 
 # ToDo's
-- many TODO's with the essential problem still in the code
+- many TODO's and the stated problem still in the code
 - GUI is solved very poorly 
 
 ## Optional ToDo's
