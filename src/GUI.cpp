@@ -262,7 +262,7 @@ void GUI::draw() {
 
 void GUI::drawEvent(SweepEvent& event) {
 
-	auto cont = event.getActivCells();
+	auto cont = event.getActiveCells();
 	for(auto i : event) {
 		if(i.isEdgeEvent()) {
 			if(i.a->rightListIdx == i.b->leftListIdx && i.a->rightListIdx != NOLIST) {

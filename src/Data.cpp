@@ -268,7 +268,6 @@ void Data::writeOBJ() {
 			/* we take the sqrt of z as it is the squared distance, not the normal distance */
 
 			double z = (facets.zMap[v] != 0.0) ? (std::sqrt(facets.zMap[v])  - zt) * zm : 0.0;
-			outfile << "# " << v.x().doubleValue() << " " << v.y().doubleValue() << " " << ((facets.zMap[v] != 0.0) ? (std::sqrt(facets.zMap[v])  - zt) * zm : 0.0) << endl;
 			outfile << "v " << x << " " << y << " " << z << endl;
 		} else {
 			outfile << "v " << x << " " << y << endl;
