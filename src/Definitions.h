@@ -13,8 +13,6 @@ using namespace std;
 
 #define INFPOINT Point(numeric_limits<double>::max(),numeric_limits<double>::max())
 
-//enum class EventType : int {EMPTY=0,EDGE,SPLIT,CREATE1,CREATE2,MERGE,CREATE1ORENTER,CREATE2ORMERGE,ENTER};
-
 enum class OutputType : int {OBJ=0,POLY,NONE,OBJ3D};
 
 struct Config {

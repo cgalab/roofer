@@ -5,24 +5,6 @@
 
 using namespace std;
 
-//bool operator==(const ArrangementLine* a, const ArrangementLine* b) {
-//		return  a->base  == b->base &&
-//				a->start == b->start &&
-//				a->e     == b->e;
-//}
-//bool operator> (const ArrangementLine* a, const ArrangementLine* b) {
-//    return (a->base == b->base && a->base->direction() == Vector(a->start - b->start).direction()) ||
-//    	   (a->base != b->base && a->uid > b->uid);
-//}
-//bool operator< (const ArrangementLine* a, const ArrangementLine* b) {
-//    return (a->base == b->base && a->base->direction() == Vector(b->start - a->start).direction()) ||
-//     	   (a->base != b->base && a->uid < b->uid);
-//}
-
-//bool operator==(const ALIterator& a, const ALIterator& b) {return operator==(*a,*b);}
-//bool operator> (const ALIterator& a, const ALIterator& b) {return operator> (*a,*b);}
-//bool operator< (const ALIterator& a, const ALIterator& b) {return operator< (*a,*b);}
-
 ostream& operator<<(ostream& out, const SweepItem& item) {
 		out <<  item.a->eid << " (";
 		for(int i = 0; i < 2; ++i) {
@@ -176,7 +158,7 @@ void SweepLine::printEventQueue() {
 	std::ostream out(nullptr);
 	std::stringbuf str;
     out.rdbuf(&str);
-    out << "Q: ";
+    out << "Q: (" << eventQueue.size() << ") ";
 
 	for(auto e : eventQueue) {
 		out << e.squaredDistance.doubleValue() << " - " << e << ", ";
@@ -190,7 +172,7 @@ void SweepLine::printEventQueue() {
 		out << endl;
 	}
 
-	LOG(INFO) << str.str();
+	LOG_IF(config->verbose,INFO) << str.str();
 }
 
 void SweepLine::printSweepLine(SweepItem& item) {
@@ -232,14 +214,8 @@ SweepEvent SweepLine::popEvent() {
 			for(auto al : status[parallelItem->base]) {
 
 				SweepItem item(parallelItem,al);
-//				if(al->leftListIdx != NOLIST) {
-//					item = SweepItem(al,parallelItem);
-//				}
 
-//				item.print();
 				if(item.raysIntersect) {
-//					LOG(INFO) << endl <<" ->ins " << item.dist().doubleValue() << " "; item.printIntPoint();
-//					LOG(INFO) << " "; item.print();
 					eventQueue.insert(item);
 				}
 			}
@@ -247,61 +223,23 @@ SweepEvent SweepLine::popEvent() {
 			first = *eventQueue.begin();
 		}
 
-//		LOG(INFO) << endl;
-//		printEventQueue();
-
 		eventQueue.erase(eventQueue.begin());
 		event.push_back(first);
 
-//		LOG(INFO) << endl << "events: ";
-//		first.printIntPoint();
-//		LOG(INFO) << " - ";
 		while(!queueEmpty() && first.squaredDistance == eventQueue.begin()->squaredDistance) {
 			auto other = *eventQueue.begin();
-//			if((first.base != other->base) &&
-//			   (first.a->e  == other->base || first.b->e  == other->base ) ) {
-//				event.push_back(*other);
-//			}
-//			else
 			if(first.intersectionPoint == other.intersectionPoint) {
 				event.push_back(other);
 			} else {
 				temp.push_back(other);
-				LOG(INFO) << "T";
+				LOG_IF(config->verbose,INFO) << "T";
 			}
-//			other.printIntPoint();
-//			LOG(INFO) << " - ";
 			eventQueue.erase(eventQueue.begin());
 		}
 
-//		LOG(INFO) << "event: ";
-//		for(auto c : event) c.print();
-//		LOG(INFO) << endl << "temp: ";
-//		for(auto c : temp) c.print();
-//		LOG(INFO) << endl;
-
 		if(temp.size() > 0) {
-//			LOG(INFO) << " Temp: ";
-//			for(auto e : temp)  {
-//				LOG(INFO) << "(" << e.intersectionPoint.x().doubleValue() << ","
-//					 << e.intersectionPoint.y().doubleValue() << ") ";
-//				e.print();
-//			}
-//			LOG(INFO) << endl;
-
 			for(auto e : temp)  { eventQueue.insert(e); }
 		}
-
-//		if(event.size() != 3){
-//			LOG(INFO) << endl << "Event: ";
-//			for(auto e : event) {
-//				LOG(INFO) << "(" << e.intersectionPoint.x().doubleValue()
-//					 << "," << e.intersectionPoint.y().doubleValue() << ") D:"
-//					 << e.normalDistance.doubleValue() << " ";
-//				e.print();
-//			}
-//			LOG(INFO) << endl;
-//		}
 
 		/* some events may longer by valid, we know via handlePopEvent */
 		SweepEvent actualEvents;
@@ -352,7 +290,7 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 		} else if(a == *(FoundB-1)) {
 			FoundA = FoundB-1;
 		} else {
-			if(a == *find(lStatus.begin(),lStatus.end(),a)) {LOG(INFO) << "--found A with normal find....";}
+			if(a == *find(lStatus.begin(),lStatus.end(),a)) {LOG_IF(config->verbose,INFO) << "--found A with normal find....";}
 			LOG(WARNING) << "WARNING: handlePopEvent a not at b+-1!";
 			return false;
 		}
@@ -383,7 +321,7 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 }
 
 ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells) {
-	LOG(INFO) << " --- INSERT GHOST VERTEX !! --- ";
+	LOG_IF(config->verbose,INFO) << " --- INSERT GHOST VERTEX !! --- ";
 
 	/* define ghost vertex */
 	ArrangementLine al(cell->a->base,cell->b->base);
@@ -411,23 +349,6 @@ ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells)
 	itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
 	++itFirstOcc;
 
-//	if((*(itFirstOcc-1)) == cell->b) {
-//		LOG(INFO) << "B FOUND! "; fflush(stdout);
-//		LOG(INFO) << cell->b->bisector.to_vector().x().doubleValue() << "," <<
-//				cell->b->bisector.to_vector().y().doubleValue() << ")-";
-//
-//	}
-//	if((**itFirstOcc) == al) {
-//		LOG(INFO) << "NEW FOUND! "; fflush(stdout);
-//		LOG(INFO) << al.bisector.to_vector().x().doubleValue() << "," <<
-//				al.bisector.to_vector().y().doubleValue() << ")-";
-//	}
-//	if((*(itFirstOcc+1)) == cell->a) {
-//		LOG(INFO) << "A FOUND! "; fflush(stdout);
-//		LOG(INFO) << cell->a->bisector.to_vector().x().doubleValue() << "," <<
-//				cell->a->bisector.to_vector().y().doubleValue() << ")-";
-//	}
-
 	/* compute events for both sides in local sweep line status */
 	if(itFirstOcc != lStatus.begin()) {
 		SweepItem iBefore(*(itFirstOcc-1),*(itFirstOcc));
@@ -443,13 +364,13 @@ ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells)
 }
 
 void SweepLine::deleteGhostVertex(SweepItem* cell, ALIterator gv) {
-	LOG(INFO) << " is gv:" << gv->ghost << " ";
+	LOG_IF(config->verbose,INFO) << " is gv:" << gv->ghost << " ";
 	auto& lStatus = status[cell->base];
 	DistanceCompare comp(cell->intersectionPoint);
 	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
 
 	if(*itFirstOcc == gv) {
 		lStatus.erase(itFirstOcc);
-		LOG(INFO) << " ghost vertex erased ";
+		LOG_IF(config->verbose,INFO) << " ghost vertex erased ";
 	}
 }

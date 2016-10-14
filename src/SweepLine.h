@@ -45,15 +45,10 @@ struct ArrangementLine {
 		base(pbase),e(pe),leftListIdx(NOLIST),rightListIdx(NOLIST),uid(id),lid(NIL),eid(edgeid),
 		parallel(false),isValid(true),ghost(false) {
 
-
-//		Point ipoint;
-//		CGAL::Object intersect = intersection(base->supporting_line(),e->supporting_line());
 		CGAL::Object intersect = intersection(base->supporting_line(),e->supporting_line());
 
 		if(base != e) {
 			if(!intersect.empty()) {
-//			if(CGAL::assign(ipoint, intersect)) {
-				//if(const Point *ipoint = boost::get<Point>(&*intersection)) {
 				if(const Point *ipoint = CGAL::object_cast<Point>(&intersect)) {
 					start    = *ipoint;
 					bisector = setBisector();
@@ -120,13 +115,7 @@ using ArrangementStart 		= map<EdgeIterator,set<ArrangementLine, less<Arrangemen
 /* holds the actual ArrangementLines, to which we point to */
 using AllArrangementLines	= map<EdgeIterator,list<ArrangementLine> >;
 
-//using ALIterator 			= vector<ArrangementLine>::iterator;
 using ALIterator 			= ArrangementLine*;
-//struct ALIterator : vector<ArrangementLine>::iterator {
-//	friend bool operator>  (const ALIterator& a, const ALIterator& b);
-//	friend bool operator<  (const ALIterator& a, const ALIterator& b);
-//	friend bool operator== (const ALIterator& a, const ALIterator& b);
-//};
 
 struct SweepItem {
 	ALIterator a, b;
@@ -304,40 +293,6 @@ struct SweepItem {
 
 	inline bool hasGhostVertex() {return a->ghost || b->ghost;}
 
-//	inline std::ostream& operator<<(std::ostream& out) {
-//		out <<  a->eid << " (";
-//		for(int i = 0; i < 2; ++i) {
-//			for(int j = 0; j < 2; ++j) {
-//				if(get(i,j) == NOLIST) {
-//					out << "_";
-//				} else {
-//					out << get(i,j);
-//				}
-//				if(i != 1 || j != 1) out << ",";
-//			}
-//		}
-//		out << ")  ";
-//
-//		if(a->ghost) {out << "g";}
-//		out << "a(";
-//		if(a->parallel) { out << "p,p)-"; } else { out <<
-//		a->bisector.to_vector().x().doubleValue() << "," <<
-//		a->bisector.to_vector().y().doubleValue() << ")-";
-//		}
-//		if(b->ghost) {out << "g";}
-//		out << "b(";
-//		if(b->parallel) { out << "p,p) "; } else { out <<
-//		b->bisector.to_vector().x().doubleValue() << "," <<
-//		b->bisector.to_vector().y().doubleValue() << ") ";
-//		}
-//
-//	    return out;
-//	}
-
-//	inline std::ostream& printIntPoint(std::ostream& out) {
-//		out << intersectionPoint.x().doubleValue() << "," << intersectionPoint.y().doubleValue();
-//		return out;
-//	}
 
 	friend std::ostream& operator<<(std::ostream& out, const SweepItem& item);
 
@@ -354,23 +309,8 @@ struct DistanceCompare {
 
 	// < Operator
 	bool operator()  (ALIterator a, ALIterator b) {
-//		if(a->base != b->base) return a->uid < b->uid;
+		// TODO: remove and check if needed (bad idea)
 		return operator()(*a,*b);
-//
-//		Line currentBase(currentIntersection,a->base->direction());
-//
-//		auto intersectionA = CGAL::intersection(currentBase, a->bisector);
-//		auto intersectionB = CGAL::intersection(currentBase, b->bisector);
-//
-//		if(!intersectionA.empty() && !intersectionB.empty()) {
-//			if(const Point *pointA = CGAL::object_cast<Point>(&intersectionA)) {
-//				if(const Point *pointB = CGAL::object_cast<Point>(&intersectionB)) {
-//					return a->base->direction() == Vector(*pointB - *pointA).direction();
-//				}
-//			}
-//		}
-//
-//		throw runtime_error("ERROR: empty intersections!");
 	}
 
 	bool operator()  (ArrangementLine a, ArrangementLine b) {
@@ -453,13 +393,6 @@ struct SweepEvent : public vector<SweepItem> {
 		return false;
 	}
 
-//	inline std::ostream& operator<<(std::ostream& out) {
-//		for(auto c : *this) {out << c << " --- ";}
-//	    return out;
-//	}
-
-	//inline void printAll() {for(auto c : *this) {c.print(); LOG(INFO) << " --- ";}}
-
 	inline bool hasGhostVertex() {
 		for(auto c : *this) {
 			if(c.a->ghost || c.b->ghost) {
@@ -483,9 +416,6 @@ struct SweepEvent : public vector<SweepItem> {
 
 	friend std::ostream& operator<<(std::ostream& out, const SweepEvent& event);
 };
-
-//using ColinearEP    = set<EdgeIterator>;
-//using ColinearEdges = set<ColinearEP>;
 
 class SweepLine {
 public:
@@ -523,8 +453,6 @@ private:
 
 	vector<ArrangementLine> 	allParallelAL;
 	ParallelEventQueue 			parallelEventQueue;
-
-//	ColinearEdges				colinearEdges;
 
 	const Config*   			config;
 };

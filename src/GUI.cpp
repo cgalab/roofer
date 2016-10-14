@@ -76,13 +76,6 @@ void GUI::addSegment(Point& a, Point& b) {
 }
 
 void GUI::addSS(const SsPtr& ss) {
-//	for ( Halfedge_const_iterator i = ss->halfedges_begin(); i != ss->halfedges_end(); ++i )
-//	{
-//		Point3D p(i->opposite()->vertex()->point().x(),i->opposite()->vertex()->point().y(),0);
-//		Point3D q(i->vertex()->point().x(),i->vertex()->point().y(),0);
-//
-//		lcc.make_segment(p,q);
-//	}
 }
 
 void GUI::keyPressEvent(QKeyEvent *e) {

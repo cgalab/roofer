@@ -27,23 +27,8 @@ private:
 
 	void createLineArrangements();
 	void addAllBaseCells();
-//	void createInitialWavefront();
-//	void createBisectorRays();
-
-//	void computeEdgeEvents();
-//	void computeSplitEvents();
-//	void computeCreateEvents();
-
-//	void startWavefrontPropagation();
-
 	void startPlaneSweep();
 
-//	Event  computeEdgeEvent(WavefrontIterator a, WavefrontIterator b);
-//	Vertex computeVelocity(Point& v_a, Point& v_b, Point& v_c);
-
-//	void handleEdgeEvent(Event& e);
-//	void handleSplitEvent(Event& e);
-//	void handleCreateEvent(Event& e);
 };
 
 #endif /* SKELETON_H_ */

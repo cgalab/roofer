@@ -7,10 +7,6 @@
 
 #include "Data.h"
 
-//#include "ImportOBJ.h"
-
-// TEST
-
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_items_3.h>
 #include <CGAL/HalfedgeDS_list.h>
@@ -26,8 +22,6 @@ Data::Data() {
 
 	sweepLine.setConfig(&config);
 }
-
-//Data():rotateNintyLeft(CGAL::ROTATION, 1, 0) {}
 
 Data::~Data() {}
 
@@ -99,7 +93,7 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 				if(config.verbose) {
 					LOG(INFO) << "Use either verbose or silent, -v or -s, not both!";
 				}
-					config.silent 		= true;
+				config.silent 		= true;
 				el::Loggers::setLoggingLevel(el::Level::Unknown);
 			} else if (argument == "-obj" || argument == "-obj3d") {
 				if(args.empty()) {return false;}
@@ -113,11 +107,14 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 			} else if (argument == "-poly") {
 				LOG(INFO) << ".poly is not supported yet!";
 				return false;
-			} else if(args.empty()){
-				config.fileName = argument;
-				fileLoaded = loadFile(argument);
-			} else {
-				LOG(INFO) << argument << " is no valid option or filename!";
+			} else if(args.empty()) {
+				if(!fileExists(argument)) {
+					LOG(INFO) << argument << " is no valid option or filename!";
+					return false;
+				} else {
+					config.fileName = argument;
+					fileLoaded = loadFile(argument);
+				}
 			}
 		}
 	}
@@ -164,7 +161,7 @@ bool Data::parseOBJ(const vector<string>& lines) {
 		vector<int> facetList;
 
 		for(auto& s : tokens) {
-			/* comments not supported or needed obj parameters */
+			/* comments, not supported or needed obj parameters */
 			// TODO: there are more OBJ parameters that this:
 			if(s == "#" || s == "o" || s == "vt" || s == "vn" ||
 			   s == "g" || s == "usemtl" || s == "s" || s == "off" ||

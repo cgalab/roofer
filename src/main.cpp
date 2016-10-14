@@ -13,7 +13,8 @@ int main(int argc, char** argv) {
 
 	el::Configurations defaultConf;
 	defaultConf.setToDefault();
-	defaultConf.setGlobally(el::ConfigurationType::Format, "%datetime{H:%m:%s.%g} %level %func: %msg");
+	//defaultConf.setGlobally(el::ConfigurationType::Format, "%datetime{H:%m:%s.%g} %level %func: %msg");
+	defaultConf.setGlobally(el::ConfigurationType::Format, "%msg");
 	el::Loggers::addFlag(el::LoggingFlag::HierarchicalLogging);
 	el::Loggers::setLoggingLevel(el::Level::Global);
 	el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
