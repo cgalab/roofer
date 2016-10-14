@@ -23,6 +23,41 @@ using namespace std;
 //bool operator> (const ALIterator& a, const ALIterator& b) {return operator> (*a,*b);}
 //bool operator< (const ALIterator& a, const ALIterator& b) {return operator< (*a,*b);}
 
+ostream& operator<<(ostream& out, const SweepItem& item) {
+		out <<  item.a->eid << " (";
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				if(item.get(i,j) == NOLIST) {
+					out << "_";
+				} else {
+					out << item.get(i,j);
+				}
+				if(i != 1 || j != 1) out << ",";
+			}
+		}
+		out << ")  ";
+
+		if(item.a->ghost) {out << "g";}
+		out << "a(";
+		if(item.a->parallel) { out << "p,p)-"; } else { out <<
+			item.a->bisector.to_vector().x().doubleValue() << "," <<
+			item.a->bisector.to_vector().y().doubleValue() << ")-";
+		}
+		if(item.b->ghost) {out << "g";}
+		out << "b(";
+		if(item.b->parallel) { out << "p,p) "; } else { out <<
+			item.b->bisector.to_vector().x().doubleValue() << "," <<
+			item.b->bisector.to_vector().y().doubleValue() << ") ";
+		}
+
+	    return out;
+}
+
+ostream& operator<<(ostream& out, const SweepEvent& event) {
+	for(auto c : event) {out << c << " --- ";}
+    return out;
+}
+
 bool operator==(const ArrangementLine& a, const ArrangementLine& b) {
 //		return  a.base  == b.base  &&
 //				a.start == b.start &&
@@ -138,34 +173,44 @@ void SweepLine::initiateEventQueue() {
 
 
 void SweepLine::printEventQueue() {
-   cout << "Q: ";
+	std::ostream out(nullptr);
+	std::stringbuf str;
+    out.rdbuf(&str);
+    out << "Q: ";
 
 	for(auto e : eventQueue) {
-		cout << e.squaredDistance.doubleValue() << " - "; e.print(); cout << ", ";
+		out << e.squaredDistance.doubleValue() << " - " << e << ", ";
 	}
 
 	if(!parallelEventQueue.empty()) {
-		cout << endl << "PQ: ";
+		out << endl << "PQ: ";
 		for(auto e : parallelEventQueue) {
-			cout << e->dist.doubleValue() << "  ";
+			out << e->dist.doubleValue() << "  ";
 		}
-		cout << endl;
+		out << endl;
 	}
+
+	LOG(INFO) << str.str();
 }
 
 void SweepLine::printSweepLine(SweepItem& item) {
-	cout << status[item.base].front()->eid << ": ";
+	std::ostream out(nullptr);
+	std::stringbuf str;
+    out.rdbuf(&str);
+
+    out << status[item.base].front()->eid << ": ";
 	for(auto l : status[item.base]) {
 		if(l == item.a || l == item.b) {
-			cout << "(";
+			out << "(";
 		}
-		cout << l->lid;
+		out << l->lid;
 		if(l == item.a || l == item.b) {
-			cout << ")";
+			out << ")";
 		}
-		cout << ", ";
+		out << ", ";
 	}
-	cout << endl;
+	out << endl;
+	LOG(INFO) << str.str();
 }
 
 
@@ -193,8 +238,8 @@ SweepEvent SweepLine::popEvent() {
 
 //				item.print();
 				if(item.raysIntersect) {
-//					cout << endl <<" ->ins " << item.dist().doubleValue() << " "; item.printIntPoint();
-//					cout << " "; item.print();
+//					LOG(INFO) << endl <<" ->ins " << item.dist().doubleValue() << " "; item.printIntPoint();
+//					LOG(INFO) << " "; item.print();
 					eventQueue.insert(item);
 				}
 			}
@@ -202,15 +247,15 @@ SweepEvent SweepLine::popEvent() {
 			first = *eventQueue.begin();
 		}
 
-//		cout << endl;
+//		LOG(INFO) << endl;
 //		printEventQueue();
 
 		eventQueue.erase(eventQueue.begin());
 		event.push_back(first);
 
-//		cout << endl << "events: ";
+//		LOG(INFO) << endl << "events: ";
 //		first.printIntPoint();
-//		cout << " - ";
+//		LOG(INFO) << " - ";
 		while(!queueEmpty() && first.squaredDistance == eventQueue.begin()->squaredDistance) {
 			auto other = *eventQueue.begin();
 //			if((first.base != other->base) &&
@@ -222,40 +267,40 @@ SweepEvent SweepLine::popEvent() {
 				event.push_back(other);
 			} else {
 				temp.push_back(other);
-				cout << "T";
+				LOG(INFO) << "T";
 			}
 //			other.printIntPoint();
-//			cout << " - ";
+//			LOG(INFO) << " - ";
 			eventQueue.erase(eventQueue.begin());
 		}
 
-//		cout << "event: ";
+//		LOG(INFO) << "event: ";
 //		for(auto c : event) c.print();
-//		cout << endl << "temp: ";
+//		LOG(INFO) << endl << "temp: ";
 //		for(auto c : temp) c.print();
-//		cout << endl;
+//		LOG(INFO) << endl;
 
 		if(temp.size() > 0) {
-//			cout << " Temp: ";
+//			LOG(INFO) << " Temp: ";
 //			for(auto e : temp)  {
-//				cout << "(" << e.intersectionPoint.x().doubleValue() << ","
+//				LOG(INFO) << "(" << e.intersectionPoint.x().doubleValue() << ","
 //					 << e.intersectionPoint.y().doubleValue() << ") ";
 //				e.print();
 //			}
-//			cout << endl;
+//			LOG(INFO) << endl;
 
 			for(auto e : temp)  { eventQueue.insert(e); }
 		}
 
 //		if(event.size() != 3){
-//			cout << endl << "Event: ";
+//			LOG(INFO) << endl << "Event: ";
 //			for(auto e : event) {
-//				cout << "(" << e.intersectionPoint.x().doubleValue()
+//				LOG(INFO) << "(" << e.intersectionPoint.x().doubleValue()
 //					 << "," << e.intersectionPoint.y().doubleValue() << ") D:"
 //					 << e.normalDistance.doubleValue() << " ";
 //				e.print();
 //			}
-//			cout << endl;
+//			LOG(INFO) << endl;
 //		}
 
 		/* some events may longer by valid, we know via handlePopEvent */
@@ -296,8 +341,7 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 			FoundA = FoundA-1;
 			FoundB = FoundA+1;
 		} else {
-			item.print();
-			cout << "WARNING: handlePopEvent b not at a+-1!";
+			LOG(WARNING) << item << " - WARNING: handlePopEvent b not at a+-1!";
 			return false;
 		}
 	} else if(!(a == *FoundA) && b == *FoundA) {
@@ -308,13 +352,12 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 		} else if(a == *(FoundB-1)) {
 			FoundA = FoundB-1;
 		} else {
-			if(a == *find(lStatus.begin(),lStatus.end(),a)) {cout << "--found A with normal find...." << endl;}
-			cout << "WARNING: handlePopEvent a not at b+-1!";
+			if(a == *find(lStatus.begin(),lStatus.end(),a)) {LOG(INFO) << "--found A with normal find....";}
+			LOG(WARNING) << "WARNING: handlePopEvent a not at b+-1!";
 			return false;
 		}
 	} else {
-		item.print();
-		cout << "WARNING: handlePopEvent a,b not found!";
+		LOG(WARNING) << item <<  " - WARNING: handlePopEvent a,b not found!";
 		return false;
 	}
 
@@ -340,7 +383,7 @@ bool SweepLine::handlePopEvent(SweepItem& item) {
 }
 
 ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells) {
-	cout << " --- INSERT GHOST VERTEX !! --- ";
+	LOG(INFO) << " --- INSERT GHOST VERTEX !! --- ";
 
 	/* define ghost vertex */
 	ArrangementLine al(cell->a->base,cell->b->base);
@@ -369,19 +412,19 @@ ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells)
 	++itFirstOcc;
 
 //	if((*(itFirstOcc-1)) == cell->b) {
-//		cout << "B FOUND! "; fflush(stdout);
-//		cout << cell->b->bisector.to_vector().x().doubleValue() << "," <<
+//		LOG(INFO) << "B FOUND! "; fflush(stdout);
+//		LOG(INFO) << cell->b->bisector.to_vector().x().doubleValue() << "," <<
 //				cell->b->bisector.to_vector().y().doubleValue() << ")-";
 //
 //	}
 //	if((**itFirstOcc) == al) {
-//		cout << "NEW FOUND! "; fflush(stdout);
-//		cout << al.bisector.to_vector().x().doubleValue() << "," <<
+//		LOG(INFO) << "NEW FOUND! "; fflush(stdout);
+//		LOG(INFO) << al.bisector.to_vector().x().doubleValue() << "," <<
 //				al.bisector.to_vector().y().doubleValue() << ")-";
 //	}
 //	if((*(itFirstOcc+1)) == cell->a) {
-//		cout << "A FOUND! "; fflush(stdout);
-//		cout << cell->a->bisector.to_vector().x().doubleValue() << "," <<
+//		LOG(INFO) << "A FOUND! "; fflush(stdout);
+//		LOG(INFO) << cell->a->bisector.to_vector().x().doubleValue() << "," <<
 //				cell->a->bisector.to_vector().y().doubleValue() << ")-";
 //	}
 
@@ -400,13 +443,13 @@ ALIterator SweepLine::insertGhostVertex(SweepItem* cell, SweepEvent& ghostCells)
 }
 
 void SweepLine::deleteGhostVertex(SweepItem* cell, ALIterator gv) {
-	cout << " is gv:" << gv->ghost << " ";
+	LOG(INFO) << " is gv:" << gv->ghost << " ";
 	auto& lStatus = status[cell->base];
 	DistanceCompare comp(cell->intersectionPoint);
 	auto itFirstOcc = lower_bound(lStatus.begin(),lStatus.end(),cell->b,comp);
 
 	if(*itFirstOcc == gv) {
 		lStatus.erase(itFirstOcc);
-		cout << " ghost vertex erased " << endl;
+		LOG(INFO) << " ghost vertex erased ";
 	}
 }

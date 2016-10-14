@@ -1,6 +1,8 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
+#include <iostream>
+
 #include "easyloggingpp/src/easylogging++.h"
 
 using namespace std;

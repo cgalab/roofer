@@ -69,8 +69,8 @@ private:
 	void printHelp();
 	void printLongHelp();
 
-	void writeOBJ(const string& fileName);
-	void writePOLY(const string& fileName);
+	void writeOBJ();
+	void writePOLY();
 
 	bool parseOBJ(const vector<string>& lines);
 	bool parsePOLY(const vector<string>& lines);

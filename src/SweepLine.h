@@ -145,18 +145,18 @@ struct SweepItem {
 
 	SweepItem(ALIterator pa, ALIterator pb):a(pa),b(pb),base(pa->base) {
 		if(a->base != b->base) {
-			if(a->base->supporting_line() == b->base->supporting_line()) {cout << " same line though ";}
-			cout << "ERROR: Base Line not equal!" << endl <<
+			if(a->base->supporting_line() == b->base->supporting_line()) {LOG(INFO) << " same line though ";}
+			LOG(INFO) << "ERROR: Base Line not equal!" << endl <<
 			a->uid << " " << b->uid << endl;
-			if(a->parallel) cout << "(a parallel)";
-			if(b->parallel) cout << "(b parallel)";
-			cout << "a: ";
-			cout << a->base->vertex(0).x().doubleValue() << "," <<
+			if(a->parallel) LOG(INFO) << "(a parallel)";
+			if(b->parallel) LOG(INFO) << "(b parallel)";
+			LOG(INFO) << "a: ";
+			LOG(INFO) << a->base->vertex(0).x().doubleValue() << "," <<
 					a->base->vertex(0).y().doubleValue() << "-" <<
 					a->base->vertex(1).x().doubleValue() << "," <<
 					a->base->vertex(1).y().doubleValue() << "  ";
-			cout << "b: ";
-			cout << b->base->vertex(0).x().doubleValue() << "," <<
+			LOG(INFO) << "b: ";
+			LOG(INFO) << b->base->vertex(0).x().doubleValue() << "," <<
 					b->base->vertex(0).y().doubleValue() << "-" <<
 					b->base->vertex(1).x().doubleValue() << "," <<
 					b->base->vertex(1).y().doubleValue() << "  ";
@@ -193,7 +193,7 @@ struct SweepItem {
 	/* enable accessing the list indices of left/right refs of a,b via setter/getter
 	 * (0,0) a left, (0,1) a right, (1,0) b left, (1,1) b right
 	 * */
-	inline int get(int i, int j) {
+	inline int get(int i, int j) const {
 		if(i == 0) {
 			if(j == 0) {
 				return a->leftListIdx;
@@ -304,38 +304,42 @@ struct SweepItem {
 
 	inline bool hasGhostVertex() {return a->ghost || b->ghost;}
 
-	inline void print() {
-		cout <<  a->eid << " (";
-		for(int i = 0; i < 2; ++i) {
-			for(int j = 0; j < 2; ++j) {
-				if(get(i,j) == NOLIST) {
-					cout << "_";
-				} else {
-					cout << get(i,j);
-				}
-				if(i != 1 || j != 1) cout << ",";
-			}
-		}
-		cout << ")  ";
+//	inline std::ostream& operator<<(std::ostream& out) {
+//		out <<  a->eid << " (";
+//		for(int i = 0; i < 2; ++i) {
+//			for(int j = 0; j < 2; ++j) {
+//				if(get(i,j) == NOLIST) {
+//					out << "_";
+//				} else {
+//					out << get(i,j);
+//				}
+//				if(i != 1 || j != 1) out << ",";
+//			}
+//		}
+//		out << ")  ";
+//
+//		if(a->ghost) {out << "g";}
+//		out << "a(";
+//		if(a->parallel) { out << "p,p)-"; } else { out <<
+//		a->bisector.to_vector().x().doubleValue() << "," <<
+//		a->bisector.to_vector().y().doubleValue() << ")-";
+//		}
+//		if(b->ghost) {out << "g";}
+//		out << "b(";
+//		if(b->parallel) { out << "p,p) "; } else { out <<
+//		b->bisector.to_vector().x().doubleValue() << "," <<
+//		b->bisector.to_vector().y().doubleValue() << ") ";
+//		}
+//
+//	    return out;
+//	}
 
-		if(a->ghost) {cout << "g";}
-		cout << "a(";
-		if(a->parallel) { cout << "p,p)-"; } else { cout <<
-		a->bisector.to_vector().x().doubleValue() << "," <<
-		a->bisector.to_vector().y().doubleValue() << ")-";
-		}
-		if(b->ghost) {cout << "g";}
-		cout << "b(";
-		if(b->parallel) { cout << "p,p) "; } else { cout <<
-		b->bisector.to_vector().x().doubleValue() << "," <<
-		b->bisector.to_vector().y().doubleValue() << ") ";
-		}
+//	inline std::ostream& printIntPoint(std::ostream& out) {
+//		out << intersectionPoint.x().doubleValue() << "," << intersectionPoint.y().doubleValue();
+//		return out;
+//	}
 
-	}
-
-	inline void printIntPoint() {
-		cout << intersectionPoint.x().doubleValue() << "," << intersectionPoint.y().doubleValue();
-	}
+	friend std::ostream& operator<<(std::ostream& out, const SweepItem& item);
 
 	friend bool operator>  (const SweepItem& a, const SweepItem& b);
 	friend bool operator<  (const SweepItem& a, const SweepItem& b);
@@ -449,7 +453,12 @@ struct SweepEvent : public vector<SweepItem> {
 		return false;
 	}
 
-	inline void printAll() {for(auto c : *this) {c.print(); cout << " --- ";}}
+//	inline std::ostream& operator<<(std::ostream& out) {
+//		for(auto c : *this) {out << c << " --- ";}
+//	    return out;
+//	}
+
+	//inline void printAll() {for(auto c : *this) {c.print(); LOG(INFO) << " --- ";}}
 
 	inline bool hasGhostVertex() {
 		for(auto c : *this) {
@@ -471,6 +480,8 @@ struct SweepEvent : public vector<SweepItem> {
 		for(auto& c : *this) {r.push_back(&c);}
 		return r;
 	}
+
+	friend std::ostream& operator<<(std::ostream& out, const SweepEvent& event);
 };
 
 //using ColinearEP    = set<EdgeIterator>;

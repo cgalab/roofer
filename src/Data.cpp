@@ -91,13 +91,13 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 				return false;
 			} else if (argument == "-v") {
 				if(config.silent) {
-					cout << "Use either verbose or silent, -v or -s, not both!" << endl;
+					LOG(INFO) << "Use either verbose or silent, -v or -s, not both!";
 				}
 				config.verbose 		= true;
 				el::Loggers::setLoggingLevel(el::Level::Global);
 			} else if (argument == "-s") {
 				if(config.verbose) {
-					cout << "Use either verbose or silent, -v or -s, not both!" << endl;
+					LOG(INFO) << "Use either verbose or silent, -v or -s, not both!";
 				}
 					config.silent 		= true;
 				el::Loggers::setLoggingLevel(el::Level::Unknown);
@@ -111,13 +111,13 @@ bool Data::evaluateArguments(std::list<std::string> args) {
 				args.pop_front();
 				config.outputFileName = argument;
 			} else if (argument == "-poly") {
-				cout << ".poly is not supported yet!" << endl;
+				LOG(INFO) << ".poly is not supported yet!";
 				return false;
 			} else if(args.empty()){
 				config.fileName = argument;
 				fileLoaded = loadFile(argument);
 			} else {
-				cout << argument << " is no valid option or filename!" << std::endl;
+				LOG(INFO) << argument << " is no valid option or filename!";
 			}
 		}
 	}
@@ -138,15 +138,15 @@ void Data::printHelp() {
 	int frameLength = usage.length() + config.printOptions.length() + 4;
 	int frameNameLength = (frameLength/2) - ((name.length())/2);
 
-	for(auto i=0; i < frameNameLength; ++i) {cout << "-";}
-	cout << name;
-	for(auto i=0; i < frameNameLength+1; ++i) {cout << "-";}
-	cout << endl;
+	for(auto i=0; i < frameNameLength; ++i) {LOG(INFO) << "-";}
+	LOG(INFO) << name;
+	for(auto i=0; i < frameNameLength+1; ++i) {LOG(INFO) << "-";}
+	LOG(INFO) << endl;
 
-	cout << "| " << usage << config.printOptions << " |" << endl;
+	LOG(INFO) << "| " << usage << config.printOptions << " |";
 
-	for(auto i=0; i < frameLength; ++i) {cout << "-";}
-	cout << endl;
+	for(auto i=0; i < frameLength; ++i) {LOG(INFO) << "-";}
+	LOG(INFO) << endl;
 }
 
 bool Data::parseOBJ(const vector<string>& lines) {
@@ -206,7 +206,7 @@ bool Data::parseOBJ(const vector<string>& lines) {
 	for(auto face : faces) {
 		for(auto idx : face) {
 			if(idx==0) {
-				cout << "WARNING: idx in obj should not be 0!" << endl;
+				LOG(INFO) << "WARNING: idx in obj should not be 0!";
 			} else {
 				polygon.push_back(input[idx-1]);
 			}
@@ -218,24 +218,25 @@ bool Data::parseOBJ(const vector<string>& lines) {
 }
 
 bool Data::parsePOLY(const vector<string>& lines) {
-	cout << "POLY: no yet supported!";
+	LOG(INFO) << "POLY: no yet supported!";
+	for(auto l : lines) { cout << " "; };
 	return false;
 }
 
-void Data::writePOLY(const string& fileName) {
-	cout << "POLY: no yet supported!";
+void Data::writePOLY() {
+	LOG(INFO) << "POLY: no yet supported!";
 }
 
 void Data::writeOutput() {
 	switch(config.outputType) {
 	case OutputType::OBJ3D:
-	case OutputType::OBJ:  writeOBJ(config.outputFileName);  break;
-	case OutputType::POLY: writePOLY(config.outputFileName); break;
+	case OutputType::OBJ:  writeOBJ();  break;
+	case OutputType::POLY: writePOLY(); break;
 	case OutputType::NONE: break;
 	}
 }
 
-void Data::writeOBJ(const string& fileName) {
+void Data::writeOBJ() {
 	set<Point> allPoints;
 
 	map<Point,int> vertexMap;
@@ -340,18 +341,18 @@ string Data::currentTimeStamp() {
 
 
 void Data::printLongHelp() {
-	cout << "  -h \t\t\tprint this help" << endl;
-	cout << "  -v \t\t\tverbose mode, shows more information about the computation" << endl;
-	cout << "  -s \t\t\tsilent mode, shows no information" << endl;
-	cout << "  -l \t\t\tlogging verbose output to <filename>.log" << endl;
+	LOG(INFO) << "  -h \t\t\tprint this help";
+	LOG(INFO) << "  -v \t\t\tverbose mode, shows more information about the computation";
+	LOG(INFO) << "  -s \t\t\tsilent mode, shows no information";
+	LOG(INFO) << "  -l \t\t\tlogging verbose output to <filename>.log";
 #ifdef QTGUI
-	cout << "  -gui \t\t\tenable GUI" << endl;
+	LOG(INFO) << "  -gui \t\t\tenable GUI";
 #endif
-	cout << "  -min | -max\t\tminimize or maximize the resulting roof" << endl;
-//	cout << "  -poly \t\twrite output in triangle's poly format" << endl;
-	cout << "  -obj \t\t\twrite output in wavefront obj format (2D coordinates)" << endl;
-	cout << "  -obj3d \t\twrite output in wavefront obj format (3D coordinates)" << endl;
-	cout << "  <filename> \t\tinput type is wavefront obj format" << endl;
+	LOG(INFO) << "  -min | -max\t\tminimize or maximize the resulting roof";
+//	LOG(INFO) << "  -poly \t\twrite output in triangle's poly format";
+	LOG(INFO) << "  -obj \t\t\twrite output in wavefront obj format (2D coordinates)";
+	LOG(INFO) << "  -obj3d \t\twrite output in wavefront obj format (3D coordinates)";
+	LOG(INFO) << "  <filename> \t\tinput type is wavefront obj format";
 }
 
 
