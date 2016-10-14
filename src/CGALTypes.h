@@ -1,3 +1,22 @@
+/*
+ * roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
+ * as well as minimum- and maximum-volume roofs over a simple polygon.
+ * Copyright (C) 2016 - Günther Eder - roofer@geder.at
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef CGALTYPES_H_
 #define CGALTYPES_H_
 
@@ -12,7 +31,7 @@
 #include <CGAL/bounding_box.h>
 #include <CGAL/intersections.h>
 
-using K 		     = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
+using K 		         = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
 
 using Polygon        = CGAL::Polygon_2<K>;
 using VertexIterator = Polygon::Vertex_iterator;
@@ -24,7 +43,7 @@ using Line           = K::Line_2;
 using Ray            = K::Ray_2;
 using Direction      = K::Direction_2;
 using Edge           = K::Segment_2;
-using BBox			 = K::Iso_rectangle_2;
+using BBox			   = K::Iso_rectangle_2;
 
 using Transformation = CGAL::Aff_transformation_2<K>;
 

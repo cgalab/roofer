@@ -1,8 +1,20 @@
 /*
- * GUI.cpp
+ * roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
+ * as well as minimum- and maximum-volume roofs over a simple polygon.
+ * Copyright (C) 2016 - Günther Eder - roofer@geder.at
  *
- *  Created on: May 28, 2015
- *      Author: gue
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "GUI.h"
@@ -34,23 +46,13 @@ edges(true), vertices(true), drawLabels(true) {
 
 GUI::~GUI() {}
 
-//void GUI::show(const SsPtr& ss) {
-//	display_lcc(lcc);
-//}
-
 Dart_handle GUI::make_facet(const Polygon& poly) {
 	Dart_handle d =
 			CGAL::make_combinatorial_polygon<LCC_3>(lcc,(unsigned int)poly.size());
 
 
 	for(auto v = poly.vertices_begin(); v != poly.vertices_end(); ++v) {
-		//for (unsigned int i=0; i<poly.size(); ++i) {
-
 		Point3D p(v->x().doubleValue(),v->y().doubleValue(),0);
-//		if(drawLabels) {
-//			drawText(p.x(),p.y(),QString(vIdx),QFont());
-//			++vIdx;
-//		}
 
 		lcc.set_vertex_attribute_of_dart(d, lcc.create_vertex_attribute(p));
 		d = d->beta(1);
@@ -132,13 +134,8 @@ void GUI::keyPressEvent(QKeyEvent *e) {
 		if(!data->sweepLine.queueEmpty()) {
 			auto item = data->sweepLine.popEvent();
 
-//			drawEvent(item);
 			skeleton->handleNextEvent(item);
 
-			fflush(stdout);
-
-//			skeleton->handleNextEvent(e);
-//			drawWavefrontPolygon(e.time);
 		}
 		updateGL();
 	}
@@ -285,9 +282,6 @@ void GUI::drawEvent(SweepEvent& event) {
 
 					addSegment(p,i.intersectionPoint);
 					addSegment(i.intersectionPoint,l.front());
-
-					//					addSegment(i.intersectionPoint,i.a->start);
-					//					addSegment(i.intersectionPoint,i.b->start);
 
 				}
 			}
