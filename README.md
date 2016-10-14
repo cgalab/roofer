@@ -23,7 +23,7 @@ blender.
 # Requirements 
 - C++11 enabled complier (gcc,clang)
 - CGAL
-- Linux and Mac OS
+- Linux or Mac OS
 - GUI only under Linux for now
 
 # License
