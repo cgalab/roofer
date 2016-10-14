@@ -433,7 +433,7 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 
 	SweepItem* c_a=nullptr;
 	SweepItem* c_b=nullptr;
-	SweepItem* c_new;
+	SweepItem* c_new=nullptr;
 
 	for(auto cell : event->getAllCells()) {
 		if(cell->isEmptyNode()) {
@@ -446,6 +446,8 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 			}
 		}
 	}
+
+	if(c_a == nullptr || c_b == nullptr || c_new == nullptr) {return false;}
 
 	auto l_a   = c_a->base->supporting_line().to_vector();
 	auto l_b   = c_b->base->supporting_line().to_vector();
