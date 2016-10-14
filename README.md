@@ -1,28 +1,30 @@
-# Min/Max Roofs
+# roofer
 
-roofer computes the minimum-volume or maximum-volume roof over a given polygon.
+roofer computes the minimum-volume or maximum-volume roof over a given simple polygon.
 
 # Algorithm
 
-The algorithm is based on scientific work that is currently done by my group.
-As soon as the paper is published, it will be referenced here. 
+The algorithm is based on scientific work that is currently done by my research group.
+As soon as the paper that goes along with this program is published, it will be referenced here. 
 
 # Input/Output
 
-Reads wavefront .obj format that should describe a simple polygon. Writes the
+Reads wavefront .obj format which should describe a simple polygon. Writes the
 same format, optional with 3D coordinates which can be imported to programs like
 blender.
 
 # ToDo's
-- many TODO's and the stated problem still in the code
-- GUI is solved very poorly 
+- some TODO's left in the code, the problems are stated along the TODO-comments
+- GUI solution has to be rewritten
 
 ## Optional ToDo's
-- libraray funciton
+- library function
 
 # Requirements 
 - C++11 enabled complier (gcc,clang)
 - CGAL
+- Linux and Mac OS
+- GUI only under Linux for now
 
 # License
 roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
