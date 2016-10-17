@@ -39,7 +39,7 @@ blender.
 roofer [-h] [-v] [-s] [-min|-max] [-poly|-obj|-obj3d &lt;filename&gt;] &lt;filename&gt;
 
 | options        | description           |
-| ------------- | -------------:|
+| ------------- |:------------- |
 |  -h           |         print this help |
 |  -v           |         verbose mode, shows more information about the computation |
 |  -s           |         silent mode, shows no information |
