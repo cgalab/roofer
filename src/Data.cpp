@@ -150,19 +150,23 @@ bool Data::fileExists(const string& fileName) {
 void Data::printHelp() {
 	string name = " Roofer ";
 	string usage = "usage: roofer ";
+   
+   std::ostream out(nullptr);
+   std::stringbuf str;
+   out.rdbuf(&str);
 
-	int frameLength = usage.length() + config.printOptions.length() + 4;
+	int frameLength = usage.length() + config.printOptions.length();
 	int frameNameLength = (frameLength/2) - ((name.length())/2);
 
-	for(auto i=0; i < frameNameLength; ++i) {LOG(INFO) << "-";}
-	LOG(INFO) << name;
-	for(auto i=0; i < frameNameLength+1; ++i) {LOG(INFO) << "-";}
-	LOG(INFO) << endl;
+	for(auto i=0; i < frameNameLength; ++i) {out << "-";}
+	out << name;
+	for(auto i=0; i < frameNameLength+1; ++i) {out << "-";}
+	out << endl;
 
-	LOG(INFO) << "| " << usage << config.printOptions << " |";
+	out << usage << config.printOptions;
+	out << endl;
 
-	for(auto i=0; i < frameLength; ++i) {LOG(INFO) << "-";}
-	LOG(INFO) << endl;
+   LOG(INFO) << str.str();
 }
 
 bool Data::parseOBJ(const vector<string>& lines) {
