@@ -38,14 +38,14 @@ blender.
 
 roofer [-h] [-v] [-s] [-min|-max] [-poly|-obj|-obj3d <filename>] <filename>
 
-  -h                    print this help
-  -v                    verbose mode, shows more information about the computation
-  -s                    silent mode, shows no information
-  -l                    logging verbose output to <filename>.log
-  -min | -max           minimize or maximize the resulting roof
-  -obj                  write output in wavefront obj format (2D coordinates)
-  -obj3d                write output in wavefront obj format (3D coordinates)
-  <filename>            input type is wavefront obj format
+|  -h           |         print this help |
+|  -v           |         verbose mode, shows more information about the computation |
+|  -s           |         silent mode, shows no information |
+|  -l           |         logging verbose output to <filename>.log |
+|  -min / -max |          minimize or maximize the resulting roof |
+|  -obj      |            write output in wavefront obj format (2D coordinates) |
+|  -obj3d   |             write output in wavefront obj format (3D coordinates) |
+|  <filename> |           input type is wavefront obj format |
 
 # License
 roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
