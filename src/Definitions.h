@@ -40,7 +40,7 @@ struct Config {
 		fileName(""),verbose(false),silent(false),
 		outputType(OutputType::NONE),outputFileName("") {
 
-		printOptions = "[-h] [-v] [-s] ";
+		printOptions = "[-h] [-v|-s] ";
 #ifdef QTGUI
 		printOptions += "[-gui] ";
 #endif
