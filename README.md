@@ -26,6 +26,18 @@ blender.
 - Linux or Mac OS
 - GUI only under Linux for now
 
+# Installation
+
+- git clone --recursive https://github.com/guenthereder/roofer
+- mkdir -p roofer/build
+- cd /roofer/build
+- cmake ..
+- make -j 
+
+# Execute
+
+./roofer 
+
 # License
 roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
 as well as minimum- and maximum-volume roofs over a simple polygon.
