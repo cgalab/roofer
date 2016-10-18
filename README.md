@@ -48,6 +48,10 @@ roofer [-h] [-v|-s] [-min|-max] [-poly|-obj|-obj3d &lt;filename&gt;] &lt;filenam
 |  -obj3d   |             write output in wavefront obj format (3D coordinates) |
 |  &lt;filename&gt; |           input type is wavefront obj format |
 
+# Submodules
+
+For logging purpose we use the following submodule: https://github.com/easylogging/easyloggingpp
+
 # License
 roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
 as well as minimum- and maximum-volume roofs over a simple polygon.
