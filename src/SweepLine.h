@@ -269,7 +269,8 @@ struct SweepItem {
 	inline bool isInteriorNode() {
 		return a->leftListIdx  != NOLIST          &&
 			   a->rightListIdx == a->leftListIdx  &&
-			   b->leftListIdx  == a->rightListIdx &&
+//			   b->leftListIdx  == a->rightListIdx &&
+			   b->leftListIdx  != NOLIST &&
 			   b->rightListIdx == b->leftListIdx;
 	}
 

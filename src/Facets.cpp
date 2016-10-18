@@ -509,7 +509,9 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 		createEvent = true;
 		min 		= true;
 	} else{
-		throw runtime_error("ERROR: handleCreateEventA: orientation?!");
+		//throw runtime_error("ERROR: handleCreateEventA: orientation?!");
+		LOG_IF(config->verbose,INFO) << "ERROR: handleCreateEventA: orientation?";
+		return createEvent;
 	}
 
 	if(createEvent) {
@@ -603,10 +605,12 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 	/* analyze if a create event occurs and what typ (min/max) */
 	if(Line(c_base->base->supporting_line()).has_on_positive_side(c_base->intersectionPoint+normalA) &&
 	   Line(c_base->base->supporting_line()).has_on_positive_side(c_base->intersectionPoint+normalB) ) {
-		createEvent = true;
-	} else if(CGAL::orientation(l_base,l_a.to_vector()) == CGAL::LEFT_TURN &&
-	          CGAL::orientation(l_b.to_vector(),l_base) == CGAL::LEFT_TURN) {
-		createEvent = true;
+		//createEvent = true;
+	//} else
+		if(CGAL::orientation(l_base,l_a.to_vector()) == CGAL::LEFT_TURN &&
+	       CGAL::orientation(l_b.to_vector(),l_base) == CGAL::LEFT_TURN) {
+			createEvent = true;
+		}
 	}
 
 	// TODO: what to do with collinear edges

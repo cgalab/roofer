@@ -55,6 +55,9 @@ ostream& operator<<(ostream& out, const SweepItem& item) {
 }
 
 ostream& operator<<(ostream& out, const SweepEvent& event) {
+	out << "[ ";
+	for(auto c : event) {out << c.a->eid << " ";}
+	out << "]: ";
 	for(auto c : event) {out << c << " --- ";}
     return out;
 }
