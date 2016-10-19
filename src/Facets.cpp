@@ -125,14 +125,15 @@ void RoofFacets::addBaseCell(ALIterator& line) {
 		listToFacet[listIdx] = allFacets[line->base].begin();
 
 		line->rightListIdx  = listIdx;
-		zMap[line->start] = 0;
+
+		insertToZmap(line->start,0);
 	} else if(*line == e) {
 
 		auto listIdx = (allFacets[line->base].empty()) ? allLists.size() : allLists.size()-1;
 		allLists[listIdx].push_back(line->start);
 		line->leftListIdx = listIdx;
 
-		zMap[line->start] = 0;
+		insertToZmap(line->start,0);
 	} else if(
 	  (aGreaterB(line->start,edgeStart,line->base) &&
 	   aGreaterB(edgeEnd,line->start,line->base))
@@ -197,7 +198,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->rightListIdx = NOLIST;
 			cell->b->leftListIdx  = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else if(cell->a->rightListIdx == NOLIST  &&  cell->b->leftListIdx  == NOLIST &&
 		          cell->a->leftListIdx  != NOLIST  &&  cell->b->rightListIdx != NOLIST) {
 			/* facet joins with facet of a create event OR parallel AL */
@@ -226,7 +227,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else if(cell->numberOfActiveIndices() == 3) {
 			if(cell->a->leftListIdx == NOLIST) {
 
@@ -235,7 +236,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				cell->a->leftListIdx  = cell->a->rightListIdx;
 				cell->b->leftListIdx  = NOLIST;
 
-				zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+				insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 			} else if(cell->b->rightListIdx == NOLIST) {
 
 				auto& l = allLists[cell->b->leftListIdx];
@@ -244,7 +245,7 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				cell->b->rightListIdx  = cell->b->leftListIdx;
 				cell->a->rightListIdx  = NOLIST;
 
-				zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+				insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 			}
 		} else if(cell->a->leftListIdx != NOLIST) {
 
@@ -252,28 +253,28 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			cell->b->leftListIdx = cell->a->leftListIdx;
 			cell->a->leftListIdx = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else if(cell->a->rightListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->b->rightListIdx = cell->a->rightListIdx;
 			cell->a->rightListIdx = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else if(cell->b->leftListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->a->leftListIdx = cell->b->leftListIdx;
 			cell->b->leftListIdx = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else if(cell->b->rightListIdx != NOLIST) {
 
 			addPointToCurrentList(cell);
 			cell->a->rightListIdx = cell->b->rightListIdx;
 			cell->b->rightListIdx = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else {
 			LOG_IF(config->verbose,INFO) << "Warning: Should not occur!";
 		}
@@ -368,7 +369,7 @@ void RoofFacets::handleSplitEvent(SweepEvent* event) {
 			cell->a->leftListIdx  = NOLIST;
 			cell->b->rightListIdx = NOLIST;
 
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else {
 			if(cell->a->leftListIdx != NOLIST) {
 				cell->b->leftListIdx = cell->a->leftListIdx;
@@ -430,7 +431,7 @@ bool RoofFacets::handlePossibleGhostVertexEnd(SweepEvent* event) {
 			}
 
 			/* add point to z-Map for simpler 3D reconstucition */
-			zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 
 			/* remove ghost vertex from local sweep line status */
 			auto gv = (cell->a->ghost) ? cell->a : cell->b;
@@ -448,7 +449,7 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 	bool createEvent = false, max = false, min = false;
 
 	if(!minimize && !maximize) {
-		return false;
+		return createEvent;
 	}
 
 	SweepItem* c_a=nullptr;
@@ -495,17 +496,21 @@ bool RoofFacets::handleCreateEventA(SweepEvent* event) {
 	/* analyze if a create event occurs and what typ (min/max) */
 	if(CGAL::orientation(l_a,l_new) == CGAL::RIGHT_TURN &&
 	   CGAL::orientation(l_b,l_new) == CGAL::RIGHT_TURN) {
+		LOG_IF(config->verbose,INFO) << " a ";
 		createEvent = true;
 		min 		= true;
 	} else if(CGAL::orientation(l_a,l_new) == CGAL::RIGHT_TURN &&
 			  CGAL::orientation(l_b,l_new) == CGAL::LEFT_TURN) {
+		LOG_IF(config->verbose,INFO) << " b ";
 		createEvent = true;
 		max 		= true;
 	} else if(CGAL::orientation(l_a,l_new) == CGAL::LEFT_TURN &&
 			  CGAL::orientation(l_b,l_new) == CGAL::RIGHT_TURN) {
+		LOG_IF(config->verbose,INFO) << " c ";
 		createEvent = false;
 	} else if(CGAL::orientation(l_a,l_new) == CGAL::LEFT_TURN &&
 			  CGAL::orientation(l_b,l_new) == CGAL::LEFT_TURN) {
+		LOG_IF(config->verbose,INFO) << " d ";
 		createEvent = true;
 		min 		= true;
 	} else{
@@ -663,7 +668,7 @@ bool RoofFacets::handleCreateEventB(SweepEvent* event) {
 			itB--;
 			listToFacet[listIdxB] = itB;
 
-			zMap[c_base->intersectionPoint] = c_base->squaredDistance.doubleValue();
+			insertToZmap(c_base->intersectionPoint,c_base->squaredDistance.doubleValue());
 
 			if(c_b->a->parallel) {
 				c_b->a->rightListIdx = listIdxB;
@@ -709,7 +714,7 @@ bool RoofFacets::handleVertexEvent(SweepEvent* event) {
 					lb.push_front(cell->intersectionPoint);
 				}
 
-				zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+				insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 
 				cell->a->rightListIdx = cell->b->rightListIdx;
 				cell->b->leftListIdx  = cell->a->leftListIdx;
@@ -812,7 +817,7 @@ void RoofFacets::addPointToCurrentList(SweepItem* cell) {
 		l.push_front(cell->intersectionPoint);
 	}
 
-	zMap[cell->intersectionPoint] = cell->squaredDistance.doubleValue();
+	insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 }
 
 EdgeIterator RoofFacets::next(EdgeIterator i) {
@@ -828,7 +833,7 @@ void RoofFacets::printAllLists() {
 	std::stringbuf str;
     out.rdbuf(&str);
 
-	out << endl << "facet: coordinate list";
+	out << endl << "facet nr. : coordinate list" << endl;
 	for(auto& facet : allFacets) {
 		for(auto f : facet.second) {
 			auto list = &allLists[f];

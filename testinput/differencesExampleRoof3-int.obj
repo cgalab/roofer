@@ -1,0 +1,12 @@
+# manual example geder@cosy.sbg.ac.at
+o minMaxDifferencesExample
+v 227 621
+v 227 561
+v 215 525
+v 226 518
+v 217 503
+v 313 488
+v 311 500
+v 322 634
+v 311 621
+f 1 2 3 4 5 6 7 8 9

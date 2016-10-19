@@ -331,17 +331,18 @@ void Data::getNormalizer(double& xt, double& xm, double& yt, double& ym, double&
 	yt = bbox.min().y().doubleValue() +	(y_span/2.0);
 	zt = 0.0;
 
-	double z_max = 0;
-	for(auto z : facets.zMap) {
-		if(z.second > z_max) { z_max = z.second; }
-	}
+//	double z_max = 0;
+//	for(auto z : facets.zMap) {
+//		if(z.second > z_max) { z_max = z.second; }
+//	}
 
 	xm = (x_span != 0) ? 2.0/x_span : 1;
 	ym = (y_span != 0) ? 2.0/y_span : 1;
-	zm = (z_max  != 0) ? 1.0/std::sqrt(z_max)  : 1;
-	zm *= ZSCALE;
+//	zm = (z_max  != 0) ? 1.0/std::sqrt(z_max)  : 1;
+//	zm *= ZSCALE;
 
 	xm = ym = std::max(xm,ym);
+	zm = xm;
 }
 
 string Data::currentTimeStamp() {

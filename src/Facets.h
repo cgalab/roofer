@@ -100,6 +100,7 @@ private:
 	/* a->left to b->left or b->right to a->right */
 	void turnLefRightOnIntersection(SweepItem* cell);
 
+	inline void insertToZmap(Point p, double v) {zMap[p] = v; LOG_IF(config->verbose,INFO) << " zINFO:(" <<v << ") ";}
 
 	bool			  minimize, maximize;
 
