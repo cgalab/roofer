@@ -1,3 +1,4 @@
+.gitignore
 nohup.out
 .DS_Store
 build/
