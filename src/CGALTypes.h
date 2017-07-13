@@ -31,7 +31,7 @@
 #include <CGAL/bounding_box.h>
 #include <CGAL/intersections.h>
 
-using K 		         = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
+using K 		     = CGAL::Exact_predicates_exact_constructions_kernel_with_sqrt;
 
 using Polygon        = CGAL::Polygon_2<K>;
 using VertexIterator = Polygon::Vertex_iterator;

@@ -1,6 +1,6 @@
 # roofer
 
-roofer computes the minimum-volume or maximum-volume roof over a given simple polygon.
+roofer computes the minimum-volume and maximum-volume roof over a given simple polygon.
 
 # Algorithm
 
@@ -11,7 +11,7 @@ As soon as the paper that goes along with this program is published, it will be 
 
 Reads wavefront .obj format which should describe a simple polygon. Writes the
 same format, optional with 3D coordinates which can be imported to programs like
-blender.
+Blender.
 
 # ToDo's
 - some TODO's left in the code, the problems are stated along the TODO-comments
@@ -29,14 +29,13 @@ blender.
 # Installation
 
 - git clone --recursive https://github.com/guenthereder/roofer
-- mkdir -p roofer/build
-- cd /roofer/build
+- mkdir -p roofer/build && cd roofer/build
 - cmake ..
 - make -j 
 
 # Usage
 
-roofer [-h] [-v|-s] [-min|-max] [-poly|-obj|-obj3d &lt;filename&gt;] &lt;filename&gt;
+<code>roofer [-h] [-v|-s] [-min|-max] [-poly|-obj|-obj3d <&lt;filename&gt;] &lt;filename&gt;</code>
 
 | options        | description           |
 | -------------:|:------------- |
@@ -53,8 +52,8 @@ roofer [-h] [-v|-s] [-min|-max] [-poly|-obj|-obj3d &lt;filename&gt;] &lt;filenam
 For logging purpose we use the following submodule: https://github.com/easylogging/easyloggingpp
 
 # License
-roofer is written in C++ and uses CGAL.  It computes straight skeleton roofs
-as well as minimum- and maximum-volume roofs over a simple polygon.
+roofer is written in C++ and uses CGAL.  It computes the straight skeleton roof
+as well as minimum- and maximum-volume roof over a given simple polygon.
 Copyright (C) 2016 - Günther Eder - roofer@geder.at
 
 This program is free software: you can redistribute it and/or modify
@@ -69,4 +68,3 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-

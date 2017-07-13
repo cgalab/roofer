@@ -18,7 +18,7 @@ endif()
 #set(cmake_exe_linker_flags "${cMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 
 option(WITH_GUI    "Enable QT GUI (requieres libQGLViewer)!"  "OFF")
-option(WITH_DEBUG  "Enable Debug Mode!"                       "OFF")
+option(WITH_DEBUG  "Enable Debug Mode!"                       "ON")
 
 include_directories(BEFORE ../../include)
 
