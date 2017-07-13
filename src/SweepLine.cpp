@@ -136,10 +136,10 @@ ostream& operator<<(ostream& os, const ArrangementLine& al) {
 }
 
 void SweepLine::initiateEventQueue() {
-	assert(arrangementStart.empty());
+	assert(!arrangementStart.empty());
 
 	for(auto& le : arrangementStart) {
-		assert(le.second.empty() && le.second.size > 1);
+		assert(!le.second.empty() && le.second.size() > 1 );
 
 		auto& arrangementLines = allArrangementLines[le.first];
 		auto& lStatus          = status[le.first];

@@ -82,7 +82,6 @@ void Skeleton::createLineArrangements() {
 		for(auto edgeIt=data.polygon.edges_begin(); edgeIt != data.polygon.edges_end(); ++edgeIt) {
 			if( baseEdgeIt->supporting_line() != edgeIt->supporting_line() ) {
 				ArrangementLine al(baseEdgeIt, edgeIt, uid, eid);
-
 				if(al.isValid) {
 					++uid;
 					if(al.parallel) {

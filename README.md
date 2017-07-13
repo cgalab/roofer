@@ -35,7 +35,7 @@ Blender.
 
 # Usage
 
-<code>roofer [-h] [-v|-s] [-min|-max] [-poly|-obj|-obj3d <&lt;filename&gt;] &lt;filename&gt;</code>
+<code>roofer [-h] [-v|-s] [-min|-max] [-poly|-obj|-obj3d &lt;filename&gt;] &lt;filename&gt;</code>
 
 | options        | description           |
 | -------------:|:------------- |

@@ -22,7 +22,10 @@
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel_with_sqrt.h>
 #include <CGAL/Polygon_2.h>
+
+#ifdef QTGUI
 #include <CGAL/Combinatorial_map_constructors.h>
+#endif
 
 #include <CGAL/Polyhedron_items_3.h>
 #include <CGAL/HalfedgeDS_list.h>

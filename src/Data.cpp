@@ -147,24 +147,37 @@ bool Data::fileExists(const string& fileName) {
 }
 
 
+//void Data::printHelp() {
+//	string name = " Roofer ";
+//	string usage = "usage: roofer ";
+//
+//   std::ostream out(nullptr);
+//   std::stringbuf str;
+//   out.rdbuf(&str);
+//
+//	int frameLength = usage.length() + config.printOptions.length();
+//	int frameNameLength = (frameLength/2) - ((name.length())/2);
+//
+//	for(auto i=0; i < frameNameLength; ++i) {out << "-";}
+//	out << name;
+//	for(auto i=0; i < frameNameLength+1; ++i) {out << "-";}
+//	out << endl;
+//
+//	out << usage << config.printOptions;
+//	out << endl;
+//
+//   LOG(INFO) << str.str();
+//}
+
 void Data::printHelp() {
-	string name = " Roofer ";
-	string usage = "usage: roofer ";
-   
+   string usage = "usage: roofer ";
+
    std::ostream out(nullptr);
    std::stringbuf str;
    out.rdbuf(&str);
 
-	int frameLength = usage.length() + config.printOptions.length();
-	int frameNameLength = (frameLength/2) - ((name.length())/2);
-
-	for(auto i=0; i < frameNameLength; ++i) {out << "-";}
-	out << name;
-	for(auto i=0; i < frameNameLength+1; ++i) {out << "-";}
-	out << endl;
-
-	out << usage << config.printOptions;
-	out << endl;
+   out << usage << config.printOptions;
+   //out << endl;
 
    LOG(INFO) << str.str();
 }
