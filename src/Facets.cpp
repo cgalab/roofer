@@ -59,7 +59,7 @@ void RoofFacets::handleEvent(SweepEvent* event) {
 		} else if(event->containsInteriorNode()){
 			handleSplitEvent(event);
 		} else if(handleVertexEvent(event)) {
-			/* divide event is handled in if clause */
+			/* vertex event is handled in if clause */
 		} else {
 			handleEnterLeaveEvent(event);
 		}
@@ -700,8 +700,10 @@ vector<SweepItem*> RoofFacets::checkColinearCells(vector<SweepItem*>& cells) {
 
 bool RoofFacets::handleVertexEvent(SweepEvent* event) {
 	auto divideNodes = event->getActiveCells();
-	if(event->numberDivideNodes() >= 1) {
-		LOG_IF(config->verbose,INFO) << "Vertex/Divide EVENT ";
+	int numberDivideNodes = event->numberDivideNodes();
+
+	if(numberDivideNodes >= 1) {
+		LOG_IF(config->verbose,INFO) << "Vertex EVENT ";
 
 		for(auto cell : divideNodes) {
 
@@ -718,8 +720,42 @@ bool RoofFacets::handleVertexEvent(SweepEvent* event) {
 
 				cell->a->rightListIdx = cell->b->rightListIdx;
 				cell->b->leftListIdx  = cell->a->leftListIdx;
-				cell->a->leftListIdx  = NOLIST;
-				cell->b->rightListIdx = NOLIST;
+
+				/* >1 then three valleys should meet */
+				if(numberDivideNodes > 1) {
+					cell->a->leftListIdx  = NOLIST;
+					cell->b->rightListIdx = NOLIST;
+
+					addPointToCurrentList(cell);
+				/* if 1 divide node then two valleys meet and two facets merge */
+				} else {
+					cell->a->leftListIdx  = cell->a->rightListIdx;
+					cell->b->rightListIdx = cell->b->leftListIdx;
+
+					/* duplicate from edge event where facets join TODO: move to extra method */
+					auto& leftList    = allLists[cell->b->leftListIdx];
+					auto rightListIdx = cell->a->rightListIdx;
+
+					if((cell->a->parallel || cell->b->parallel) && cell->a->leftListIdx == cell->b->rightListIdx) {
+						LOG_IF(config->verbose,INFO) << " (PAR) ";
+						leftList.push_back(cell->intersectionPoint);
+					} else {
+						if(cell->a->leftListIdx == cell->b->rightListIdx) {
+							LOG_IF(config->verbose,INFO) << "ERROR: index equal!";
+						}
+
+						leftList.push_back(cell->intersectionPoint);
+						/* adds a next index to find the corresponding following list */
+						leftList.push_back(rightListIdx);
+
+						/* we also have to remove the 2nd facet as it joined up */
+						auto it = listToFacet[rightListIdx];
+						allFacets[cell->base].erase(it);
+						listToFacet.erase(rightListIdx);
+					}
+
+				}
+
 			} else {
 				addPointToCurrentList(cell);
 				turnLefRightOnIntersection(cell);
