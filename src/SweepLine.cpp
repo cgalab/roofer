@@ -55,8 +55,12 @@ ostream& operator<<(ostream& out, const SweepItem& item) {
 }
 
 ostream& operator<<(ostream& out, const SweepEvent& event) {
+	std::vector<int> bak = {};
+	for(auto c : event) {bak.push_back( c.a->eid );}
+	std::sort(bak.begin(),bak.end());
+
 	out << "[ ";
-	for(auto c : event) {out << c.a->eid << " ";}
+	for(auto c : bak) {out << c << " ";}
 	out << "]: ";
 	for(auto c : event) {out << c << " --- ";}
     return out;

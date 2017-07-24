@@ -208,6 +208,9 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 			if((cell->a->parallel || cell->b->parallel) && cell->a->leftListIdx == cell->b->rightListIdx) {
 				LOG_IF(config->verbose,INFO) << " (PAR) ";
 				leftList.push_back(cell->intersectionPoint);
+
+				cell->a->leftListIdx  = NOLIST;
+				cell->b->rightListIdx = NOLIST;
 			} else {
 				if(cell->a->leftListIdx == cell->b->rightListIdx) {
 					LOG_IF(config->verbose,INFO) << "ERROR: index equal!";
@@ -221,11 +224,13 @@ void RoofFacets::handleEdgeEvent(SweepEvent* event) {
 				auto it = listToFacet[rightListIdx];
 				allFacets[cell->base].erase(it);
 				listToFacet.erase(rightListIdx);
+
+				cell->a->rightListIdx = cell->b->rightListIdx;
+				cell->b->leftListIdx  = cell->a->leftListIdx;
+
+				cell->a->leftListIdx  = cell->a->rightListIdx;
+				cell->b->rightListIdx = cell->b->leftListIdx;
 			}
-
-
-			cell->a->leftListIdx  = NOLIST;
-			cell->b->rightListIdx = NOLIST;
 
 			insertToZmap(cell->intersectionPoint,cell->squaredDistance.doubleValue());
 		} else if(cell->numberOfActiveIndices() == 3) {
